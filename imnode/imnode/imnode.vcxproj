@@ -19,12 +19,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\..\DDManager\color_node_editor.cpp" />
-    <ClCompile Include="..\..\..\..\kys-cpp\src\PotConv.cpp" />
-    <ClCompile Include="..\..\..\..\nb\convert.cpp" />
-    <ClCompile Include="..\..\..\..\nb\File.cpp" />
+    <ClCompile Include="..\..\..\kys-cpp\src\PotConv.cpp" />
+    <ClCompile Include="..\..\..\nb\convert.cpp" />
+    <ClCompile Include="..\..\..\nb\File.cpp" />
+    <ClCompile Include="..\..\example\color_node_editor.cpp" />
     <ClCompile Include="..\..\example\main.cpp" />
-    <ClCompile Include="..\..\example\save_load.cpp" />
     <ClCompile Include="..\..\imnodes.cpp" />
   </ItemGroup>
   <ItemGroup>

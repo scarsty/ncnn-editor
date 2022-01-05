@@ -21,19 +21,16 @@
     <ClCompile Include="..\..\imnodes.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\example\save_load.cpp">
+    <ClCompile Include="..\..\example\color_node_editor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\nb\convert.cpp">
+    <ClCompile Include="..\..\..\nb\File.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\DDManager\color_node_editor.cpp">
+    <ClCompile Include="..\..\..\nb\convert.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\nb\File.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\kys-cpp\src\PotConv.cpp">
+    <ClCompile Include="..\..\..\kys-cpp\src\PotConv.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

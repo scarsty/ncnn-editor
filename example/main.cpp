@@ -39,7 +39,7 @@ int main(int, char**)
     SDL_DisplayMode current;
     SDL_GetCurrentDisplayMode(0, &current);
     SDL_Window* window = SDL_CreateWindow(
-        "DD MODULE Editor",
+        "Net Editor",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         1280,
