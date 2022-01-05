@@ -30,9 +30,6 @@
     <ClCompile Include="..\..\..\nb\convert.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\kys-cpp\src\PotConv.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\example\graph.h">

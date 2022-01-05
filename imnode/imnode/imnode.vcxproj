@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\..\kys-cpp\src\PotConv.cpp" />
     <ClCompile Include="..\..\..\nb\convert.cpp" />
     <ClCompile Include="..\..\..\nb\File.cpp" />
     <ClCompile Include="..\..\example\color_node_editor.cpp" />

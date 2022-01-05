@@ -22,7 +22,7 @@
 #include "fmt1.h"
 #include "convert.h"
 #include "File.h"
-#include "PotConv.h"
+//#include "PotConv.h"
 
 namespace example
 {
@@ -234,6 +234,16 @@ private:
         {
             exit(0);
         }
+        //ImGui::OpenPopup("popup");
+        //if (ImGui::BeginPopupModal("popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        //{
+        //    ImGui::Text("Hello dsjfhds fhjs hfj dshfj hds");
+        //    if (ImGui::Button("Close"))
+        //        ImGui::CloseCurrentPopup();
+        //    ImGui::EndPopup();
+        //}
+
+
         const SDL_MessageBoxButtonData buttons[] =
         {
             { SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 3, u8"取消" },
@@ -252,7 +262,7 @@ private:
             buttons,                    /* .buttons */
             &colorScheme                /* .colorScheme */
         };
-        int buttonid;
+        int buttonid =3;
         SDL_ShowMessageBox(&messageboxdata, &buttonid);
         if (buttonid == 1)
         {
@@ -469,7 +479,7 @@ public:
             std::string str = u8"没有打开的文件";
             if (!current_file_.empty())
             {
-                str = fmt1::format(u8"当前文件：{}，", PotConv::cp936toutf8(current_file_));
+                str = fmt1::format(u8"当前文件：{}，", current_file_);
                 if (saved_)
                 {
                     str += u8"已保存";
@@ -563,82 +573,58 @@ public:
             {
             case UiNodeType::output:
             {
-                const float node_width = 120;
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(11, 109, 191, 255));
-                ImNodes::PushColorStyle(ImNodesCol_TitleBarHovered, IM_COL32(45, 126, 194, 255));
-                ImNodes::PushColorStyle(ImNodesCol_TitleBarSelected, IM_COL32(81, 148, 204, 255));
-                ImNodes::BeginNode(node.id);
-                ImNodes::BeginNodeTitleBar();
-                ImGui::PushItemWidth(node_width);
-                //ImGui::InputText("##hidelabel", &graph_.node(node.text_id).text);
-                ImGui::TextUnformatted("layer_out");
-                ImNodes::EndNodeTitleBar();
-
-                ImGui::Dummy(ImVec2(node_width, 0.f));
-                {
-                    ImNodes::BeginInputAttribute(node.text_id);
-                    const float label_width = ImGui::CalcTextSize("output").x;
-                    ImGui::TextUnformatted("output");
-                    ImNodes::EndInputAttribute();
-                }
-                ImNodes::EndNode();
-                ImNodes::PopColorStyle();
-                ImNodes::PopColorStyle();
-                ImNodes::PopColorStyle();
             }
             break;
             case UiNodeType::input:
             {
-                const float node_width = 120;
-                ImNodes::BeginNode(node.id);
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0x33, 0x33, 0xff));
+            }
+            break;
+            case UiNodeType::fc:
+            {
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
+            }
+            break;
+            case UiNodeType::conv:
+            {
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x00, 0x99, 0xcc, 0xff));
+            }
+            break;
+            case UiNodeType::pool:
+            {
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x99, 0xcc, 0x66, 0xff));
+            }
+            break;
+            }
+            const float node_width = 150;
+            ImNodes::BeginNode(node.id);
 
-                ImNodes::BeginNodeTitleBar();
+            ImNodes::BeginNodeTitleBar();
+            ImGui::PushItemWidth(node_width);
+            ImGui::InputText("##hidelabel", &node.title);
+            ImNodes::EndNodeTitleBar();
+
+            ImNodes::BeginInputAttribute(node.text_id);
+            //if (graph_.num_edges_from_node(node.text_id) == 0ull)
+            {
                 ImGui::PushItemWidth(node_width);
-                ImGui::InputText("##hidelabel", &node.title);
-                ImNodes::EndNodeTitleBar();
-
+                ImGui::InputTextMultiline("##hidelabel", &node.text, ImVec2(node_width, 50));
+                ImGui::PopItemWidth();
+            }
+            ImNodes::EndInputAttribute();
+            ImGui::Spacing();
+            {
                 ImNodes::BeginOutputAttribute(node.id);
                 const float label_width = ImGui::CalcTextSize("next").x;
                 ImGui::Indent(node_width - label_width);
                 ImGui::TextUnformatted("next");
-                ImNodes::EndOutputAttribute();
-
-                ImNodes::EndNode();
-            }
-            break;
-            case UiNodeType::fc:
-            case UiNodeType::conv:
-            case UiNodeType::pool:
-            {
-                const float node_width = 150;
-                ImNodes::BeginNode(node.id);
-
-                ImNodes::BeginNodeTitleBar();
-                ImGui::PushItemWidth(node_width);
-                ImGui::InputText("##hidelabel", &node.title);
-                ImNodes::EndNodeTitleBar();
-
-                ImNodes::BeginInputAttribute(node.text_id);
-                //if (graph_.num_edges_from_node(node.text_id) == 0ull)
-                {
-                    ImGui::PushItemWidth(node_width);
-                    ImGui::InputTextMultiline("##hidelabel", &node.text);
-                    ImGui::PopItemWidth();
-                }
                 ImNodes::EndInputAttribute();
-                //ImGui::Spacing();
-                {
-                    ImNodes::BeginOutputAttribute(node.id);
-                    const float label_width = ImGui::CalcTextSize("next").x;
-                    ImGui::Indent(node_width - label_width);
-                    ImGui::TextUnformatted("next");
-                    ImNodes::EndInputAttribute();
-                }
-                ImNodes::EndNode();
             }
-            break;
-            break;
-            }
+            ImNodes::EndNode();
+            ImNodes::PopColorStyle();
+            //ImNodes::PopColorStyle();
+            //ImNodes::PopColorStyle();
         }
 
         {
