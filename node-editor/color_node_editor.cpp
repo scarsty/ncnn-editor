@@ -1,4 +1,4 @@
-#include "node_editor.h"
+ï»¿#include "node_editor.h"
 
 #include <imnodes.h>
 #include <imgui.h>
@@ -181,12 +181,12 @@ private:
             if (kv.second > 1)
             {
                 res = true;
-                auto str = fmt1::format(u8"ÓĞ{}¸ö\"{}\"!", kv.second, kv.first);
-                ImGui::OpenPopup(u8"ÌáÊ¾");
-                if (ImGui::BeginPopupModal(u8"ÍË³ö", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+                auto str = fmt1::format(u8"æœ‰{}ä¸ª\"{}\"!", kv.second, kv.first);
+                ImGui::OpenPopup(u8"æç¤º");
+                if (ImGui::BeginPopupModal(u8"é€€å‡º", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
                     ImGui::Text(str.c_str());
-                    if (ImGui::Button(u8"ÖªµÀÁË"))
+                    if (ImGui::Button(u8"çŸ¥é“äº†"))
                     {
                         ImGui::CloseCurrentPopup();
                     }
@@ -228,11 +228,11 @@ private:
         {
             exit(0);
         }
-        ImGui::OpenPopup(u8"ÍË³ö");
-        if (ImGui::BeginPopupModal(u8"ÍË³ö", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        ImGui::OpenPopup(u8"é€€å‡º");
+        if (ImGui::BeginPopupModal(u8"é€€å‡º", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::Text(u8"ÊÇ·ñ±£´æ£¿");
-            if (ImGui::Button(u8"ÊÇ"))
+            ImGui::Text(u8"æ˜¯å¦ä¿å­˜ï¼Ÿ");
+            if (ImGui::Button(u8"æ˜¯"))
             {
                 ImGui::CloseCurrentPopup();
                 try_save();
@@ -240,14 +240,14 @@ private:
                 need_dialog_ = 0;
             }
             ImGui::SameLine();
-            if (ImGui::Button(u8"·ñ"))
+            if (ImGui::Button(u8"å¦"))
             {
                 ImGui::CloseCurrentPopup();
                 exit(0);
                 need_dialog_ = 0;
             }
             ImGui::SameLine();
-            if (ImGui::Button(u8"È¡Ïû"))
+            if (ImGui::Button(u8"å–æ¶ˆ"))
             {
                 ImGui::CloseCurrentPopup();
                 need_dialog_ = 0;
@@ -270,16 +270,16 @@ public:
         auto flags = ImGuiWindowFlags_MenuBar;
 
         // The node editor window
-        std::string window_title = u8"ÍøÂç½á¹¹±à¼­";
+        std::string window_title = u8"ç½‘ç»œç»“æ„ç¼–è¾‘";
         ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
         ImGui::Begin(window_title.c_str(), NULL, flags);
 
         //if (ImGui::)   //close window
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu(u8"ÎÄ¼ş"))
+            if (ImGui::BeginMenu(u8"æ–‡ä»¶"))
             {
-                if (ImGui::MenuItem(u8"´ò¿ª..."))
+                if (ImGui::MenuItem(u8"æ‰“å¼€..."))
                 {
                     auto file = openfile();
                     if (!file.empty())
@@ -379,11 +379,11 @@ public:
                     }
                     saved_ = true;
                 }
-                if (ImGui::MenuItem(u8"±£´æ"))
+                if (ImGui::MenuItem(u8"ä¿å­˜"))
                 {
                     try_save(true);
                 }
-                if (ImGui::MenuItem(u8"Áí´æÎª..."))
+                if (ImGui::MenuItem(u8"å¦å­˜ä¸º..."))
                 {
                     refresh_ini();
                     auto file = openfile();
@@ -398,23 +398,23 @@ public:
                         saved_ = true;
                     }
                 }
-                if (ImGui::MenuItem(u8"ÍË³ö"))
+                if (ImGui::MenuItem(u8"é€€å‡º"))
                 {
                     //try_exit();
                     need_dialog_ = 1;
-                    //ImGui::OpenPopup(u8"ÍË³ö");
+                    //ImGui::OpenPopup(u8"é€€å‡º");
                     //
                 }
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu(u8"ËõÂÔÍ¼Î»ÖÃ"))
+            if (ImGui::BeginMenu(u8"ç¼©ç•¥å›¾ä½ç½®"))
             {
                 const char* names[] = {
-                    u8"×óÉÏ",
-                    u8"ÓÒÉÏ",
-                    u8"×óÏÂ",
-                    u8"ÓÒÏÂ",
+                    u8"å·¦ä¸Š",
+                    u8"å³ä¸Š",
+                    u8"å·¦ä¸‹",
+                    u8"å³ä¸‹",
                 };
                 int locations[] = {
                     ImNodesMiniMapLocation_TopLeft,
@@ -432,19 +432,19 @@ public:
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu(u8"ÑùÊ½"))
+            if (ImGui::BeginMenu(u8"æ ·å¼"))
             {
-                if (ImGui::MenuItem(u8"¾­µä"))
+                if (ImGui::MenuItem(u8"ç»å…¸"))
                 {
                     ImGui::StyleColorsClassic();
                     ImNodes::StyleColorsClassic();
                 }
-                if (ImGui::MenuItem(u8"°µ"))
+                if (ImGui::MenuItem(u8"æš—"))
                 {
                     ImGui::StyleColorsDark();
                     ImNodes::StyleColorsDark();
                 }
-                if (ImGui::MenuItem(u8"ÁÁ"))
+                if (ImGui::MenuItem(u8"äº®"))
                 {
                     ImGui::StyleColorsLight();
                     ImNodes::StyleColorsLight();
@@ -457,19 +457,19 @@ public:
         {
         //ImGui::Columns(2);
         //ImGui::TextUnformatted("A -- add node");
-            ImGui::TextUnformatted(u8"Delete -- É¾³ıÑ¡ÖĞµÄ²ã»òÁ¬½Ó");
+            ImGui::TextUnformatted(u8"Delete -- åˆ é™¤é€‰ä¸­çš„å±‚æˆ–è¿æ¥");
             //ImGui::NextColumn();
-            std::string str = u8"Ã»ÓĞ´ò¿ªµÄÎÄ¼ş";
+            std::string str = u8"æ²¡æœ‰æ‰“å¼€çš„æ–‡ä»¶";
             if (!current_file_.empty())
             {
-                str = fmt1::format(u8"µ±Ç°ÎÄ¼ş£º{}£¬", current_file_);
+                str = fmt1::format(u8"å½“å‰æ–‡ä»¶ï¼š{}ï¼Œ", current_file_);
                 if (saved_)
                 {
-                    str += u8"ÒÑ±£´æ";
+                    str += u8"å·²ä¿å­˜";
                 }
                 else
                 {
-                    str += u8"Î´±£´æ";
+                    str += u8"æœªä¿å­˜";
                 }
             }
             ImGui::TextUnformatted(str.c_str());
@@ -500,7 +500,7 @@ public:
             if (ImGui::BeginPopup("add node"))
             {
                 const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
-                if (ImGui::MenuItem(u8"ÊäÈë"))
+                if (ImGui::MenuItem(u8"è¾“å…¥"))
                 {
                     int count = 0;
                     for (auto& node : nodes_)
@@ -513,7 +513,7 @@ public:
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                     saved_ = false;
                 }
-                if (ImGui::MenuItem(u8"Êä³ö") && root_node_id_ == -1)
+                if (ImGui::MenuItem(u8"è¾“å‡º") && root_node_id_ == -1)
                 {
                     auto& ui_node = createUiNode();
                     ui_node.type = UiNodeType::output;
@@ -522,7 +522,7 @@ public:
                     root_node_id_ = ui_node.id;
                     saved_ = false;
                 }
-                if (ImGui::MenuItem(u8"È«Á¬½Ó"))
+                if (ImGui::MenuItem(u8"å…¨è¿æ¥"))
                 {
                     auto& ui_node = createUiNode();
                     ui_node.type = UiNodeType::fc;
@@ -530,7 +530,7 @@ public:
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                     saved_ = false;
                 }
-                if (ImGui::MenuItem(u8"¾í»ı"))
+                if (ImGui::MenuItem(u8"å·ç§¯"))
                 {
                     auto& ui_node = createUiNode();
                     ui_node.type = UiNodeType::conv;
@@ -538,7 +538,7 @@ public:
                     ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                     saved_ = false;
                 }
-                if (ImGui::MenuItem(u8"³Ø»¯"))
+                if (ImGui::MenuItem(u8"æ± åŒ–"))
                 {
                     auto& ui_node = createUiNode();
                     ui_node.type = UiNodeType::pool;
@@ -716,7 +716,7 @@ public:
 
         if (need_dialog_ == 1)
         {
-            //ImGui::OpenPopup(u8"ÍË³ö");
+            //ImGui::OpenPopup(u8"é€€å‡º");
             try_exit();
         }
 
