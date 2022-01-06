@@ -21,8 +21,8 @@
   <ItemGroup>
     <ClCompile Include="..\..\nb\convert.cpp" />
     <ClCompile Include="..\..\nb\File.cpp" />
-    <ClCompile Include="..\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\imgui\backends\imgui_impl_sdlrenderer.cpp" />
     <ClCompile Include="..\imgui\imgui.cpp" />
     <ClCompile Include="..\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\imgui\imgui_draw.cpp" />

@@ -68,7 +68,7 @@ private:
     INIReaderNormal ini_;
     std::string current_file_;
     bool saved_ = true;
-    int need_dialog_ = 0;
+    int need_dialog_ = 0;    //1: when exist, 2: save
     UiNode& createUiNode()
     {
         static int n = 0;

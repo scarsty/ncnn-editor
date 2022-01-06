@@ -14,12 +14,14 @@ add_executable(node-editor
     imgui/imgui_draw.cpp
     imgui/imgui_tables.cpp
     imgui/imgui_widgets.cpp
-    imgui/backends/imgui_impl_opengl3.cpp
+    imgui/backends/imgui_impl_sdlrenderer.cpp
     imgui/backends/imgui_impl_sdl.cpp
     imgui/misc/cpp/imgui_stdlib.cpp
     node-editor/color_node_editor.cpp
     node-editor/main.cpp
-    imnodes/imnodes.cpp)
-target_link_libraries(node-editor sdl2 sdl2main glfw)
+    imnodes/imnodes.cpp
+    ../nb/convert.cpp
+    ../nb/File.cpp)
+target_link_libraries(node-editor sdl2 sdl2main)
 
 install(TARGETS node-editor RUNTIME DESTINATION bin)
