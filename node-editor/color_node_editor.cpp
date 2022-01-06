@@ -131,7 +131,7 @@ private:
         }
 #else
         std::string filePathName;
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*", ".");
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".ini", ".");
 
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
         {

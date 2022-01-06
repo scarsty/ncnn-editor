@@ -64,6 +64,8 @@ int main(int, char**)
     auto& io = ImGui::GetIO();
 #ifdef _WIN32
     io.Fonts->AddFontFromFileTTF("c:/windows/fonts/msyh.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+#else
+    io.Fonts->AddFontFromFileTTF("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
 #endif
     bool done = false;
     bool initialized = false;
