@@ -24,7 +24,6 @@
     <ClCompile Include="..\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\imgui\backends\imgui_impl_sdl.cpp" />
-    <ClCompile Include="..\imgui\backends\imgui_impl_sdlrenderer.cpp" />
     <ClCompile Include="..\imgui\imgui.cpp" />
     <ClCompile Include="..\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\imgui\imgui_draw.cpp" />
@@ -32,8 +31,9 @@
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="..\imnodes\imnodes.cpp" />
-    <ClCompile Include="ccccloader.cpp" />
+    <ClCompile Include="ccccloader.h" />
     <ClCompile Include="color_node_editor.cpp" />
+    <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,13 +137,13 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;D:\project\开发库\imnodes\dependencies\imgui-1.84.21;D:\project\开发库\imnodes\dependencies\gl3w\include1;D:\project\nb;D:\project\开发库\imnodes\example;D:\project\kys-cpp\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;D:\project\nb;../imgui/backends;../imgui;../imgui/misc/cpp;../imnodes;../ImGuiFileDialog</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\project\microsoft\vcpkg\installed\x64-windows\lib\manual-link</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sdl2main.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sdl2main.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">

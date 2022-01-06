@@ -54,6 +54,7 @@ private:
         // stored in the structs.
         int id;
         std::string title, text;
+        std::vector<std::pair<std::string, std::string>> values;
         int text_id;
     };
     struct Link
@@ -160,19 +161,23 @@ private:
             auto pos = ImNodes::GetNodeGridSpacePos(nodes_[i].id);
             //需重设置属性
             //auto str = fmt1::format("[{}]\n{}\neditor_position={}, {}", nodes_[i].title, nodes_[i].text, pos.x, pos.y);
+            for (auto& kv : nodes_[i].values)
+            {
+                loader_->setLayerPro(nodes_[i].title, kv.first, kv.second);
+            }
             loader_->setLayerPro(nodes_[i].title, "editor_position", fmt1::format("{},{}", pos.x, pos.y));
             m1[nodes_[i].id] = nodes_[i].title;
             m1[nodes_[i].text_id] = nodes_[i].title;
         }
-        std::map<std::string, std::string> m2;
+        std::map<std::string, std::vector<std::string>> m2;
         for (const auto& link : links_)
         {
-            m2[m1[link.from]] += m1[link.to] + ", ";
+            m2[m1[link.from]].push_back(m1[link.to]);
         }
         for (auto& kv : m2)
         {
             //看起来没有处理多个连接
-            loader_->setNext(kv.first, { kv.second });
+            loader_->setLayerNext(kv.first, kv.second);
         }
     }
 
@@ -494,7 +499,7 @@ public:
             }
             break;
             }
-            const float node_width = 150;
+            const float node_width = 100;
             ImNodes::BeginNode(node.id);
 
             ImNodes::BeginNodeTitleBar();
@@ -504,10 +509,19 @@ public:
 
             ImNodes::BeginInputAttribute(node.text_id);
             //if (graph_.num_edges_from_node(node.text_id) == 0ull)
+
+            for (auto& kv : node.values)
             {
-                ImGui::PushItemWidth(node_width);
-                ImGui::InputTextMultiline("##hidelabel", &node.text, ImVec2(node_width, 50));
+                ImGui::TextUnformatted(kv.first.c_str());
+                ImGui::SameLine();
+                ImGui::PushItemWidth(50);
+                ImGui::InputText(("##"+kv.first).c_str(), &kv.second);
                 ImGui::PopItemWidth();
+            }
+            {
+                /*ImGui::PushItemWidth(node_width);
+                ImGui::InputTextMultiline("##hidelabel", &node.text, ImVec2(node_width, 50));
+                ImGui::PopItemWidth();*/
             }
             ImNodes::EndInputAttribute();
             ImGui::Spacing();
@@ -640,9 +654,9 @@ public:
                 nodes_.clear();
                 if (loader_)
                 {
-                    loader_->clear();                    
+                    loader_->clear();
                 }
-                loader_ = cccc_loader();
+                loader_ = create_loader(file);    //此处有内存泄漏,不管了
                 loader_->loadFile(file);
                 current_file_ = file;
                 ImVec2 pos;
@@ -656,36 +670,14 @@ public:
                 {
                     auto& ui_node = createUiNode();
                     ui_node.type = UiNodeType::fc;
-                    std::string type = loader_->getLayerPro(layer, "type");
-                    if (type.find("null") == 0)
-                    {
-                        ui_node.type = UiNodeType::input;
-                    }
-                    else if (type.find("out") == 0)
-                    {
-                        ui_node.type = UiNodeType::output;
-                        root_node_id_ = ui_node.id;
-                    }
-                    else if (type.find("fc") == 0)
-                    {
-                        ui_node.type = UiNodeType::pool;
-                    }
-                    else if (type.find("conv") == 0)
-                    {
-                        ui_node.type = UiNodeType::conv;
-                    }
-                    else if (type.find("pool") == 0)
-                    {
-                        ui_node.type = UiNodeType::pool;
-                    }
                     ui_node.title = layer;
-                    /*for (auto& key : ini_.getAllKeys(layer))
+                    for (auto& key : loader_->getLayerAllPro(layer))
                     {
-                        if (key != "next" && key != "editor_position" && key != "type")
+                        if (key != "next" && key != "editor_position")
                         {
-                            ui_node.text += key + "=" + ini_.getString(layer, key) + "\n";
+                            ui_node.values.push_back({ key, loader_->getLayerPro(layer, key) });
                         }
-                    }*/
+                    }
                     if (!ui_node.text.empty())
                     {
                         ui_node.text.pop_back();
@@ -705,7 +697,7 @@ public:
                 links_.clear();
                 for (auto& layer : loader_->getAllLayers())
                 {
-                    auto nexts = loader_->getNext(layer);
+                    auto nexts = loader_->getLayerNext(layer);
                     for (auto sec1 : nexts)
                     {
                         if (check_can_link(dd[layer].id, dd[sec1].text_id))
@@ -716,6 +708,43 @@ public:
                 }
             }
             saved_ = true;
+        }
+
+
+        {
+            for (auto& ui_node : nodes_)
+            {
+                std::string type;
+                for (auto& v : ui_node.values)
+                {
+                    if (v.first == "type")
+                    {
+                        type = v.second;
+                        break;
+                    }
+                }
+                if (type.find("null") == 0)
+                {
+                    ui_node.type = UiNodeType::input;
+                }
+                else if (type.find("out") == 0)
+                {
+                    ui_node.type = UiNodeType::output;
+                    root_node_id_ = ui_node.id;
+                }
+                else if (type.find("fc") == 0)
+                {
+                    ui_node.type = UiNodeType::fc;
+                }
+                else if (type.find("conv") == 0)
+                {
+                    ui_node.type = UiNodeType::conv;
+                }
+                else if (type.find("pool") == 0)
+                {
+                    ui_node.type = UiNodeType::pool;
+                }
+            }
         }
 
         ImGui::End();

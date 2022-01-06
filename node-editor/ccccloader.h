@@ -1,3 +1,4 @@
+#pragma once
 #include "loader.h"
 #include "INIReader.h"
 #include "convert.h"
@@ -40,20 +41,29 @@ public:
     {
         return ini_.getString(layer, pro);
     }
-    virtual void setNext(const std::string& layer, const std::vector<std::string>& nexts) override {}
-    virtual std::vector<std::string> getNext(const std::string& layer) override
+    virtual std::vector<std::string> getLayerAllPro(const std::string& layer) override
+    {
+        return ini_.getAllKeys(layer);
+    }
+    virtual void setLayerNext(const std::string& layer, const std::vector<std::string>& nexts) override
+    {
+        std::string str;
+        for (auto& l : nexts)
+        {
+            str += l + ",";
+        }
+        if (!str.empty())
+        {
+            str.pop_back();
+        }
+        ini_.setKey(layer, "next", str);
+    }
+    virtual std::vector<std::string> getLayerNext(const std::string& layer) override
     {
         return convert::splitString(getLayerPro(layer, "next"));
     }
     virtual void clear() override
     {
-        //for (auto& section : ini_.getAllSections())
-        //{
-        //    if (section.find("layer_") == 0)
-        //    {
-        //        ini_.eraseSection(section);
-        //    }
-        //}
         ini_ = INIReaderNormal();
     }
     virtual void eraseLayer(const std::string& layer) override
@@ -73,7 +83,3 @@ public:
 
 };
 
-NodeLoader* cccc_loader()
-{
-    return new ccccLoader();
-}
