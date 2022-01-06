@@ -6,3 +6,7 @@
 	path = imnodes
 	url = https://github.com/Nelarius/imnodes
 	branch = master
+[submodule "ImGuiFileDialog"]
+	path = ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog
+	branch = Lib_Only

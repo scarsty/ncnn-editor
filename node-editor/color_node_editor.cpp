@@ -2,6 +2,7 @@
 
 #include <imnodes.h>
 #include <imgui.h>
+#include <ImGuiFileDialog.h>
 
 #include <SDL.h>
 #include <SDL_keycode.h>
@@ -68,7 +69,7 @@ private:
     INIReaderNormal ini_;
     std::string current_file_;
     bool saved_ = true;
-    int need_dialog_ = 0;    //1: when exist, 2: save
+    int need_dialog_ = 0;    //1: when exist, 2: openfile to open
     UiNode& createUiNode()
     {
         static int n = 0;
@@ -127,8 +128,26 @@ private:
         {
             return "";
         }
+#else
+        std::string filePathName;
+        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".*", ".");
+
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+        {
+          // action if OK
+            if (ImGuiFileDialog::Instance()->IsOk())
+            {
+                filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+                // action
+            }
+
+            // close
+            ImGuiFileDialog::Instance()->Close();
+            need_dialog_ = 0;
+        }
+        return filePathName;
 #endif
-        return "";
     }
     void refresh_ini()
     {
@@ -281,103 +300,8 @@ public:
             {
                 if (ImGui::MenuItem(u8"打开..."))
                 {
-                    auto file = openfile();
-                    if (!file.empty())
-                    {
-                        nodes_.clear();
-                        ini_ = INIReaderNormal();
-                        ini_.loadFile(file);
-                        current_file_ = file;
-                        ImVec2 pos;
-                        pos.x = 100, pos.y = 200;
-                        std::string prefix = "layer_";
-                        std::map<std::string, UiNode> dd;
-                        //ImNodes::BeginNodeEditor();
-                        // restore mod
-                        auto sections = ini_.getAllSections();
-                        std::sort(sections.begin(), sections.end(), [this](const std::string& l, const std::string& r)
-                        {
-                            return ini_.getSectionNo(l) < ini_.getSectionNo(r);
-                        });
-                        for (auto& section : sections)
-                        {
-                            size_t size = prefix.size();
-                            if (section.find(prefix) == 0)
-                            {
-                                auto& ui_node = createUiNode();
-                                ui_node.type = UiNodeType::fc;
-                                std::string name = section.substr(size);
-                                std::string type = ini_.getString(section, "type");
-                                if (type.find("null") == 0)
-                                {
-                                    ui_node.type = UiNodeType::input;
-                                }
-                                else if (type.find("out") == 0)
-                                {
-                                    ui_node.type = UiNodeType::output;
-                                    root_node_id_ = ui_node.id;
-                                }
-                                else if (type.find("fc") == 0)
-                                {
-                                    ui_node.type = UiNodeType::pool;
-                                }
-                                else if (type.find("conv") == 0)
-                                {
-                                    ui_node.type = UiNodeType::conv;
-                                }
-                                else if (type.find("pool") == 0)
-                                {
-                                    ui_node.type = UiNodeType::pool;
-                                }
-                                ui_node.title = section;
-                                for (auto& key : ini_.getAllKeys(section))
-                                {
-                                    if (key != "next" && key != "editor_position" && key != "type")
-                                    {
-                                        ui_node.text += key + "=" + ini_.getString(section, key) + "\n";
-                                    }
-                                }
-                                if (!ui_node.text.empty())
-                                {
-                                    ui_node.text.pop_back();
-                                }
-                                if (ini_.hasKey(section, "editor_position"))
-                                {
-                                    std::vector<int> v = convert::findNumbers<int>(ini_.getString(section, "editor_position"));
-                                    if (v.size() >= 2)
-                                    {
-                                        pos.x = v[0];
-                                        pos.y = v[1];
-                                    }
-                                }
-                                ImNodes::SetNodeGridSpacePos(ui_node.id, pos);
-                                pos.x += 200;
-                                pos.y += 20;
-                                dd[section] = ui_node;
-                            }
-                        }
-                        // restore link
-                        links_.clear();
-                        for (auto& section : ini_.getAllSections())
-                        {
-                            size_t size = prefix.size();
-                            if (section.find(prefix) == 0)
-                            {
-                                if (ini_.hasKey(section, "next"))
-                                {
-                                    auto nexts = convert::splitString(ini_.getString(section, "next"), ",");
-                                    for (auto sec1 : nexts)
-                                    {
-                                        if (check_can_link(dd[section].id, dd[sec1].text_id))
-                                        {
-                                            links_.emplace_back(dd[section].id, dd[sec1].text_id);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    saved_ = true;
+                    need_dialog_ = 2;
+                    
                 }
                 if (ImGui::MenuItem(u8"保存"))
                 {
@@ -718,6 +642,106 @@ public:
         {
             //ImGui::OpenPopup(u8"退出");
             try_exit();
+        }
+        if (need_dialog_ == 2)
+        {
+            auto file = openfile();
+            if (!file.empty())
+            {
+                nodes_.clear();
+                ini_ = INIReaderNormal();
+                ini_.loadFile(file);
+                current_file_ = file;
+                ImVec2 pos;
+                pos.x = 100, pos.y = 200;
+                std::string prefix = "layer_";
+                std::map<std::string, UiNode> dd;
+                //ImNodes::BeginNodeEditor();
+                // restore mod
+                auto sections = ini_.getAllSections();
+                std::sort(sections.begin(), sections.end(), [this](const std::string& l, const std::string& r)
+                {
+                    return ini_.getSectionNo(l) < ini_.getSectionNo(r);
+                });
+                for (auto& section : sections)
+                {
+                    size_t size = prefix.size();
+                    if (section.find(prefix) == 0)
+                    {
+                        auto& ui_node = createUiNode();
+                        ui_node.type = UiNodeType::fc;
+                        std::string name = section.substr(size);
+                        std::string type = ini_.getString(section, "type");
+                        if (type.find("null") == 0)
+                        {
+                            ui_node.type = UiNodeType::input;
+                        }
+                        else if (type.find("out") == 0)
+                        {
+                            ui_node.type = UiNodeType::output;
+                            root_node_id_ = ui_node.id;
+                        }
+                        else if (type.find("fc") == 0)
+                        {
+                            ui_node.type = UiNodeType::pool;
+                        }
+                        else if (type.find("conv") == 0)
+                        {
+                            ui_node.type = UiNodeType::conv;
+                        }
+                        else if (type.find("pool") == 0)
+                        {
+                            ui_node.type = UiNodeType::pool;
+                        }
+                        ui_node.title = section;
+                        for (auto& key : ini_.getAllKeys(section))
+                        {
+                            if (key != "next" && key != "editor_position" && key != "type")
+                            {
+                                ui_node.text += key + "=" + ini_.getString(section, key) + "\n";
+                            }
+                        }
+                        if (!ui_node.text.empty())
+                        {
+                            ui_node.text.pop_back();
+                        }
+                        if (ini_.hasKey(section, "editor_position"))
+                        {
+                            std::vector<int> v = convert::findNumbers<int>(ini_.getString(section, "editor_position"));
+                            if (v.size() >= 2)
+                            {
+                                pos.x = v[0];
+                                pos.y = v[1];
+                            }
+                        }
+                        ImNodes::SetNodeGridSpacePos(ui_node.id, pos);
+                        pos.x += 200;
+                        pos.y += 20;
+                        dd[section] = ui_node;
+                    }
+                }
+                // restore link
+                links_.clear();
+                for (auto& section : ini_.getAllSections())
+                {
+                    size_t size = prefix.size();
+                    if (section.find(prefix) == 0)
+                    {
+                        if (ini_.hasKey(section, "next"))
+                        {
+                            auto nexts = convert::splitString(ini_.getString(section, "next"), ",");
+                            for (auto sec1 : nexts)
+                            {
+                                if (check_can_link(dd[section].id, dd[sec1].text_id))
+                                {
+                                    links_.emplace_back(dd[section].id, dd[sec1].text_id);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            saved_ = true;
         }
 
         ImGui::End();
