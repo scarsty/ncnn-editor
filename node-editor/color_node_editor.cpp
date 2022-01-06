@@ -106,6 +106,7 @@ private:
     std::string openfile()
     {
 #ifdef _WIN32
+        need_dialog_ = 0;
         OPENFILENAMEA ofn;
         char szFile[1024];
         ZeroMemory(&ofn, sizeof(ofn));
