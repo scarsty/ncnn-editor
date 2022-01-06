@@ -62,8 +62,9 @@ int main(int, char**)
     ImNodes::StyleColorsDark();
 
     auto& io = ImGui::GetIO();
+#ifdef _WIN32
     io.Fonts->AddFontFromFileTTF("c:/windows/fonts/msyh.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
-
+#endif
     bool done = false;
     bool initialized = false;
 
