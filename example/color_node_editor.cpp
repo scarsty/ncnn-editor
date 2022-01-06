@@ -1,5 +1,4 @@
 #include "node_editor.h"
-#include "graph.h"
 
 #include <imnodes.h>
 #include <imgui.h>
@@ -13,16 +12,17 @@
 #include <cmath>
 #include <vector>
 #include <string>
-
-#include <windows.h>
-#include <commdlg.h>
 #include <imgui_stdlib.h>
 
 #include "INIReader.h"
 #include "fmt1.h"
 #include "convert.h"
 #include "File.h"
-//#include "PotConv.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <commdlg.h>
+#endif
 
 namespace example
 {
@@ -103,6 +103,7 @@ private:
     }
     std::string openfile()
     {
+#ifdef _WIN32
         OPENFILENAMEA ofn;
         char szFile[1024];
         ZeroMemory(&ofn, sizeof(ofn));
@@ -125,6 +126,8 @@ private:
         {
             return "";
         }
+#endif
+        return "";
     }
     void refresh_ini()
     {
