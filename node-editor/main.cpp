@@ -5,7 +5,7 @@
 #include <imnodes.h>
 #include <stdio.h>
 #include <SDL.h>
-#include <GL/gl3w.h>
+#include <SDL_opengl.h>
 
 int main(int, char**)
 {
@@ -48,12 +48,6 @@ int main(int, char**)
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
-
-    if (gl3wInit())
-    {
-        fprintf(stderr, "Failed to initialize OpenGL loader!\n");
-        return 1;
-    }
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();

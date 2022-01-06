@@ -68,6 +68,7 @@ private:
     INIReaderNormal ini_;
     std::string current_file_;
     bool saved_ = true;
+    int need_dialog_ = 0;
     UiNode& createUiNode()
     {
         static int n = 0;
@@ -181,26 +182,16 @@ private:
             {
                 res = true;
                 auto str = fmt1::format(u8"有{}个\"{}\"!", kv.second, kv.first);
-                const SDL_MessageBoxButtonData buttons[] =
+                ImGui::OpenPopup(u8"提示");
+                if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
-                    //{ /* .flags, .buttonid, .text */ 0, 0, "no" },
-                    { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, u8"知道了" },
-                    //{ SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 2, "cancel" },
-                };
-                const SDL_MessageBoxColorScheme colorScheme =
-                { { { 255, 0, 0 }, { 0, 255, 0 }, { 255, 255, 0 }, { 0, 0, 255 }, { 255, 0, 255 } } };
-                const SDL_MessageBoxData messageboxdata =
-                {
-                    SDL_MESSAGEBOX_ERROR, /* .flags */
-                    NULL,                       /* .window */
-                    u8"错误",               /* .title */
-                    str.c_str(),            /* .message */
-                    SDL_arraysize(buttons),     /* .numbuttons */
-                    buttons,                    /* .buttons */
-                    &colorScheme                /* .colorScheme */
-                };
-                int buttonid;
-                SDL_ShowMessageBox(&messageboxdata, &buttonid);
+                    ImGui::Text(str.c_str());
+                    if (ImGui::Button(u8"知道了"))
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
             }
         }
         return res;
@@ -237,44 +228,31 @@ private:
         {
             exit(0);
         }
-        //ImGui::OpenPopup("popup");
-        //if (ImGui::BeginPopupModal("popup", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-        //{
-        //    ImGui::Text("Hello dsjfhds fhjs hfj dshfj hds");
-        //    if (ImGui::Button("Close"))
-        //        ImGui::CloseCurrentPopup();
-        //    ImGui::EndPopup();
-        //}
-
-
-        const SDL_MessageBoxButtonData buttons[] =
+        ImGui::OpenPopup(u8"退出");
+        if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            { SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT, 3, u8"取消" },
-            { 0, 2, u8"否" },
-            { SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, 1, u8"是" },
-        };
-        const SDL_MessageBoxColorScheme colorScheme =
-        { { { 255, 0, 0 }, { 0, 255, 0 }, { 255, 255, 0 }, { 0, 0, 255 }, { 255, 0, 255 } } };
-        const SDL_MessageBoxData messageboxdata =
-        {
-            SDL_MESSAGEBOX_INFORMATION, /* .flags */
-            NULL,                       /* .window */
-            u8"提示",               /* .title */
-            u8"是否保存？",            /* .message */
-            SDL_arraysize(buttons),     /* .numbuttons */
-            buttons,                    /* .buttons */
-            &colorScheme                /* .colorScheme */
-        };
-        int buttonid =3;
-        SDL_ShowMessageBox(&messageboxdata, &buttonid);
-        if (buttonid == 1)
-        {
-            try_save();
-            exit(0);
-        }
-        else if (buttonid == 2)
-        {
-            exit(0);
+            ImGui::Text(u8"是否保存？");
+            if (ImGui::Button(u8"是"))
+            {
+                ImGui::CloseCurrentPopup();
+                try_save();
+                exit(0);
+                need_dialog_ = 0;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(u8"否"))
+            {
+                ImGui::CloseCurrentPopup();
+                exit(0);
+                need_dialog_ = 0;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(u8"取消"))
+            {
+                ImGui::CloseCurrentPopup();
+                need_dialog_ = 0;
+            }
+            ImGui::EndPopup();
         }
     }
 
@@ -297,7 +275,6 @@ public:
         ImGui::Begin(window_title.c_str(), NULL, flags);
 
         //if (ImGui::)   //close window
-
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu(u8"文件"))
@@ -423,7 +400,10 @@ public:
                 }
                 if (ImGui::MenuItem(u8"退出"))
                 {
-                    try_exit();
+                    //try_exit();
+                    need_dialog_ = 1;
+                    //ImGui::OpenPopup(u8"退出");
+                    //
                 }
                 ImGui::EndMenu();
             }
@@ -494,6 +474,7 @@ public:
             }
             ImGui::TextUnformatted(str.c_str());
         }
+
         //if (ImGui::Checkbox("emulate_three_button_mouse", &emulate_three_button_mouse))
         //{
         //    ImNodes::GetIO().EmulateThreeButtonMouse.Modifier =
@@ -727,13 +708,19 @@ public:
             try_save(true);
         }
 
-        ImGui::End();
-
         if (event.type == SDL_QUIT
             || event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
         {
+            need_dialog_ = 1;
+        }
+
+        if (need_dialog_ == 1)
+        {
+            //ImGui::OpenPopup(u8"退出");
             try_exit();
         }
+
+        ImGui::End();
     }
 };
 
