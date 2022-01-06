@@ -18,7 +18,7 @@ add_executable(node-editor
     imgui/backends/imgui_impl_sdl.cpp
     imgui/misc/cpp/imgui_stdlib.cpp
     node-editor/color_node_editor.cpp
-    node-editot/main.cpp
+    node-editor/main.cpp
     imnodes/imnodes.cpp)
 target_link_libraries(node-editor sdl2 sdl2main glfw)
 
