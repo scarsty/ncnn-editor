@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_VERBOSE_MAKEFILE on)
 set(CMAKE_CXX_COMPILER $ENV{CXX})
-set(CMAKE_CXX_FLAGS "-O3 -std=c++17 -pthread -fopenmp -DNDEBUG")
+set(CMAKE_CXX_FLAGS "-O3 -std=c++17 -DNDEBUG")
 
 include_directories(/usr/local/include . ./imgui ./example ./imgui/backends ./imgui/misc/cpp ./imnodes)
 link_directories(/usr/local/lib)

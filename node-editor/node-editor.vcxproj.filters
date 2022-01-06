@@ -57,5 +57,8 @@
     <ClCompile Include="..\imgui\backends\imgui_impl_sdlrenderer.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="..\imgui\backends\imgui_impl_opengl3.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
