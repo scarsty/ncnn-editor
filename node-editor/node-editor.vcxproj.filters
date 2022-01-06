@@ -63,5 +63,13 @@
     <ClCompile Include="..\ImGuiFileDialog\ImGuiFileDialog.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
+    <ClCompile Include="ccccloader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="loader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

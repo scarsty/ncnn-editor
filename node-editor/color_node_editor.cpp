@@ -15,10 +15,11 @@
 #include <string>
 #include <imgui_stdlib.h>
 
-#include "INIReader.h"
 #include "fmt1.h"
 #include "convert.h"
 #include "File.h"
+
+#include "loader.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -61,12 +62,11 @@ private:
         Link(int f, int t) { from = f; to = t; }
     };
 
-    //Graph<Node> graph_;
+    NodeLoader* loader_ = nullptr;
     std::vector<UiNode> nodes_;
     std::vector<Link> links_;
     int root_node_id_;
     ImNodesMiniMapLocation minimap_location_;
-    INIReaderNormal ini_;
     std::string current_file_;
     bool saved_ = true;
     int need_dialog_ = 0;    //1: when exist, 2: openfile to open
@@ -150,29 +150,19 @@ private:
         return filePathName;
 #endif
     }
-    void refresh_ini()
+    void refresh_loader()
     {
         if (check_same_name()) { return; }
-        auto ini0 = ini_;
-        for (auto& section : ini_.getAllSections())
-        {
-            if (section.find("layer_") == 0)
-            {
-                ini_.eraseSection(section);
-            }
-        }
+        loader_->eraseAllLayers();
         std::map<int, std::string> m1;
         for (int i = 0; i < nodes_.size(); i++)
         {
             auto pos = ImNodes::GetNodeGridSpacePos(nodes_[i].id);
-            auto str = fmt1::format("[{}]\n{}\neditor_position={}, {}", nodes_[i].title, nodes_[i].text, pos.x, pos.y);
-            ini_.loadString(str, false);
-            INIReaderNormal ini1;
-            ini1.loadString(str, false);
-            m1[nodes_[i].id] = ini1.getAllSections()[0];
-            m1[nodes_[i].text_id] = ini1.getAllSections()[0];
-            auto section = nodes_[i].title;
-            ini_.setKey(section, "type", ini0.getString(section, "type"));
+            //需重设置属性
+            //auto str = fmt1::format("[{}]\n{}\neditor_position={}, {}", nodes_[i].title, nodes_[i].text, pos.x, pos.y);
+            loader_->setLayerPro(nodes_[i].title, "editor_position", fmt1::format("{},{}", pos.x, pos.y));
+            m1[nodes_[i].id] = nodes_[i].title;
+            m1[nodes_[i].text_id] = nodes_[i].title;
         }
         std::map<std::string, std::string> m2;
         for (const auto& link : links_)
@@ -181,10 +171,8 @@ private:
         }
         for (auto& kv : m2)
         {
-            auto str = fmt1::format("[{}]\nnext={}", kv.first, kv.second);
-            str.pop_back();
-            str.pop_back();
-            ini_.loadString(str, false);
+            //看起来没有处理多个连接
+            loader_->setNext(kv.first, { kv.second });
         }
     }
 
@@ -220,7 +208,7 @@ private:
     {
         if (saved_ == false || force)
         {
-            refresh_ini();
+            refresh_loader();
             if (current_file_.empty())
             {
                 auto file = openfile();
@@ -231,13 +219,13 @@ private:
                         file = File::changeFileExt(file, "ini");
                     }
                     current_file_ = file;
-                    ini_.saveFile(current_file_);
+                    loader_->saveFile(current_file_);
                     saved_ = true;
                 }
             }
             else
             {
-                ini_.saveFile(current_file_);
+                loader_->saveFile(current_file_);
                 saved_ = true;
             }
         }
@@ -302,7 +290,7 @@ public:
                 if (ImGui::MenuItem(u8"打开..."))
                 {
                     need_dialog_ = 2;
-                    
+
                 }
                 if (ImGui::MenuItem(u8"保存"))
                 {
@@ -310,7 +298,7 @@ public:
                 }
                 if (ImGui::MenuItem(u8"另存为..."))
                 {
-                    refresh_ini();
+                    refresh_loader();
                     auto file = openfile();
                     if (!file.empty())
                     {
@@ -319,7 +307,7 @@ public:
                             file = File::changeFileExt(file, "ini");
                         }
                         current_file_ = file;
-                        ini_.saveFile(current_file_);
+                        loader_->saveFile(current_file_);
                         saved_ = true;
                     }
                 }
@@ -650,94 +638,79 @@ public:
             if (!file.empty())
             {
                 nodes_.clear();
-                ini_ = INIReaderNormal();
-                ini_.loadFile(file);
+                if (loader_)
+                {
+                    loader_->clear();                    
+                }
+                loader_ = cccc_loader();
+                loader_->loadFile(file);
                 current_file_ = file;
                 ImVec2 pos;
                 pos.x = 100, pos.y = 200;
-                std::string prefix = "layer_";
+
                 std::map<std::string, UiNode> dd;
                 //ImNodes::BeginNodeEditor();
                 // restore mod
-                auto sections = ini_.getAllSections();
-                std::sort(sections.begin(), sections.end(), [this](const std::string& l, const std::string& r)
+                auto layers = loader_->getAllLayers();
+                for (auto& layer : layers)
                 {
-                    return ini_.getSectionNo(l) < ini_.getSectionNo(r);
-                });
-                for (auto& section : sections)
-                {
-                    size_t size = prefix.size();
-                    if (section.find(prefix) == 0)
+                    auto& ui_node = createUiNode();
+                    ui_node.type = UiNodeType::fc;
+                    std::string type = loader_->getLayerPro(layer, "type");
+                    if (type.find("null") == 0)
                     {
-                        auto& ui_node = createUiNode();
-                        ui_node.type = UiNodeType::fc;
-                        std::string name = section.substr(size);
-                        std::string type = ini_.getString(section, "type");
-                        if (type.find("null") == 0)
-                        {
-                            ui_node.type = UiNodeType::input;
-                        }
-                        else if (type.find("out") == 0)
-                        {
-                            ui_node.type = UiNodeType::output;
-                            root_node_id_ = ui_node.id;
-                        }
-                        else if (type.find("fc") == 0)
-                        {
-                            ui_node.type = UiNodeType::pool;
-                        }
-                        else if (type.find("conv") == 0)
-                        {
-                            ui_node.type = UiNodeType::conv;
-                        }
-                        else if (type.find("pool") == 0)
-                        {
-                            ui_node.type = UiNodeType::pool;
-                        }
-                        ui_node.title = section;
-                        for (auto& key : ini_.getAllKeys(section))
-                        {
-                            if (key != "next" && key != "editor_position" && key != "type")
-                            {
-                                ui_node.text += key + "=" + ini_.getString(section, key) + "\n";
-                            }
-                        }
-                        if (!ui_node.text.empty())
-                        {
-                            ui_node.text.pop_back();
-                        }
-                        if (ini_.hasKey(section, "editor_position"))
-                        {
-                            std::vector<int> v = convert::findNumbers<int>(ini_.getString(section, "editor_position"));
-                            if (v.size() >= 2)
-                            {
-                                pos.x = v[0];
-                                pos.y = v[1];
-                            }
-                        }
-                        ImNodes::SetNodeGridSpacePos(ui_node.id, pos);
-                        pos.x += 200;
-                        pos.y += 20;
-                        dd[section] = ui_node;
+                        ui_node.type = UiNodeType::input;
                     }
+                    else if (type.find("out") == 0)
+                    {
+                        ui_node.type = UiNodeType::output;
+                        root_node_id_ = ui_node.id;
+                    }
+                    else if (type.find("fc") == 0)
+                    {
+                        ui_node.type = UiNodeType::pool;
+                    }
+                    else if (type.find("conv") == 0)
+                    {
+                        ui_node.type = UiNodeType::conv;
+                    }
+                    else if (type.find("pool") == 0)
+                    {
+                        ui_node.type = UiNodeType::pool;
+                    }
+                    ui_node.title = layer;
+                    /*for (auto& key : ini_.getAllKeys(layer))
+                    {
+                        if (key != "next" && key != "editor_position" && key != "type")
+                        {
+                            ui_node.text += key + "=" + ini_.getString(layer, key) + "\n";
+                        }
+                    }*/
+                    if (!ui_node.text.empty())
+                    {
+                        ui_node.text.pop_back();
+                    }
+                    std::vector<int> v = convert::findNumbers<int>(loader_->getLayerPro(layer, "editor_position"));
+                    if (v.size() >= 2)
+                    {
+                        pos.x = v[0];
+                        pos.y = v[1];
+                    }
+                    ImNodes::SetNodeGridSpacePos(ui_node.id, pos);
+                    pos.x += 200;
+                    pos.y += 20;
+                    dd[layer] = ui_node;
                 }
                 // restore link
                 links_.clear();
-                for (auto& section : ini_.getAllSections())
+                for (auto& layer : loader_->getAllLayers())
                 {
-                    size_t size = prefix.size();
-                    if (section.find(prefix) == 0)
+                    auto nexts = loader_->getNext(layer);
+                    for (auto sec1 : nexts)
                     {
-                        if (ini_.hasKey(section, "next"))
+                        if (check_can_link(dd[layer].id, dd[sec1].text_id))
                         {
-                            auto nexts = convert::splitString(ini_.getString(section, "next"), ",");
-                            for (auto sec1 : nexts)
-                            {
-                                if (check_can_link(dd[section].id, dd[sec1].text_id))
-                                {
-                                    links_.emplace_back(dd[section].id, dd[sec1].text_id);
-                                }
-                            }
+                            links_.emplace_back(dd[layer].id, dd[sec1].text_id);
                         }
                     }
                 }
