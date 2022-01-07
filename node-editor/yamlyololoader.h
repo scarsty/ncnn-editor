@@ -1,19 +1,31 @@
 #pragma once
 #include "loader.h"
-#include "INIReader.h"
-#include "convert.h"
+#include "yaml-cpp/yaml.h"
+#include <fstream>
 
-class ccccLoader : public NodeLoader
+
+class yamlyoloLoader : public NodeLoader
 {
-    INIReaderNormal config_;
+    class Layer
+    {
+        int no_ = 0;
+        int repeat_ = 1;
+        std::vector<int> from_;
+        std::string module_;
+        std::vector<int> parameters_;
+    };
+
+    YAML::Node config_;
+
 public:
     virtual void loadFile(const std::string& filename) override
     {
-        config_.loadFile(filename);
+        config_ = YAML::LoadFile(filename);
     }
     virtual void saveFile(const std::string& filename) override
     {
-        config_.saveFile(filename);
+        std::ofstream fout(filename);
+        fout << config_;
     }
     virtual std::vector<std::string> getAllLayers() override
     {

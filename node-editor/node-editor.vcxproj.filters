@@ -71,5 +71,8 @@
     <ClInclude Include="loader.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="yamlyololoader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
