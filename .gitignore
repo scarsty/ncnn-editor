@@ -1,6 +1,4 @@
-imnode/.vs/
-imnode/imnode/x64/
-imnode/x64/
 .vs/
 node-editor/x64/
 x64/
+node-editor/imgui.ini
