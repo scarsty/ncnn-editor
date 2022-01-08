@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\nb\convert.cpp" />
     <ClCompile Include="..\..\nb\File.cpp" />
-    <ClCompile Include="..\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\imgui\backends\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\imgui\backends\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\imgui\imgui.cpp" />
@@ -31,13 +30,17 @@
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="..\imnodes\imnodes.cpp" />
+    <ClCompile Include="ccccloader.cpp" />
     <ClCompile Include="ccccloader.h" />
     <ClCompile Include="color_node_editor.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ncnnloader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loader.h" />
+    <ClInclude Include="ncnnloader.h" />
+    <ClInclude Include="node.h" />
     <ClInclude Include="yamlyololoader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

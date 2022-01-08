@@ -57,14 +57,17 @@
     <ClCompile Include="..\imgui\backends\imgui_impl_opengl3.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\ImGuiFileDialog\ImGuiFileDialog.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
     <ClCompile Include="loader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ccccloader.h">
       <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ccccloader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ncnnloader.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -72,6 +75,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="yamlyololoader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ncnnloader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="node.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

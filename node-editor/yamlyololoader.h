@@ -18,6 +18,7 @@ class yamlyoloLoader : public NodeLoader
     YAML::Node config_;
 
 public:
+    /*
     virtual void loadFile(const std::string& filename) override
     {
         config_ = YAML::LoadFile(filename);
@@ -91,7 +92,6 @@ public:
                 config_.eraseSection(section);
             }
         }
-    }
-
+    }*/
 };
 

@@ -1,9 +1,7 @@
 #pragma once
 #include "loader.h"
-#include "INIReader.h"
-#include "convert.h"
 
-class ccccLoader : public NodeLoader
+class ncnnLoader : public NodeLoader
 {
 public:
     virtual void fileToNodes(const std::string& filename, std::vector<Node>& nodes) override;
