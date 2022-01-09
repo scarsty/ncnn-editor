@@ -10,4 +10,5 @@
 
 本工程只给出了一个简单神经网络格式的编辑和修改，如需更多格式支持可能要自己添加。
 
-<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/lenet.png' />
+<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/lenet.png'/>
+<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/ncnn.png'/>
