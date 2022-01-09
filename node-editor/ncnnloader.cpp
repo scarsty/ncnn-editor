@@ -161,7 +161,7 @@ void ncnnLoader::nodesToFile(const std::vector<Node>& nodes, const std::string& 
     for (auto& n : nodes_turn)
     {
         blob_count += n->nexts.size();
-        auto l = fmt1::format("{} {} {} {} ", n->type, n->title, n->prevs.size(), n->nexts.size());
+        auto l = fmt1::format("{:-16} {:-16} {} {} ", n->type, n->title, n->prevs.size(), n->nexts.size());
         for (auto& n1 : n->prevs)
         {
             if (n1->nexts.size() == 1)
