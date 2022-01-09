@@ -1,6 +1,6 @@
 ## node-editor
 
-基于imnodes<https://github.com/Nelarius/imnodes>的流程图编辑工具。
+基于 [imnodes](https://github.com/Nelarius/imnodes) 的流程图编辑工具。
 
 经修改后，可以用于神经网络，或者某些特殊流程图的编辑。
 
