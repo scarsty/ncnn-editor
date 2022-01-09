@@ -42,9 +42,6 @@
     <ClCompile Include="..\imgui\backends\imgui_impl_sdl.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\imnodes\imnodes.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
     <ClCompile Include="..\imgui\misc\cpp\imgui_stdlib.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
@@ -65,6 +62,9 @@
     </ClCompile>
     <ClCompile Include="ccccloader.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\modify\imnodes.cpp">
+      <Filter>imgui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

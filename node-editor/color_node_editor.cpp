@@ -680,7 +680,7 @@ public:
 static ColorNodeEditor color_editor;
 } // namespace
 
-void NodeEditorInitialize()
+void NodeEditorInitialize(int argc, char* argv[])
 {
     ImGui::StyleColorsLight();
     ImNodes::StyleColorsLight();

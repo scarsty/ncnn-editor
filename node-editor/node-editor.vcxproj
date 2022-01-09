@@ -29,7 +29,7 @@
     <ClCompile Include="..\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\imgui\misc\cpp\imgui_stdlib.cpp" />
-    <ClCompile Include="..\imnodes\imnodes.cpp" />
+    <ClCompile Include="..\modify\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
     <ClCompile Include="color_node_editor.cpp" />
     <ClCompile Include="loader.cpp" />

@@ -2,7 +2,7 @@
 
 namespace example
 {
-void NodeEditorInitialize();
+void NodeEditorInitialize(int, char**);
 void NodeEditorShow();
 void NodeEditorShutdown();
 void NodeEditorSetEvent(void*);

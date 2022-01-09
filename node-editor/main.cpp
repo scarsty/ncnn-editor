@@ -7,7 +7,7 @@
 #include <SDL.h>
 #include <SDL_opengl.h>
 
-int main(int, char**)
+int main(int argc, char* argv[])
 {
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
     {
@@ -96,7 +96,7 @@ int main(int, char**)
         if (!initialized)
         {
             initialized = true;
-            example::NodeEditorInitialize();
+            example::NodeEditorInitialize(argc, argv);
         }
 
         example::NodeEditorSetEvent(&event);
