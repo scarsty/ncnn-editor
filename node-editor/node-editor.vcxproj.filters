@@ -60,13 +60,10 @@
     <ClCompile Include="loader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ccccloader.h">
-      <Filter>头文件</Filter>
-    </ClCompile>
-    <ClCompile Include="ccccloader.cpp">
+    <ClCompile Include="ncnnloader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ncnnloader.cpp">
+    <ClCompile Include="ccccloader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -81,6 +78,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="node.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ccccloader.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

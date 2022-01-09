@@ -31,13 +31,13 @@
     <ClCompile Include="..\imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="..\imnodes\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
-    <ClCompile Include="ccccloader.h" />
     <ClCompile Include="color_node_editor.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ccccloader.h" />
     <ClInclude Include="loader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
@@ -140,7 +140,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;D:\project\nb;../imgui/backends;../imgui;../imgui/misc/cpp;../imnodes;../ImGuiFileDialog</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>

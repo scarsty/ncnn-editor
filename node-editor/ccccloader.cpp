@@ -1,4 +1,6 @@
 #include "ccccloader.h"
+#include "INIReader.h"
+#include "convert.h"
 
 void ccccLoader::fileToNodes(const std::string& filename, std::vector<Node>& nodes)
 {
@@ -50,6 +52,7 @@ void ccccLoader::fileToNodes(const std::string& filename, std::vector<Node>& nod
                 if (s == n1.title)
                 {
                     n.nexts.push_back(&n1);
+                    n1.prevs.push_back(&n);
                 }
             }
         }

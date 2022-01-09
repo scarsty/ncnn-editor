@@ -142,6 +142,7 @@ private:
             auto pos = ImNodes::GetNodeGridSpacePos(node.id);
             node.position_x = pos.x;
             node.position_y = pos.y;
+            node.prevs.clear();
             node.nexts.clear();
             n1[node.id] = &node;
             n1[node.text_id] = &node;
@@ -150,6 +151,7 @@ private:
         for (const auto& link : links_)
         {
             n1[link.from]->nexts.push_back(n1[link.to]);
+            n1[link.to]->prevs.push_back(n1[link.from]);
         }
     }
 
@@ -464,7 +466,7 @@ public:
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(11, 109, 191, 255));
             }
-            const float node_width = 100;
+            const float node_width = 200;
             ImNodes::BeginNode(node.id);
 
             ImNodes::BeginNodeTitleBar();
@@ -476,11 +478,19 @@ public:
             //if (graph_.num_edges_from_node(node.text_id) == 0ull)
             ImGui::TextUnformatted("type");
             ImGui::SameLine();
-            ImGui::PushItemWidth(50);
+            ImGui::PushItemWidth(node_width - ImGui::CalcTextSize("type").x - 8);
             ImGui::InputText("##type", &node.type);
             ImGui::PopItemWidth();
+            ImNodes::EndInputAttribute();
 
-            for (const auto& k : loader_->efftiveKeys(node.type))
+            ImNodes::BeginOutputAttribute(node.id);
+            auto v = loader_->efftiveKeys(node.type);
+            if (v.empty())
+            {
+                ImGui::PushItemWidth(node_width);
+                ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
+            }
+            for (const auto& k : v)
             {
                 ImGui::TextUnformatted(k.c_str());
                 ImGui::SameLine();
@@ -493,15 +503,11 @@ public:
                 ImGui::InputTextMultiline("##hidelabel", &node.text, ImVec2(node_width, 50));
                 ImGui::PopItemWidth();*/
             }
+            /*const float label_width = ImGui::CalcTextSize("next").x;
+            ImGui::Indent(node_width - label_width);
+            ImGui::TextUnformatted("");*/
             ImNodes::EndInputAttribute();
-            ImGui::Spacing();
-            {
-                ImNodes::BeginOutputAttribute(node.id);
-                const float label_width = ImGui::CalcTextSize("next").x;
-                ImGui::Indent(node_width - label_width);
-                ImGui::TextUnformatted("next");
-                ImNodes::EndInputAttribute();
-            }
+
             ImNodes::EndNode();
             ImNodes::PopColorStyle();
             //ImNodes::PopColorStyle();
@@ -578,7 +584,7 @@ public:
                     {
                         return node.id == node_id;
                     });
-                    nodes_.erase(iter);
+                    iter->erased = true;
                     for (auto it = links_.begin(); it != links_.end();)
                     {
                         if (it->from == node_id || it->to == node_id + 1)
@@ -641,7 +647,7 @@ public:
                     }
                     ImNodes::SetNodeGridSpacePos(node.id, pos);
                     pos.x += 150;
-                    pos.y += 20;
+                    pos.y += 0;
                 }
                 // restore link
                 links_.clear();
