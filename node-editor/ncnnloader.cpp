@@ -152,28 +152,49 @@ void ncnnLoader::nodesToFile(const std::vector<Node>& nodes, const std::string& 
         }
     };
 
-    push_cal_stack((Node*)&nodes[0], 1, nodes_turn, false);
+    push_cal_stack((Node*)&nodes[0], 1, nodes_turn, true);
 
     std::vector<std::string> lines(2);
-
     lines[0] = "7767517";
-
+    
+    int blob_count = 0;
     for (auto& n : nodes_turn)
     {
-        auto l = fmt1::format("{} {} {} {}", n->type, n->title, n->prevs.size(), n->nexts.size());
-        for (int i = 0; i < n->prevs.size(); i++)
+        blob_count += n->nexts.size();
+        auto l = fmt1::format("{} {} {} {} ", n->type, n->title, n->prevs.size(), n->nexts.size());
+        for (auto& n1 : n->prevs)
         {
-            l += n->prevs[i] + " ";
+            if (n1->nexts.size() == 1)
+            {
+                l += n1->title + " ";
+            }
+            else
+            {
+                l += n1->title + "_" + n->title + " ";
+            }
         }
+        if (n->nexts.size() <= 1)
+        {
+            l += n->title + " ";
+        }
+        else
+        {
+            for (auto& n1 : n->nexts)
+            {
+                l += n->title + "_" + n1->title + " ";
+            }
+        }
+        l += n->text;
         lines.push_back(std::move(l));
     }
-
+    lines[1] = fmt1::format("{} {}", nodes_turn.size(), blob_count+1);
     std::string str;
     for (auto& l : lines)
     {
         str += l + "\n";
     }
     fmt1::print("{}", str);
+    convert::writeStringToFile(str, filename);
 }
 
 std::vector<std::string> ncnnLoader::efftiveKeys(const std::string& type)

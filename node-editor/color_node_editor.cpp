@@ -55,7 +55,7 @@ private:
     int need_dialog_ = 0;    //1: when exist, 2: openfile to open
     Node& createNode()
     {
-        static int n = 0;
+        int n = nodes_.size();
         nodes_.emplace_back();
         auto& node = nodes_.back();
         node.id = n * 2;
@@ -456,15 +456,23 @@ public:
             }
             else if (type.find("conv") == 0)
             {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x00, 0x99, 0xcc, 0xff));
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0xff, 0xff, 0xff));
             }
             else if (type.find("pool") == 0)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x99, 0xcc, 0x66, 0xff));
             }
+            else if (type.find("split") == 0)
+            {
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
+            }
+            else if (type.find("concat") == 0)
+            {
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xff, 0x99, 0xff));
+            }
             else
             {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(11, 109, 191, 255));
+                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0x66, 0x66, 0xff));
             }
             const float node_width = 200;
             ImNodes::BeginNode(node.id);
@@ -521,7 +529,7 @@ public:
                 ImNodes::Link(link_id++, link.from, link.to);
             }
         }
-        ImNodes::MiniMap(0.2f, minimap_location_);
+        ImNodes::MiniMap(0.5f, minimap_location_);
         ImNodes::EndNodeEditor();
 
         // Handle new links
