@@ -454,19 +454,19 @@ public:
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
             }
-            else if (type.find("conv") == 0)
+            else if (type.find("conv") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0xff, 0xff, 0xff));
             }
-            else if (type.find("pool") == 0)
+            else if (type.find("pool") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x99, 0xcc, 0x66, 0xff));
             }
-            else if (type.find("split") == 0)
+            else if (type.find("split") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
             }
-            else if (type.find("concat") == 0)
+            else if (type.find("concat") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xff, 0x99, 0xff));
             }
