@@ -19,7 +19,10 @@ add_executable(node-editor
     imgui/misc/cpp/imgui_stdlib.cpp
     node-editor/color_node_editor.cpp
     node-editor/main.cpp
-    imnodes/imnodes.cpp
+    node-editor/loader.cpp
+    node-editor/ccccloader.cpp
+    node-editor/ncnnloader.cpp
+    imnodes2/imnodes.cpp
     ../nb/convert.cpp
     ../nb/File.cpp
     ImGuiFileDialog/ImGuiFileDialog.cpp)
