@@ -7,6 +7,7 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::vector<Node>& nod
 {
     nodes.clear();
     auto str = convert::readStringFromFile(filename);
+    str = convert::replaceAllSubString(str, "\r", "");
     auto lines = convert::splitString(str, "\n");
     int layer_count = 0, blob_count = 0;
     if (lines.size() >= 2)
