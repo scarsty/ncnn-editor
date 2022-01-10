@@ -45,9 +45,6 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="yamlyololoader.h" />
   </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="node-editor.rc" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
