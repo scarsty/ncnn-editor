@@ -53,6 +53,9 @@ private:
     std::string current_file_;
     bool saved_ = true;
     int need_dialog_ = 0;    //1: when exist, 2: openfile to open
+    std::string begin_file_;
+    int first_run_ = 1;
+
     Node& createNode()
     {
         int n = nodes_.size();

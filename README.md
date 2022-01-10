@@ -6,8 +6,6 @@
 
 目标是老妪能训。
 
-注意除了main.cpp和color_node_editor.cpp与imnodes给出的范例不同之外，其余文件均未改动。
-
 ### 操作
 
 * 按住中键可以拖动整个图。
