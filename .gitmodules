@@ -10,3 +10,6 @@
 	path = ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog
 	branch = Lib_Only
+[submodule "nb"]
+	path = nb
+	url = https://github.com/scarsty/nb
