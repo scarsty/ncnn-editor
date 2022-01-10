@@ -23,8 +23,8 @@ add_executable(node-editor
     node-editor/ccccloader.cpp
     node-editor/ncnnloader.cpp
     imnodes2/imnodes.cpp
-    ../nb/convert.cpp
-    ../nb/File.cpp
+    nb/convert.cpp
+    nb/File.cpp
     ImGuiFileDialog/ImGuiFileDialog.cpp)
 target_link_libraries(node-editor SDL2 SDL2main GL)
 
