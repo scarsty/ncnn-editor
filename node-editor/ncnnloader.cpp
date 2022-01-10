@@ -156,7 +156,7 @@ void ncnnLoader::nodesToFile(const std::vector<Node>& nodes, const std::string& 
 
     std::vector<std::string> lines(2);
     lines[0] = "7767517";
-    
+
     int blob_count = 0;
     for (auto& n : nodes_turn)
     {
@@ -184,10 +184,10 @@ void ncnnLoader::nodesToFile(const std::vector<Node>& nodes, const std::string& 
                 l += n->title + "_" + n1->title + " ";
             }
         }
-        l += n->text;
+        l += convert::replaceAllSubString(n->text, "\n", " ");
         lines.push_back(std::move(l));
     }
-    lines[1] = fmt1::format("{} {}", nodes_turn.size(), blob_count+1);
+    lines[1] = fmt1::format("{} {}", nodes_turn.size(), blob_count + 1);
     std::string str;
     for (auto& l : lines)
     {

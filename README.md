@@ -19,7 +19,11 @@
 
 ### 支持的格式
 
-ini范例，[ncnn](https://github.com/Tencent/ncnn/wiki/param-and-model-file-structure)。
+* ini范例
+* [ncnn](https://github.com/Tencent/ncnn/wiki/param-and-model-file-structure)
+* [pnnx](https://github.com/pnnx/pnnx) 该格式与ncnn基本一致，故可以直接支持，实际因为参数列表较长体验有些问题
+
+请大佬们pr支持新格式！
 
 <img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/lenet.png'/>
 <img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/ncnn.png'/>
