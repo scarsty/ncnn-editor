@@ -123,7 +123,7 @@ inline CubicBezier GetCubicBezier(
     }
 
     const float  link_length = ImSqrt(ImLengthSqr(end - start));
-    const ImVec2 offset = ImVec2(0.25f * link_length, 0.f);
+    const ImVec2 offset = ImVec2(0.f, 0.25f * link_length);
     CubicBezier  cubic_bezier;
     cubic_bezier.P0 = start;
     cubic_bezier.P1 = start + offset;

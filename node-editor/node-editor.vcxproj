@@ -29,19 +29,24 @@
     <ClCompile Include="..\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\imgui\misc\cpp\imgui_stdlib.cpp" />
-    <ClCompile Include="..\modify\imnodes.cpp" />
+    <ClCompile Include="..\imnodes2\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
     <ClCompile Include="color_node_editor.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
+    <ClCompile Include="yamlyololoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ccccloader.h" />
     <ClInclude Include="loader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="yamlyololoader.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="node-editor.rc" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
