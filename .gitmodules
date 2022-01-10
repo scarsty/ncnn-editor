@@ -1,0 +1,16 @@
+[submodule "3rdparty/imgui"]
+	path = 3rdparty/imgui
+	url = https://github.com/ocornut/imgui
+	branch = master
+[submodule "3rdparty/imnodes"]
+	path = 3rdparty/imnodes
+	url = https://github.com/Nelarius/imnodes
+	branch = master
+[submodule "3rdparty/ImGuiFileDialog"]
+	path = 3rdparty/ImGuiFileDialog
+	url = https://github.com/aiekick/ImGuiFileDialog
+	branch = Lib_Only
+[submodule "3rdparty/nb"]
+	path = 3rdparty/nb
+	url = https://github.com/scarsty/nb
+	branch = master
