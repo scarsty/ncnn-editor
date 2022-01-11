@@ -511,8 +511,8 @@ public:
                 if (node.id == select_id_)
                 {
                     loader_->refreshNodeValues(node);
-                    ImGui::BeginTable("value",2);
-                    ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 90);
+                    ImGui::BeginTable("value", 2, 0, { node_width, 0});
+                    ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
                     for (auto& kv : node.values)
                     {
                         ImGui::TableNextColumn();
