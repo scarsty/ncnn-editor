@@ -512,7 +512,7 @@ public:
                 {
                     loader_->refreshNodeValues(node);
                     ImGui::BeginTable("value",2);
-                    ImGui::TableSetupColumn("value", 16, 90);
+                    ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 90);
                     for (auto& kv : node.values)
                     {
                         ImGui::TableNextColumn();
