@@ -46,7 +46,7 @@ private:
     };
 
     NodeLoader* loader_ = nullptr;
-    std::vector<Node> nodes_;    //在一次编辑期间,只可增不可减
+    std::deque<Node> nodes_;    //在一次编辑期间,只可增不可减
     std::vector<Link> links_;
     int root_node_id_;
     ImNodesMiniMapLocation minimap_location_;
@@ -246,7 +246,10 @@ public:
     SDL_Event event;
 
     ColorNodeEditor() : nodes_(), root_node_id_(-1),
-        minimap_location_(ImNodesMiniMapLocation_BottomRight) {}
+        minimap_location_(ImNodesMiniMapLocation_BottomRight)
+    {
+        loader_ = create_loader("");
+    }
 
     void show()
     {
@@ -449,11 +452,11 @@ public:
                 continue;
             }
             auto type = convert::toLowerCase(node.type);
-            if (type == "data" || type == "input")
+            if (type.find("data") != std::string::npos || type.find("input") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0x33, 0x33, 0xff));
             }
-            else if (type == "fc" || type == "innerproduct")
+            else if (type.find("fc") != std::string::npos || type.find("inner") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
             }
@@ -461,7 +464,7 @@ public:
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0xff, 0xff, 0xff));
             }
-            else if (type.find("pool") != std::string::npos)
+            else if (type.find("pool") != std::string::npos || type.find("up") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x99, 0xcc, 0x66, 0xff));
             }
@@ -496,24 +499,22 @@ public:
 
             ImNodes::BeginOutputAttribute(node.id);
             auto v = loader_->efftiveKeys(node.type);
-            if (v.empty())
-            {
-                ImGui::PushItemWidth(node_width);
-                ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
-            }
             for (const auto& k : v)
             {
-                ImGui::TextUnformatted(k.c_str());
-                ImGui::SameLine();
-                ImGui::PushItemWidth(50);
-                ImGui::InputText(("##" + k).c_str(), &node.values[k]);
-                ImGui::PopItemWidth();
-            }
-            {
-                /*ImGui::PushItemWidth(node_width);
-                ImGui::InputTextMultiline("##hidelabel", &node.text, ImVec2(node_width, 50));
-                ImGui::PopItemWidth();*/
-            }
+                if (k.empty())
+                {
+                    ImGui::PushItemWidth(node_width);
+                    ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
+                }
+                else
+                {
+                    ImGui::TextUnformatted(k.c_str());
+                    ImGui::SameLine();
+                    ImGui::PushItemWidth(node_width - ImGui::CalcTextSize(k.c_str()).x - 8);
+                    ImGui::InputText(("##" + k).c_str(), &node.values[k]);
+                    ImGui::PopItemWidth();
+                }
+            }            
             /*const float label_width = ImGui::CalcTextSize("next").x;
             ImGui::Indent(node_width - label_width);
             ImGui::TextUnformatted("");*/
@@ -633,9 +634,17 @@ public:
             //ImGui::OpenPopup(u8"退出");
             try_exit();
         }
-        if (need_dialog_ == 2)
+        if (need_dialog_ == 2 || !begin_file_.empty() && first_run_)
         {
-            auto file = openfile();
+            std::string file;
+            if (!begin_file_.empty() && first_run_)
+            {
+                file = begin_file_;
+            }
+            else
+            {
+                 file= openfile();
+            }
             //std::string file = "squeezenet_v1.1.param";
             if (!file.empty())
             {
@@ -677,6 +686,11 @@ public:
         }
 
         ImGui::End();
+        first_run_ = 0;
+    }
+    void setBeginFile(const std::string& file)
+    {
+        begin_file_ = file;
     }
 };
 
@@ -699,6 +713,10 @@ void NodeEditorInitialize(int argc, char* argv[])
     ImGui::SetNextWindowPos(ImVec2(0.0f, 0.0f));
     ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 #endif
+    if (argc >= 2)
+    {
+        ex1::color_editor.setBeginFile(argv[1]);        
+    }
 }
 
 void NodeEditorShow() { ex1::color_editor.show(); }

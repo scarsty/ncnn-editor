@@ -3,7 +3,7 @@
 #include "fmt1.h"
 #include <functional>
 
-void ncnnLoader::fileToNodes(const std::string& filename, std::vector<Node>& nodes)
+void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
     nodes.clear();
     auto str = convert::readStringFromFile(filename);
@@ -67,42 +67,10 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::vector<Node>& nod
         }
     }
 
-    //set position
-    for (auto& n : nodes)
-    {
-        if (n.position_x == -1 && n.position_y == -1)
-        {
-            if (n.prevs.empty())
-            {
-                n.position_x = 100;
-                n.position_y = 100;
-            }
-            else
-            {
-                n.position_x = n.prevs[0]->position_x;
-                n.position_y = n.prevs[0]->position_y + 150;
-            }
-        }
-        int count = 0;
-        for (auto& n1 : n.nexts)
-        {
-            if (n1->position_x < 0)
-            {
-                n1->position_x = n.position_x + (count++) * 300;
-                if (n.nexts.size() > 1)
-                {
-                    n1->position_x -= 150;
-                }
-            }
-            if (n1->position_y < 0)
-            {
-                n1->position_y = std::max(n1->position_y, n.position_y + 150);
-            }
-        }
-    }
+    calPosition(nodes);
 }
 
-void ncnnLoader::nodesToFile(const std::vector<Node>& nodes, const std::string& filename)
+void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& filename)
 {
     std::vector<Node*> nodes_turn;
 
@@ -200,7 +168,7 @@ void ncnnLoader::nodesToFile(const std::vector<Node>& nodes, const std::string& 
 
 std::vector<std::string> ncnnLoader::efftiveKeys(const std::string& type)
 {
-    return {};
+    return { "" };
     if (type == "Convolution")
     {
         return { "channel", "window", "stride", "padding" };
@@ -217,5 +185,5 @@ std::vector<std::string> ncnnLoader::efftiveKeys(const std::string& type)
     {
         return { "data" };
     }
-    return {};
+    return { "" };
 }

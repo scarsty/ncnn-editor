@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <deque>
 #include <map>
 
 struct Node
@@ -9,7 +10,7 @@ struct Node
     std::string type;
     std::string text;
     std::map<std::string, std::string> values;
-    int id, text_id;
+    int id, text_id;   //use to draw nodes
     int erased = 0;
 
     std::vector<Node*> prevs, nexts;

@@ -2,7 +2,7 @@
 #include "INIReader.h"
 #include "convert.h"
 
-void ccccLoader::fileToNodes(const std::string& filename, std::vector<Node>& nodes)
+void ccccLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
     INIReaderNormal ini;
     ini.loadFile(filename);
@@ -59,7 +59,7 @@ void ccccLoader::fileToNodes(const std::string& filename, std::vector<Node>& nod
     }
 }
 
-void ccccLoader::nodesToFile(const std::vector<Node>& nodes, const std::string& filename)
+void ccccLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& filename)
 {
     INIReaderNormal ini;
     ini.loadFile(filename);
@@ -115,5 +115,5 @@ std::vector<std::string> ccccLoader::efftiveKeys(const std::string& type)
     {
         return { "data" };
     }
-    return {};
+    return { "" };
 }
