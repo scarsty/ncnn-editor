@@ -9,13 +9,30 @@
 
 void NodeLoader::calPosition(std::deque<Node>& nodes)
 {
-    std::map<int64_t, Node*> node_pos_map;
-
+    std::map<std::pair<int, int>, Node*> node_pos_map;
     int width = 250;
 
-    auto cal_pos = [&node_pos_map](Node& n)->int64_t
+    auto avoid_overlap = [&node_pos_map, width](Node& n)->int
     {
-        return n.position_x * 1e9 + n.position_y;
+        for (auto& kv : node_pos_map)
+        {
+            int x = kv.first.first;
+            int y = kv.first.second;
+            if (y == n.position_y && abs(x - n.position_x) < width)
+            {
+                if (n.position_x >= x)
+                {
+                    n.position_x = x + width;
+                }
+                else
+                {
+                    n.position_x = x - width;
+                }
+                break;
+            }
+        }
+        node_pos_map[{n.position_x, n.position_y}] = &n;
+        return (n.position_x - width / 2) * 1e9 + n.position_y;
     };
 
     for (auto& n : nodes)
@@ -24,8 +41,8 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
         {
             if (n.prevs.empty())
             {
-                n.position_x = 100;
-                n.position_y = 100;
+                n.position_x = width;
+                n.position_y = 150;
             }
             else
             {
@@ -60,18 +77,13 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
                 n1->position_x += width;
             }
             x_map[n1->position_x] = n1;
-
             n.position_y = std::max(n.position_y, n1->position_y + 150);
         }
     }
     // avoid the same position
     for (auto& n : nodes)
     {
-        if (node_pos_map.count(cal_pos(n)))
-        {
-            n.position_x += width;
-        }
-        node_pos_map[cal_pos(n)] = &n;
+        avoid_overlap(n);
     }
 }
 
