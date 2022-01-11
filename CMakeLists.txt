@@ -26,6 +26,6 @@ add_executable(node-editor
     3rdparty/nb/convert.cpp
     3rdparty/nb/File.cpp
     3rdparty/ImGuiFileDialog/ImGuiFileDialog.cpp)
-target_link_libraries(node-editor SDL2 SDL2main GL)
+target_link_libraries(node-editor SDL2 SDL2main GL dl)
 
 install(TARGETS node-editor RUNTIME DESTINATION bin)
