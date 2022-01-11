@@ -472,7 +472,7 @@ public:
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
             }
-            else if (type.find("concat") != std::string::npos)
+            else if (type.find("cat") != std::string::npos)
             {
                 ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xff, 0x99, 0xff));
             }

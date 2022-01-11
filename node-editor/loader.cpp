@@ -52,15 +52,16 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
     }
     for (auto& n : nodes)
     {
+        std::map<int, Node*> x_map;
         for (auto& n1 : n.prevs)
         {
-            //if (n1->position_y < 0)
-            //{
-            //    n1.position_x = std::max(n.position_y, n1->position_y + 150);
-            //}
+            if (x_map.count(n1->position_x))
             {
-                n.position_y = std::max(n.position_y, n1->position_y + 150);
+                n1->position_x += width;
             }
+            x_map[n1->position_x] = n1;
+
+            n.position_y = std::max(n.position_y, n1->position_y + 150);
         }
     }
     // avoid the same position
