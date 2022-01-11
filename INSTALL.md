@@ -32,6 +32,8 @@ cmake ..
 make
 ```
 
+Please use apt (or yum or pacman or brew) to install SDL2 and yaml-cpp if you can.
+
 **SDL2 install**
 
 - `download the source from the offcial website:http://www.libsdl.org/`
