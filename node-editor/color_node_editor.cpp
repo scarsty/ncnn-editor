@@ -511,14 +511,19 @@ public:
                 if (node.id == select_id_)
                 {
                     loader_->refreshNodeValues(node);
+                    ImGui::BeginTable("value",2);
+                    ImGui::TableSetupColumn("value", 16, 90);
                     for (auto& kv : node.values)
                     {
+                        ImGui::TableNextColumn();
                         ImGui::TextUnformatted(kv.first.c_str());
-                        ImGui::SameLine();
-                        ImGui::PushItemWidth(node_width - ImGui::CalcTextSize(kv.first.c_str()).x - 8);
+                        ImGui::TableNextColumn();
+                        ImGui::PushItemWidth(100);
                         ImGui::InputText(("##" + kv.first).c_str(), &kv.second);
                         ImGui::PopItemWidth();
+                        ImGui::TableNextRow();
                     }
+                    ImGui::EndTable();
                     ImGui::PushItemWidth(node_width);
                     ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
                 }
