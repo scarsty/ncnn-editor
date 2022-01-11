@@ -25,9 +25,12 @@ void ccccLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
             Node node;
             node.title = s;
             node.type = ini.getString(s, "type");
-            for (auto& kv : node.values)
+            for (auto& key : ini.getAllKeys(s))
             {
-                kv.second = ini.getString(s, kv.first);
+                if (key != "type" && key != "editor_position" && key != "next")
+                {
+                    node.values[key] = ini.getString(s, key);
+                }
             }
             std::vector<int> v = convert::findNumbers<int>(ini.getString(s, "editor_position"));
             if (v.size() >= 2)
@@ -97,23 +100,15 @@ void ccccLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
     ini.saveFile(filename);
 }
 
-std::vector<std::string> ccccLoader::efftiveKeys(const std::string& type)
+void ccccLoader::refreshNodeValues(Node& n)
 {
-    if (type == "conv")
+    INIReaderNormal ini;
+    ini.loadString(n.text);
+    for (auto& key : ini.getAllKeys(""))
     {
-        return { "active", "channel", "window", "stride", "padding" };
+        if (key != "type" && key != "editor_position" && key != "next")
+        {
+            n.values[key] = ini.getString("", key);
+        }
     }
-    else if (type == "pool")
-    {
-        return { "active", "pooltype", "window", "stride", "padding" };
-    }
-    else if (type == "fc")
-    {
-        return { "active", "node" };
-    }
-    else if (type == "data")
-    {
-        return { "data" };
-    }
-    return { "" };
 }

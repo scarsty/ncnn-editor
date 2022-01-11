@@ -55,6 +55,7 @@ private:
     int need_dialog_ = 0;    //1: when exist, 2: openfile to open
     std::string begin_file_;
     int first_run_ = 1;
+    int select_id_ = -1;
 
     Node& createNode()
     {
@@ -375,6 +376,13 @@ public:
         //        emulate_three_button_mouse ? &ImGui::GetIO().KeyAlt : NULL;
         //}
         //ImGui::Columns(1);
+        {
+            select_id_ = -1;
+            if (ImNodes::NumSelectedNodes() == 1)
+            {
+                ImNodes::GetSelectedNodes(&select_id_);
+            }
+        }
 
         ImNodes::BeginNodeEditor();
 
@@ -445,85 +453,92 @@ public:
             ImGui::PopStyleVar();
         }
 
-        for (auto& node : nodes_)
+        // draw nodes
         {
-            if (node.erased)
+            for (auto& node : nodes_)
             {
-                continue;
-            }
-            auto type = convert::toLowerCase(node.type);
-            if (type.find("data") != std::string::npos || type.find("input") != std::string::npos)
-            {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0x33, 0x33, 0xff));
-            }
-            else if (type.find("fc") != std::string::npos || type.find("inner") != std::string::npos)
-            {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
-            }
-            else if (type.find("conv") != std::string::npos)
-            {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0xff, 0xff, 0xff));
-            }
-            else if (type.find("pool") != std::string::npos || type.find("up") != std::string::npos)
-            {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x99, 0xcc, 0x66, 0xff));
-            }
-            else if (type.find("split") != std::string::npos)
-            {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
-            }
-            else if (type.find("cat") != std::string::npos)
-            {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xff, 0x99, 0xff));
-            }
-            else
-            {
-                ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0x66, 0x66, 0xff));
-            }
-            const float node_width = 200;
-            ImNodes::BeginNode(node.id);
-
-            ImNodes::BeginNodeTitleBar();
-            ImGui::PushItemWidth(node_width);
-            ImGui::InputText("##hidelabel", &node.title);
-            ImNodes::EndNodeTitleBar();
-
-            ImNodes::BeginInputAttribute(node.text_id);
-            //if (graph_.num_edges_from_node(node.text_id) == 0ull)
-            ImGui::TextUnformatted("type");
-            ImGui::SameLine();
-            ImGui::PushItemWidth(node_width - ImGui::CalcTextSize("type").x - 8);
-            ImGui::InputText("##type", &node.type);
-            ImGui::PopItemWidth();
-            ImNodes::EndInputAttribute();
-
-            ImNodes::BeginOutputAttribute(node.id);
-            auto v = loader_->efftiveKeys(node.type);
-            for (const auto& k : v)
-            {
-                if (k.empty())
+                if (node.erased)
                 {
-                    ImGui::PushItemWidth(node_width);
-                    ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
+                    continue;
+                }
+
+                auto type = convert::toLowerCase(node.type);
+                if (type.find("data") != std::string::npos || type.find("input") != std::string::npos)
+                {
+                    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0x33, 0x33, 0xff));
+                }
+                else if (type.find("fc") != std::string::npos || type.find("inner") != std::string::npos)
+                {
+                    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
+                }
+                else if (type.find("conv") != std::string::npos)
+                {
+                    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0xff, 0xff, 0xff));
+                }
+                else if (type.find("pool") != std::string::npos || type.find("up") != std::string::npos)
+                {
+                    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0x99, 0xcc, 0x66, 0xff));
+                }
+                else if (type.find("split") != std::string::npos)
+                {
+                    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xcc, 0x99, 0xff));
+                }
+                else if (type.find("cat") != std::string::npos)
+                {
+                    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0xff, 0x99, 0xff));
                 }
                 else
                 {
-                    ImGui::TextUnformatted(k.c_str());
-                    ImGui::SameLine();
-                    ImGui::PushItemWidth(node_width - ImGui::CalcTextSize(k.c_str()).x - 8);
-                    ImGui::InputText(("##" + k).c_str(), &node.values[k]);
-                    ImGui::PopItemWidth();
+                    ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xff, 0x66, 0x66, 0xff));
                 }
-            }            
-            /*const float label_width = ImGui::CalcTextSize("next").x;
-            ImGui::Indent(node_width - label_width);
-            ImGui::TextUnformatted("");*/
-            ImNodes::EndInputAttribute();
+                const float node_width = 200;
+                ImNodes::BeginNode(node.id);
 
-            ImNodes::EndNode();
-            ImNodes::PopColorStyle();
-            //ImNodes::PopColorStyle();
-            //ImNodes::PopColorStyle();
+                ImNodes::BeginNodeTitleBar();
+                ImGui::PushItemWidth(node_width);
+                ImGui::InputText("##hidelabel", &node.title);
+                ImNodes::EndNodeTitleBar();
+
+                ImNodes::BeginInputAttribute(node.text_id);
+                //if (graph_.num_edges_from_node(node.text_id) == 0ull)
+                ImGui::TextUnformatted("type");
+                ImGui::SameLine();
+                ImGui::PushItemWidth(node_width - ImGui::CalcTextSize("type").x - 8);
+                ImGui::InputText("##type", &node.type);
+                ImGui::PopItemWidth();
+                ImNodes::EndInputAttribute();
+
+                if (node.id == select_id_)
+                {
+                    loader_->refreshNodeValues(node);
+                    for (auto& kv : node.values)
+                    {
+                        ImGui::TextUnformatted(kv.first.c_str());
+                        ImGui::SameLine();
+                        ImGui::PushItemWidth(node_width - ImGui::CalcTextSize(kv.first.c_str()).x - 8);
+                        ImGui::InputText(("##" + kv.first).c_str(), &kv.second);
+                        ImGui::PopItemWidth();
+                    }
+                    ImGui::PushItemWidth(node_width);
+                    ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
+                }
+
+                ImNodes::BeginOutputAttribute(node.id);
+
+                /*const float label_width = ImGui::CalcTextSize("next").x;
+                ImGui::Indent(node_width - label_width);
+                ImGui::TextUnformatted("");*/
+                //ImGui::TextUnformatted("");
+                //ImGui::PushItemWidth(node_width);
+                //ImGui::TextUnformatted("");
+                //ImGui::PopItemWidth();
+                ImNodes::EndOutputAttribute();
+
+                ImNodes::EndNode();
+                ImNodes::PopColorStyle();
+                //ImNodes::PopColorStyle();
+                //ImNodes::PopColorStyle();
+            }
         }
 
         {
@@ -643,7 +658,7 @@ public:
             }
             else
             {
-                 file= openfile();
+                file = openfile();
             }
             //std::string file = "squeezenet_v1.1.param";
             if (!file.empty())
@@ -715,7 +730,7 @@ void NodeEditorInitialize(int argc, char* argv[])
 #endif
     if (argc >= 2)
     {
-        ex1::color_editor.setBeginFile(argv[1]);        
+        ex1::color_editor.setBeginFile(argv[1]);
     }
 }
 

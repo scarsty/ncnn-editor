@@ -45,6 +45,7 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
             {
                 node.text.pop_back();
             }
+            refreshNodeValues(node);
             nodes.push_back(std::move(node));
         }
     }
@@ -66,7 +67,6 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
             }
         }
     }
-
     calPosition(nodes);
 }
 
@@ -153,7 +153,12 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
                 l += n->title + "_" + n1->title + " ";
             }
         }
-        l += convert::replaceAllSubString(n->text, "\n", " ");
+        for (auto& kv : n->values)
+        {
+            l += kv.first + "=" + kv.second + " ";
+        }
+        l.pop_back();
+        //l += convert::replaceAllSubString(n->text, "\n", " ");
         lines.push_back(std::move(l));
     }
     lines[1] = fmt1::format("{} {}", nodes_turn.size(), blob_count + 1);
@@ -166,24 +171,38 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
     convert::writeStringToFile(str, filename);
 }
 
-std::vector<std::string> ncnnLoader::efftiveKeys(const std::string& type)
+void ncnnLoader::refreshNodeValues(Node& n)
 {
-    return { "" };
-    if (type == "Convolution")
+    auto strs = convert::splitString(n.text, " ");
+    for (auto&str:strs)
     {
-        return { "channel", "window", "stride", "padding" };
+        auto kv = convert::splitString(str, "=");
+        if (kv.size() >= 2)
+        {
+            n.values[kv[0]] = kv[1];
+        }
     }
-    else if (type == "Pooling")
-    {
-        return { "pooltype", "window", "stride", "padding" };
-    }
-    else if (type == "InnerProduct")
-    {
-        return { "node" };
-    }
-    else if (type == "input")
-    {
-        return { "data" };
-    }
-    return { "" };
+    n.text = "";
 }
+
+//std::vector<std::string> ncnnLoader::efftiveKeys(const std::string& type)
+//{
+//    return { "" };
+//    if (type == "Convolution")
+//    {
+//        return { "channel", "window", "stride", "padding" };
+//    }
+//    else if (type == "Pooling")
+//    {
+//        return { "pooltype", "window", "stride", "padding" };
+//    }
+//    else if (type == "InnerProduct")
+//    {
+//        return { "node" };
+//    }
+//    else if (type == "input")
+//    {
+//        return { "data" };
+//    }
+//    return { "" };
+//}
