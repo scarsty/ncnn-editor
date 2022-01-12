@@ -13,13 +13,17 @@ struct Node
     std::map<std::string, std::string> values;
 
     std::vector<Node*> prevs, nexts;
-    std::vector<std::string> in, out;
 
     //use to draw nodes
     int id, text_id;
     int position_x = -1, position_y = -1;
     int erased = 0;
     int selected = 0;
+
+    // 辅助值
+    std::vector<std::string> in, out;
+
+
 
     Node()
     {
@@ -34,3 +38,10 @@ struct Node
         //};
     }
 };
+
+
+/*
+    接口应实现从文件到std::deque<Node>的转换，包含title，type，可编辑值等
+    text可以加入编辑列表中没有的值
+    Node的初始坐标可以自行计算，或者也可以调用Loader中自带的一个算法
+*/

@@ -1,0 +1,21 @@
+name: Code format
+
+on: [push, pull_request, pull_request_target]
+
+jobs:
+  clang-format:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v2
+      - name: Run clang format
+        run: |
+          curl https://oss-clang-format.s3.us-east-2.amazonaws.com/linux64/clang-format-linux64 -o clang-format
+          chmod +x clang-format
+          sudo mv clang-format /opt/clang-format
+          python tools/run_clang_format.py --files shufaCV tests --recursive --clang_format_executable /opt/clang-format --style file --fix
+      - name: Apply code-format changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: Apply code-format changes

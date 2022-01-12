@@ -1,0 +1,30 @@
+name: android-x86-cpu
+on:
+  push:
+    branches: [master]
+    paths:
+    - '.github/workflows/android-x86-cpu.yml'
+    - 'CMakeLists.txt'
+    - 'cmake/**'
+    - 'shufaCV/*'
+  pull_request:
+    branches: [master]
+    paths:
+    - '.github/workflows/android-x86-cpu.yml'
+    - 'CMakeLists.txt'
+    - 'cmake/**'
+    - 'shufaCV/*'
+jobs:
+  android-x86:
+    runs-on: ubuntu-latest
+    steps:
+    - name: cancel-previous-runs
+      uses: styfle/cancel-workflow-action@0.9.1
+      with:
+        access_token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: actions/checkout@v2
+    - name: build
+      run: |
+        mkdir build && cd build
+        cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_HOME/ndk-bundle/build/cmake/android.toolchain.cmake -DANDROID_ABI="x86"  -DANDROID_PLATFORM=android-14 ..
+        cmake --build . -j 2

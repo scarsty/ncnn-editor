@@ -1,4 +1,4 @@
-﻿#include "node_editor.h"
+#include "node_editor.h"
 
 #include <imnodes.h>
 #include <imgui.h>
@@ -93,7 +93,7 @@ private:
         return true;
     }
     void add_link(int from, int to)
-    { 
+    {
         std::function<int(int)> get = [&](int i)
         {
             bool have_same = false;
@@ -144,7 +144,7 @@ private:
 
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
         {
-          // action if OK
+            // action if OK
             if (ImGuiFileDialog::Instance()->IsOk())
             {
                 filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
@@ -372,8 +372,8 @@ public:
             ImGui::EndMenuBar();
         }
         {
-        //ImGui::Columns(2);
-        //ImGui::TextUnformatted("A -- add node");
+            //ImGui::Columns(2);
+            //ImGui::TextUnformatted("A -- add node");
             ImGui::TextUnformatted(u8"Delete -- 删除选中的层或连接");
             //ImGui::NextColumn();
             std::string str = u8"没有打开的文件";
@@ -781,7 +781,7 @@ void NodeEditorInitialize(int argc, char* argv[])
     if (argc >= 2)
     {
         ex1::color_editor.setBeginFile(argv[1]);
-}
+    }
 }
 
 void NodeEditorShow() { ex1::color_editor.show(); }
