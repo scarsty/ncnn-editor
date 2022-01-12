@@ -6,7 +6,12 @@
 void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
     nodes.clear();
+    is_pnnx_ = false;
     auto str = convert::readStringFromFile(filename);
+    if (str.find("pnnx") != std::string::npos)
+    {
+        is_pnnx_ = true;
+    }
     str = convert::replaceAllSubString(str, "\r", "");
     auto lines = convert::splitString(str, "\n");
     int layer_count = 0, blob_count = 0;
@@ -24,7 +29,7 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
         {
             Node node;
             node.title = v[1];
-            node.type = v[0];
+            node.type = v[0];            
 
             int input_count = atoi(v[2].c_str());
             int output_count = atoi(v[3].c_str());
@@ -46,6 +51,11 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
                 node.text.pop_back();
             }
             refreshNodeValues(node);
+            node.prevs.resize(input_count);
+            if (!is_pnnx_)
+            {
+                node.nexts.resize(output_count);
+            }
             nodes.push_back(std::move(node));
         }
     }
@@ -54,18 +64,30 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
     {
         for (auto& node2 : nodes)
         {
-            for (auto& from : node1.out)
+            for (int i_from = 0; i_from < node1.out.size(); i_from++)
             {
-                for (auto& to : node2.in)
+                for (int i_to = 0; i_to < node2.in.size(); i_to++)
                 {
-                    if (from == to)
+                    if (node1.out[i_from] == node2.in[i_to])
                     {
-                        node1.nexts.push_back(&node2);
-                        node2.prevs.push_back(&node1);
+                        if (is_pnnx_)
+                        {
+                            node1.nexts.push_back(&node2);
+                        }
+                        else
+                        {
+                            node1.nexts[i_from] = &node2;
+                        }
+                        node2.prevs[i_to] = &node1;
                     }
                 }
             }
         }
+    }
+    for (auto& n : nodes)
+    {
+        n.prevs.erase(std::remove(n.prevs.begin(), n.prevs.end(), nullptr), n.prevs.end());
+        n.nexts.erase(std::remove(n.nexts.begin(), n.nexts.end(), nullptr), n.nexts.end());
     }
     calPosition(nodes);
 }
@@ -174,7 +196,7 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
 void ncnnLoader::refreshNodeValues(Node& n)
 {
     auto strs = convert::splitString(n.text, " ");
-    for (auto&str:strs)
+    for (auto& str : strs)
     {
         auto kv = convert::splitString(str, "=");
         if (kv.size() >= 2)

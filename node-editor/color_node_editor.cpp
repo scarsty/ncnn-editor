@@ -57,6 +57,8 @@ private:
     int first_run_ = 1;
     int select_id_ = -1;
 
+    const int node_add_ = 10000;
+
     Node& createNode()
     {
         int n = nodes_.size();
@@ -90,6 +92,26 @@ private:
         }
         return true;
     }
+    void add_link(int from, int to)
+    { 
+        std::function<int(int)> get = [&](int i)
+        {
+            bool have_same = false;
+            for (auto& l : links_)
+            {
+                if (l.from == i || l.to == i)
+                {
+                    i += node_add_;
+                    have_same = true;
+                    break;
+                }
+            }
+            if (have_same) { i = get(i); }
+            return i;
+        };
+        links_.emplace_back(get(from), get(to));
+    }
+
     std::string openfile()
     {
 #ifdef _WIN32
@@ -499,19 +521,36 @@ public:
                 ImGui::InputText("##hidelabel", &node.title);
                 ImNodes::EndNodeTitleBar();
 
-                ImNodes::BeginInputAttribute(node.text_id);
+                int table_width = node_width - 24;
+
+                if (node.prevs.size() > 0)
+                {
+                    ImGui::BeginTable("inb", node.prevs.size() + 9, 0, ImVec2(node_width - 10, 1), 0);
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    for (int i = 0; i < node.prevs.size(); i++)
+                    {
+                        ImGui::TableNextColumn();
+                        ImNodes::BeginInputAttribute(node.text_id + i * 10000);
+                        ImNodes::EndInputAttribute();
+                    }
+                    ImGui::EndTable();
+                }
+
                 //if (graph_.num_edges_from_node(node.text_id) == 0ull)
                 ImGui::TextUnformatted("type");
                 ImGui::SameLine();
                 ImGui::PushItemWidth(node_width - ImGui::CalcTextSize("type").x - 8);
                 ImGui::InputText("##type", &node.type);
                 ImGui::PopItemWidth();
-                ImNodes::EndInputAttribute();
 
                 if (node.id == select_id_)
                 {
                     loader_->refreshNodeValues(node);
-                    ImGui::BeginTable("value", 2, 0, { node_width, 0});
+                    ImGui::BeginTable("value", 2, 0, { node_width, 0 });
                     ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
                     for (auto& kv : node.values)
                     {
@@ -528,16 +567,22 @@ public:
                     ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
                 }
 
-                ImNodes::BeginOutputAttribute(node.id);
-
-                /*const float label_width = ImGui::CalcTextSize("next").x;
-                ImGui::Indent(node_width - label_width);
-                ImGui::TextUnformatted("");*/
-                //ImGui::TextUnformatted("");
-                //ImGui::PushItemWidth(node_width);
-                //ImGui::TextUnformatted("");
-                //ImGui::PopItemWidth();
-                ImNodes::EndOutputAttribute();
+                if (node.nexts.size() > 0)
+                {
+                    ImGui::BeginTable("out", node.nexts.size() + 9, 0, ImVec2(node_width - 10, 1), 0);
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    ImGui::TableNextColumn();
+                    for (int i = 0; i < node.nexts.size(); i++)
+                    {
+                        ImGui::TableNextColumn();
+                        ImNodes::BeginOutputAttribute(node.id + i * 10000);
+                        ImNodes::EndOutputAttribute();
+                    }
+                    ImGui::EndTable();
+                }
 
                 ImNodes::EndNode();
                 ImNodes::PopColorStyle();
@@ -571,7 +616,7 @@ public:
                 }
                 if (check_can_link(start_attr, end_attr))
                 {
-                    links_.emplace_back(start_attr, end_attr);
+                    add_link(start_attr, end_attr);
                 }
                 saved_ = false;
             }
@@ -697,7 +742,7 @@ public:
                     {
                         if (check_can_link(node.id, node1->text_id))
                         {
-                            links_.emplace_back(node.id, node1->text_id);
+                            add_link(node.id, node1->text_id);
                         }
                     }
                 }
@@ -736,7 +781,7 @@ void NodeEditorInitialize(int argc, char* argv[])
     if (argc >= 2)
     {
         ex1::color_editor.setBeginFile(argv[1]);
-    }
+}
 }
 
 void NodeEditorShow() { ex1::color_editor.show(); }

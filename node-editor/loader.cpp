@@ -9,31 +9,7 @@
 
 void NodeLoader::calPosition(std::deque<Node>& nodes)
 {
-    std::map<std::pair<int, int>, Node*> node_pos_map;
     int width = 250;
-
-    auto avoid_overlap = [&node_pos_map, width](Node& n)->int
-    {
-        for (auto& kv : node_pos_map)
-        {
-            int x = kv.first.first;
-            int y = kv.first.second;
-            if (y == n.position_y && abs(x - n.position_x) < width)
-            {
-                if (n.position_x >= x)
-                {
-                    n.position_x = x + width;
-                }
-                else
-                {
-                    n.position_x = x - width;
-                }
-                break;
-            }
-        }
-        node_pos_map[{n.position_x, n.position_y}] = &n;
-        return (n.position_x - width / 2) * 1e9 + n.position_y;
-    };
 
     for (auto& n : nodes)
     {
@@ -58,7 +34,7 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
                 n1->position_x = n.position_x + (count++) * width;
                 if (n.nexts.size() > 1)
                 {
-                    n1->position_x -= width * (n.nexts.size() - 1.5);
+                    n1->position_x -= width /2* (n.nexts.size() - 1);
                 }
             }
             if (n1->position_y < 0)
@@ -81,9 +57,27 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
         }
     }
     // avoid the same position
+    std::map<std::pair<int, int>, Node*> node_pos_map;
     for (auto& n : nodes)
     {
-        avoid_overlap(n);
+        for (auto& kv : node_pos_map)
+        {
+            int x = kv.first.first;
+            int y = kv.first.second;
+            if (y == n.position_y && abs(x - n.position_x) < width)
+            {
+                if (n.position_x >= x)
+                {
+                    n.position_x = x + width;
+                }
+                else
+                {
+                    n.position_x = x - width;
+                }
+                break;
+            }
+        }
+        node_pos_map[{n.position_x, n.position_y}] = &n;
     }
 }
 
