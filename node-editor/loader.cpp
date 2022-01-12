@@ -1,5 +1,7 @@
 #include "loader.h"
 
+#include <algorithm>
+
 #include "File.h"
 #include "convert.h"
 
@@ -17,7 +19,7 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
         {
             if (n.prevs.empty())
             {
-                n.position_x = width;
+                n.position_x = width * 2;
                 n.position_y = 150;
             }
             else
@@ -25,6 +27,19 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
                 n.position_x = n.prevs[0]->position_x;
                 n.position_y = n.prevs[0]->position_y + 150;
             }
+        }
+        int x_sum = 0, x_count = 0;
+        for (auto& n1 : n.prevs)
+        {
+            if (n1->position_x > 0)
+            {
+                x_sum += n1->position_x;
+                x_count++;
+            }
+        }
+        if (x_count >= 2 || x_count == 1 && n.prevs[0]->nexts.size() == 1)
+        {
+            n.position_x = x_sum / x_count;
         }
         int count = 0;
         for (auto& n1 : n.nexts)
@@ -34,19 +49,24 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
                 n1->position_x = n.position_x + (count++) * width;
                 if (n.nexts.size() > 1)
                 {
-                    n1->position_x -= width /2* (n.nexts.size() - 1);
+                    n1->position_x -= width / 2 * (n.nexts.size() - 1);
                 }
             }
-            if (n1->position_y < 0)
+            //if (n1->position_y < 0)
             {
                 n1->position_y = std::max(n1->position_y, n.position_y + 150);
             }
         }
     }
+    //同一下级的横坐标打散
     for (auto& n : nodes)
     {
         std::map<int, Node*> x_map;
-        for (auto& n1 : n.prevs)
+        auto v = n.prevs;
+        //有些情况上下级间不止一个连接, 不去重会过于偏右
+        //std::sort(v.begin(), v.end());
+        //v.erase(std::unique(v.begin(), v.end()), v.end());
+        for (auto& n1 : v)
         {
             if (x_map.count(n1->position_x))
             {
