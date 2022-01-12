@@ -1,0 +1,163 @@
+7767517
+161 167
+pnnx.Input               pnnx_input_0             0 1 0
+nn.Conv2d                convbn2d_0               1 1 0 1 bias=True dilation=(1,1) groups=1 in_channels=3 kernel_size=(6,6) out_channels=32 padding=(2,2) stride=(2,2) @bias=(32)f32 @weight=(32,3,6,6)f32 $input=0
+nn.SiLU                  model.backbone.body.0.act 1 1 1 2
+nn.Conv2d                convbn2d_1               1 1 2 3 bias=True dilation=(1,1) groups=1 in_channels=32 kernel_size=(3,3) out_channels=64 padding=(1,1) stride=(2,2) @bias=(64)f32 @weight=(64,32,3,3)f32 $input=2
+nn.SiLU                  model.backbone.body.1.act 1 1 3 4
+nn.Conv2d                convbn2d_2               1 1 4 5 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(1,1) out_channels=32 padding=(0,0) stride=(1,1) @bias=(32)f32 @weight=(32,64,1,1)f32 $input=4
+nn.SiLU                  model.backbone.body.2.cv1.act 1 1 5 6
+nn.Conv2d                convbn2d_3               1 1 6 7 bias=True dilation=(1,1) groups=1 in_channels=32 kernel_size=(1,1) out_channels=32 padding=(0,0) stride=(1,1) @bias=(32)f32 @weight=(32,32,1,1)f32 $input=6
+nn.SiLU                  model.backbone.body.2.m.0.cv1.act 1 1 7 8
+nn.Conv2d                convbn2d_4               1 1 8 9 bias=True dilation=(1,1) groups=1 in_channels=32 kernel_size=(3,3) out_channels=32 padding=(1,1) stride=(1,1) @bias=(32)f32 @weight=(32,32,3,3)f32 $input=8
+nn.SiLU                  model.backbone.body.2.m.0.cv2.act 1 1 9 10
+pnnx.Expression          pnnx_expr_87             2 1 6 10 11 expr=add(@0,@1)
+nn.Conv2d                convbn2d_5               1 1 4 12 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(1,1) out_channels=32 padding=(0,0) stride=(1,1) @bias=(32)f32 @weight=(32,64,1,1)f32 $input=4
+nn.SiLU                  model.backbone.body.2.cv2.act 1 1 12 13
+torch.cat                torch.cat_6              2 1 11 13 14 dim=1
+nn.Conv2d                convbn2d_6               1 1 14 15 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,64,1,1)f32 $input=14
+nn.SiLU                  model.backbone.body.2.cv3.act 1 1 15 16
+nn.Conv2d                convbn2d_7               1 1 16 17 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(3,3) out_channels=128 padding=(1,1) stride=(2,2) @bias=(128)f32 @weight=(128,64,3,3)f32 $input=16
+nn.SiLU                  model.backbone.body.3.act 1 1 17 18
+nn.Conv2d                convbn2d_8               1 1 18 19 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,128,1,1)f32 $input=18
+nn.SiLU                  model.backbone.body.4.cv1.act 1 1 19 20
+nn.Conv2d                convbn2d_9               1 1 20 21 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,64,1,1)f32 $input=20
+nn.SiLU                  model.backbone.body.4.m.0.cv1.act 1 1 21 22
+nn.Conv2d                convbn2d_10              1 1 22 23 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(3,3) out_channels=64 padding=(1,1) stride=(1,1) @bias=(64)f32 @weight=(64,64,3,3)f32 $input=22
+nn.SiLU                  model.backbone.body.4.m.0.cv2.act 1 1 23 24
+pnnx.Expression          pnnx_expr_84             2 1 20 24 25 expr=add(@0,@1)
+nn.Conv2d                convbn2d_11              1 1 25 26 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,64,1,1)f32 $input=25
+nn.SiLU                  model.backbone.body.4.m.1.cv1.act 1 1 26 27
+nn.Conv2d                convbn2d_12              1 1 27 28 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(3,3) out_channels=64 padding=(1,1) stride=(1,1) @bias=(64)f32 @weight=(64,64,3,3)f32 $input=27
+nn.SiLU                  model.backbone.body.4.m.1.cv2.act 1 1 28 29
+pnnx.Expression          pnnx_expr_82             2 1 25 29 30 expr=add(@0,@1)
+nn.Conv2d                convbn2d_13              1 1 18 31 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,128,1,1)f32 $input=18
+nn.SiLU                  model.backbone.body.4.cv2.act 1 1 31 32
+torch.cat                torch.cat_7              2 1 30 32 33 dim=1
+nn.Conv2d                convbn2d_14              1 1 33 34 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,128,1,1)f32 $input=33
+nn.SiLU                  model.backbone.body.4.cv3.act 1 1 34 35
+nn.Conv2d                convbn2d_15              1 1 35 36 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(3,3) out_channels=256 padding=(1,1) stride=(2,2) @bias=(256)f32 @weight=(256,128,3,3)f32 $input=35
+nn.SiLU                  model.backbone.body.5.act 1 1 36 37
+nn.Conv2d                convbn2d_16              1 1 37 38 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,256,1,1)f32 $input=37
+nn.SiLU                  model.backbone.body.6.cv1.act 1 1 38 39
+nn.Conv2d                convbn2d_17              1 1 39 40 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,128,1,1)f32 $input=39
+nn.SiLU                  model.backbone.body.6.m.0.cv1.act 1 1 40 41
+nn.Conv2d                convbn2d_18              1 1 41 42 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(3,3) out_channels=128 padding=(1,1) stride=(1,1) @bias=(128)f32 @weight=(128,128,3,3)f32 $input=41
+nn.SiLU                  model.backbone.body.6.m.0.cv2.act 1 1 42 43
+pnnx.Expression          pnnx_expr_79             2 1 39 43 44 expr=add(@0,@1)
+nn.Conv2d                convbn2d_19              1 1 44 45 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,128,1,1)f32 $input=44
+nn.SiLU                  model.backbone.body.6.m.1.cv1.act 1 1 45 46
+nn.Conv2d                convbn2d_20              1 1 46 47 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(3,3) out_channels=128 padding=(1,1) stride=(1,1) @bias=(128)f32 @weight=(128,128,3,3)f32 $input=46
+nn.SiLU                  model.backbone.body.6.m.1.cv2.act 1 1 47 48
+pnnx.Expression          pnnx_expr_77             2 1 44 48 49 expr=add(@0,@1)
+nn.Conv2d                convbn2d_21              1 1 49 50 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,128,1,1)f32 $input=49
+nn.SiLU                  model.backbone.body.6.m.2.cv1.act 1 1 50 51
+nn.Conv2d                convbn2d_22              1 1 51 52 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(3,3) out_channels=128 padding=(1,1) stride=(1,1) @bias=(128)f32 @weight=(128,128,3,3)f32 $input=51
+nn.SiLU                  model.backbone.body.6.m.2.cv2.act 1 1 52 53
+pnnx.Expression          pnnx_expr_75             2 1 49 53 54 expr=add(@0,@1)
+nn.Conv2d                convbn2d_23              1 1 37 55 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,256,1,1)f32 $input=37
+nn.SiLU                  model.backbone.body.6.cv2.act 1 1 55 56
+torch.cat                torch.cat_8              2 1 54 56 57 dim=1
+nn.Conv2d                convbn2d_24              1 1 57 58 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,256,1,1)f32 $input=57
+nn.SiLU                  model.backbone.body.6.cv3.act 1 1 58 59
+nn.Conv2d                convbn2d_25              1 1 59 60 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(3,3) out_channels=512 padding=(1,1) stride=(2,2) @bias=(512)f32 @weight=(512,256,3,3)f32 $input=59
+nn.SiLU                  model.backbone.body.7.act 1 1 60 61
+nn.Conv2d                convbn2d_26              1 1 61 62 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,512,1,1)f32 $input=61
+nn.SiLU                  model.backbone.body.8.cv1.act 1 1 62 63
+nn.Conv2d                convbn2d_27              1 1 63 64 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,256,1,1)f32 $input=63
+nn.SiLU                  model.backbone.body.8.m.0.cv1.act 1 1 64 65
+nn.Conv2d                convbn2d_28              1 1 65 66 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(3,3) out_channels=256 padding=(1,1) stride=(1,1) @bias=(256)f32 @weight=(256,256,3,3)f32 $input=65
+nn.SiLU                  model.backbone.body.8.m.0.cv2.act 1 1 66 67
+pnnx.Expression          pnnx_expr_72             2 1 63 67 68 expr=add(@0,@1)
+nn.Conv2d                convbn2d_29              1 1 61 69 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,512,1,1)f32 $input=61
+nn.SiLU                  model.backbone.body.8.cv2.act 1 1 69 70
+torch.cat                torch.cat_9              2 1 68 70 71 dim=1
+nn.Conv2d                convbn2d_30              1 1 71 72 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=512 padding=(0,0) stride=(1,1) @bias=(512)f32 @weight=(512,512,1,1)f32 $input=71
+nn.SiLU                  model.backbone.body.8.cv3.act 1 1 72 73
+nn.Conv2d                convbn2d_31              1 1 73 74 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,512,1,1)f32 $input=73
+nn.SiLU                  model.backbone.pan.inner_blocks.0.cv1.act 1 1 74 75
+nn.MaxPool2d             model.backbone.pan.inner_blocks.0.m.0 1 1 75 76 ceil_mode=False dilation=(1,1) kernel_size=(5,5) padding=(2,2) return_indices=False stride=(1,1)
+nn.MaxPool2d             model.backbone.pan.inner_blocks.0.m.1 1 1 75 77 ceil_mode=False dilation=(1,1) kernel_size=(9,9) padding=(4,4) return_indices=False stride=(1,1)
+nn.MaxPool2d             model.backbone.pan.inner_blocks.0.m.2 1 1 75 78 ceil_mode=False dilation=(1,1) kernel_size=(13,13) padding=(6,6) return_indices=False stride=(1,1)
+torch.cat                torch.cat_10             4 1 75 76 77 78 79 dim=1
+nn.Conv2d                convbn2d_32              1 1 79 80 bias=True dilation=(1,1) groups=1 in_channels=1024 kernel_size=(1,1) out_channels=512 padding=(0,0) stride=(1,1) @bias=(512)f32 @weight=(512,1024,1,1)f32 $input=79
+nn.SiLU                  model.backbone.pan.inner_blocks.0.cv2.act 1 1 80 81
+nn.Conv2d                convbn2d_33              1 1 81 82 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,512,1,1)f32 $input=81
+nn.SiLU                  model.backbone.pan.inner_blocks.1.act 1 1 82 83
+nn.Upsample              model.backbone.pan.inner_blocks.2 1 1 83 84 mode=nearest scale_factor=(2.000000e+00,2.000000e+00) size=None
+torch.cat                torch.cat_11             2 1 84 59 85 dim=1
+nn.Conv2d                convbn2d_34              1 1 85 86 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,512,1,1)f32 $input=85
+nn.SiLU                  model.backbone.pan.inner_blocks.3.cv1.act 1 1 86 87
+nn.Conv2d                convbn2d_35              1 1 87 88 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,128,1,1)f32 $input=87
+nn.SiLU                  model.backbone.pan.inner_blocks.3.m.0.cv1.act 1 1 88 89
+nn.Conv2d                convbn2d_36              1 1 89 90 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(3,3) out_channels=128 padding=(1,1) stride=(1,1) @bias=(128)f32 @weight=(128,128,3,3)f32 $input=89
+nn.SiLU                  model.backbone.pan.inner_blocks.3.m.0.cv2.act 1 1 90 91
+nn.Conv2d                convbn2d_37              1 1 85 92 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,512,1,1)f32 $input=85
+nn.SiLU                  model.backbone.pan.inner_blocks.3.cv2.act 1 1 92 93
+torch.cat                torch.cat_12             2 1 91 93 94 dim=1
+nn.Conv2d                convbn2d_38              1 1 94 95 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,256,1,1)f32 $input=94
+nn.SiLU                  model.backbone.pan.inner_blocks.3.cv3.act 1 1 95 96
+nn.Conv2d                convbn2d_39              1 1 96 97 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,256,1,1)f32 $input=96
+nn.SiLU                  model.backbone.pan.inner_blocks.4.act 1 1 97 98
+nn.Upsample              model.backbone.pan.inner_blocks.5 1 1 98 99 mode=nearest scale_factor=(2.000000e+00,2.000000e+00) size=None
+torch.cat                torch.cat_13             2 1 99 35 100 dim=1
+nn.Conv2d                convbn2d_40              1 1 100 101 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,256,1,1)f32 $input=100
+nn.SiLU                  model.backbone.pan.layer_blocks.0.cv1.act 1 1 101 102
+nn.Conv2d                convbn2d_41              1 1 102 103 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,64,1,1)f32 $input=102
+nn.SiLU                  model.backbone.pan.layer_blocks.0.m.0.cv1.act 1 1 103 104
+nn.Conv2d                convbn2d_42              1 1 104 105 bias=True dilation=(1,1) groups=1 in_channels=64 kernel_size=(3,3) out_channels=64 padding=(1,1) stride=(1,1) @bias=(64)f32 @weight=(64,64,3,3)f32 $input=104
+nn.SiLU                  model.backbone.pan.layer_blocks.0.m.0.cv2.act 1 1 105 106
+nn.Conv2d                convbn2d_43              1 1 100 107 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=64 padding=(0,0) stride=(1,1) @bias=(64)f32 @weight=(64,256,1,1)f32 $input=100
+nn.SiLU                  model.backbone.pan.layer_blocks.0.cv2.act 1 1 107 108
+torch.cat                torch.cat_14             2 1 106 108 109 dim=1
+nn.Conv2d                convbn2d_44              1 1 109 110 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,128,1,1)f32 $input=109
+nn.SiLU                  model.backbone.pan.layer_blocks.0.cv3.act 1 1 110 111
+nn.Conv2d                convbn2d_45              1 1 111 112 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(3,3) out_channels=128 padding=(1,1) stride=(2,2) @bias=(128)f32 @weight=(128,128,3,3)f32 $input=111
+nn.SiLU                  model.backbone.pan.layer_blocks.1.act 1 1 112 113
+torch.cat                torch.cat_15             2 1 113 98 114 dim=1
+nn.Conv2d                convbn2d_46              1 1 114 115 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,256,1,1)f32 $input=114
+nn.SiLU                  model.backbone.pan.layer_blocks.2.cv1.act 1 1 115 116
+nn.Conv2d                convbn2d_47              1 1 116 117 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,128,1,1)f32 $input=116
+nn.SiLU                  model.backbone.pan.layer_blocks.2.m.0.cv1.act 1 1 117 118
+nn.Conv2d                convbn2d_48              1 1 118 119 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(3,3) out_channels=128 padding=(1,1) stride=(1,1) @bias=(128)f32 @weight=(128,128,3,3)f32 $input=118
+nn.SiLU                  model.backbone.pan.layer_blocks.2.m.0.cv2.act 1 1 119 120
+nn.Conv2d                convbn2d_49              1 1 114 121 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=128 padding=(0,0) stride=(1,1) @bias=(128)f32 @weight=(128,256,1,1)f32 $input=114
+nn.SiLU                  model.backbone.pan.layer_blocks.2.cv2.act 1 1 121 122
+torch.cat                torch.cat_16             2 1 120 122 123 dim=1
+nn.Conv2d                convbn2d_50              1 1 123 124 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,256,1,1)f32 $input=123
+nn.SiLU                  model.backbone.pan.layer_blocks.2.cv3.act 1 1 124 125
+nn.Conv2d                convbn2d_51              1 1 125 126 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(3,3) out_channels=256 padding=(1,1) stride=(2,2) @bias=(256)f32 @weight=(256,256,3,3)f32 $input=125
+nn.SiLU                  model.backbone.pan.layer_blocks.3.act 1 1 126 127
+torch.cat                torch.cat_17             2 1 127 83 128 dim=1
+nn.Conv2d                convbn2d_52              1 1 128 129 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,512,1,1)f32 $input=128
+nn.SiLU                  model.backbone.pan.layer_blocks.4.cv1.act 1 1 129 130
+nn.Conv2d                convbn2d_53              1 1 130 131 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,256,1,1)f32 $input=130
+nn.SiLU                  model.backbone.pan.layer_blocks.4.m.0.cv1.act 1 1 131 132
+nn.Conv2d                convbn2d_54              1 1 132 133 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(3,3) out_channels=256 padding=(1,1) stride=(1,1) @bias=(256)f32 @weight=(256,256,3,3)f32 $input=132
+nn.SiLU                  model.backbone.pan.layer_blocks.4.m.0.cv2.act 1 1 133 134
+nn.Conv2d                convbn2d_55              1 1 128 135 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=256 padding=(0,0) stride=(1,1) @bias=(256)f32 @weight=(256,512,1,1)f32 $input=128
+nn.SiLU                  model.backbone.pan.layer_blocks.4.cv2.act 1 1 135 136
+torch.cat                torch.cat_18             2 1 134 136 137 dim=1
+nn.Conv2d                convbn2d_56              1 1 137 138 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=512 padding=(0,0) stride=(1,1) @bias=(512)f32 @weight=(512,512,1,1)f32 $input=137
+nn.SiLU                  model.backbone.pan.layer_blocks.4.cv3.act 1 1 138 139
+nn.Conv2d                model.head.head.0        1 1 111 140 bias=True dilation=(1,1) groups=1 in_channels=128 kernel_size=(1,1) out_channels=255 padding=(0,0) stride=(1,1) @bias=(255)f32 @weight=(255,128,1,1)f32
+pnnx.Expression          pnnx_expr_46             1 1 140 141 expr=[int(size(@0,0)),3,-1,int(size(@0,2)),int(size(@0,3))]
+Tensor.view              Tensor.view_3            2 1 140 141 142 $input=140 $shape=141
+nn.Conv2d                model.head.head.1        1 1 125 143 bias=True dilation=(1,1) groups=1 in_channels=256 kernel_size=(1,1) out_channels=255 padding=(0,0) stride=(1,1) @bias=(255)f32 @weight=(255,256,1,1)f32
+pnnx.Expression          pnnx_expr_27             1 1 143 144 expr=[int(size(@0,0)),3,-1,int(size(@0,2)),int(size(@0,3))]
+Tensor.view              Tensor.view_4            2 1 143 144 145 $input=143 $shape=144
+nn.Conv2d                model.head.head.2        1 1 139 146 bias=True dilation=(1,1) groups=1 in_channels=512 kernel_size=(1,1) out_channels=255 padding=(0,0) stride=(1,1) @bias=(255)f32 @weight=(255,512,1,1)f32
+pnnx.Expression          pnnx_expr_6              1 1 146 147 expr=[int(size(@0,0)),3,-1,int(size(@0,2)),int(size(@0,3))]
+Tensor.view              Tensor.view_5            2 1 146 147 148 $input=146 $shape=147
+torch.permute            torch.permute_21         1 1 148 149 dims=(0,1,3,4,2) $input=148
+Tensor.contiguous        Tensor.contiguous_2      1 1 149 150 memory_format=torch.contiguous_format $input=149
+torch.permute            torch.permute_20         1 1 145 151 dims=(0,1,3,4,2) $input=145
+Tensor.contiguous        Tensor.contiguous_1      1 1 151 152 memory_format=torch.contiguous_format $input=151
+torch.permute            torch.permute_19         1 1 142 153 dims=(0,1,3,4,2) $input=142
+Tensor.contiguous        Tensor.contiguous_0      1 1 153 154 memory_format=torch.contiguous_format $input=153
+yolort.models.anchor_utils.AnchorGenerator anchor_generator         9 1 111 111 111 111 125 125 125 125 139 155
+prim::TupleUnpack        pnnx_136                 1 7 155 156 157 158 159 160 161 162
+yolort.runtime.trt_helper.LogitsDecoder post_process             10 1 154 156 157 158 152 159 160 150 161 162 163
+prim::TupleUnpack        pnnx_137                 1 2 163 164 165
+prim::TupleConstruct     pnnx_140                 2 1 164 165 166
+pnnx.Output              pnnx_output_0            1 0 166
