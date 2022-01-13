@@ -1,5 +1,5 @@
 #include "yamlyololoader.h"
-#include "yaml-cpp/yaml.h"
+#include <yaml-cpp/yaml.h>
 #include "fmt1.h"
 
 struct Layer
@@ -10,7 +10,7 @@ struct Layer
     std::vector<std::string> paras;
 };
 
-static Node yaml2l(YAML::Node& y)
+static Node yaml2l(YAML::Node y)
 {
     Node n;
     if (y[0].IsScalar())
@@ -40,7 +40,7 @@ void yamlyoloLoader::fileToNodes(const std::string& filename, std::deque<Node>& 
         n.title = "back_" + std::to_string(i);
         nodes.emplace_back(std::move(n));
     }
-    auto& head = config["head"];
+    auto head = config["head"];
     for (size_t i = 0; i < head.size(); i++)
     {
         auto n = yaml2l(head[i]);

@@ -25,8 +25,9 @@ set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 # collect the source files
 if(APPLE)
-    add_compile_options(-x objective-c++ -fobjc-weak -fno-objc-arc)
-
+    enable_language(OBJCXX)
+    set(OBJCXX_EXTENSIONS -x objective-c++ -fobjc-weak)
+    # set_target_properties (${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_WEAK ON)
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore")
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.node-editor)
     list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
@@ -63,15 +64,14 @@ target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
 find_package(SDL2)
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
-find_package(YAML-CPP)
-target_include_directories(${PROJECT_NAME} PRIVATE ${YAML-CPP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${YAML-CPP_LIBRARIES})
 
 if (UNIX)
     target_link_directories (${PROJECT_NAME} PRIVATE /usr/local/lib)
     target_link_libraries (${PROJECT_NAME} PRIVATE dl)
 endif ()
-
+find_package(YAML-CPP)
+target_include_directories(${PROJECT_NAME} PRIVATE ${YAML-CPP_INCLUDE_DIRS})
+target_link_libraries (${PROJECT_NAME} PRIVATE yaml-cpp)
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
 
 # summary
