@@ -57,6 +57,8 @@ private:
     int first_run_ = 1;
     int select_id_ = -1;
 
+    int erase_select_ = 0;
+
     Node& createNode()
     {
         int n = nodes_.size();
@@ -67,8 +69,22 @@ private:
         n++;
         return node;
     }
-    bool check_can_link(int from, int to)
+
+    bool check_can_link(int from, int to, bool manully = false)
     {
+        //allow one pin has only one link
+        if (manully)
+        {
+            for (auto& link : links_)
+            {
+                if (link.from == from || link.to == to)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        //allow one pin has multi links
         int link_count = 0;
         for (auto& link : links_)
         {
@@ -90,8 +106,14 @@ private:
         }
         return true;
     }
+
     void add_link(int from, int to, bool manully = false)
     {
+        if (manully)
+        {
+            links_.emplace_back(from, to);
+            return;
+        }
         std::function<int(int)> get = [&](int i)
         {
             bool have_same = false;
@@ -109,12 +131,142 @@ private:
         };
         links_.emplace_back(get(from), get(to));
 
-        from = from / Node::MAX_PIN;
-        to = (to - Node::HALF_MAX_PIN) / Node::MAX_PIN;
-        if (manully)
+        //from = from / Node::MAX_PIN;
+        //to = to / Node::MAX_PIN;
+
+    }
+
+    bool link_on_node(const Link& l, int node_id)
+    {
+        int i = l.from - node_id;
+        int j = l.to - node_id;
+        return (i >= 0 && i < Node::MAX_PIN) || (j >= 0 && j < Node::MAX_PIN);
+    }
+
+
+    void refresh_pos_link()
+    {
+        if (check_same_name()) { return; }
+
+        std::map<int, std::pair<Node*, Node*>> n1;//pin->link(node*->node*)
+        for (const auto& link : links_)
         {
-            nodes_[from].nexts.push_back(&nodes_[to]);
-            nodes_[to].prevs.push_back(&nodes_[from]);
+            int from = link.from / Node::MAX_PIN;
+            int to = link.to / Node::MAX_PIN;
+
+            n1[link.from] = { &nodes_[from],&nodes_[to] };
+            n1[link.to] = { &nodes_[from],&nodes_[to] };
+        }
+
+        for (auto& node : nodes_)
+        {
+            auto pos = ImNodes::GetNodeGridSpacePos(node.id);
+            node.position_x = pos.x;
+            node.position_y = pos.y;
+            node.prevs.clear();
+            node.nexts.clear();
+
+            for (int i = node.id; i < node.id + node.next_pin; i++)
+            {
+                if (n1.count(i))
+                {
+                    node.nexts.push_back(n1[i].second);
+                }
+            }
+            for (int i = node.text_id; i < node.text_id + node.prev_pin; i++)
+            {
+                if (n1.count(i))
+                {
+                    node.prevs.push_back(n1[i].first);
+                }
+            }
+        }
+
+    }
+
+    bool check_same_name()
+    {
+        bool res = false;
+        std::map<std::string, int> m1;
+        for (auto& node : nodes_)
+        {
+            m1[node.title]++;
+        }
+        for (auto& kv : m1)
+        {
+            if (kv.second > 1)
+            {
+                res = true;
+                auto str = fmt1::format(u8"有{}个\"{}\"!", kv.second, kv.first);
+                ImGui::OpenPopup(u8"提示");
+                if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+                {
+                    ImGui::Text(str.c_str());
+                    if (ImGui::Button(u8"知道了"))
+                    {
+                        ImGui::CloseCurrentPopup();
+                    }
+                    ImGui::EndPopup();
+                }
+            }
+        }
+        return res;
+    }
+
+    void try_save(bool force = false)
+    {
+        if (saved_ == false || force)
+        {
+            refresh_pos_link();
+            if (current_file_.empty())
+            {
+                auto file = openfile();
+                if (!file.empty())
+                {
+                    current_file_ = file;
+                    loader_->nodesToFile(nodes_, current_file_);
+                    saved_ = true;
+                }
+            }
+            else
+            {
+                loader_->nodesToFile(nodes_, current_file_);
+                saved_ = true;
+            }
+        }
+    }
+
+    void try_exit()
+    {
+        if (saved_)
+        {
+            exit(0);
+        }
+        ImGui::OpenPopup(u8"退出");
+        if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text(u8"是否保存？");
+            if (ImGui::Button(u8"是"))
+            {
+                ImGui::CloseCurrentPopup();
+                try_save();
+                exit(0);
+                need_dialog_ = 0;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(u8"否"))
+            {
+                ImGui::CloseCurrentPopup();
+                exit(0);
+                need_dialog_ = 0;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button(u8"取消"))
+            {
+                ImGui::CloseCurrentPopup();
+                need_dialog_ = 0;
+            }
+            ImGui::EndPopup();
         }
     }
 
@@ -164,113 +316,6 @@ private:
         }
         return filePathName;
 #endif
-    }
-    void refresh_pos_link()
-    {
-        if (check_same_name()) { return; }
-        std::map<int, Node* > n1;
-        for (auto& node : nodes_)
-        {
-            auto pos = ImNodes::GetNodeGridSpacePos(node.id);
-            node.position_x = pos.x;
-            node.position_y = pos.y;
-            node.prevs.clear();
-            node.nexts.clear();
-            n1[node.id] = &node;
-            n1[node.text_id] = &node;
-        }
-        std::map<std::string, std::vector<std::string>> m2;
-        for (const auto& link : links_)
-        {
-            int from = link.from / Node::MAX_PIN;
-            int to = (link.to - Node::HALF_MAX_PIN) / Node::MAX_PIN;//这里没有顺,unfishexhn
-            n1[from]->nexts.push_back(n1[to]);
-            n1[to]->prevs.push_back(n1[from]);
-        }
-    }
-
-    bool check_same_name()
-    {
-        bool res = false;
-        std::map<std::string, int> m1;
-        for (auto& node : nodes_)
-        {
-            m1[node.title]++;
-        }
-        for (auto& kv : m1)
-        {
-            if (kv.second > 1)
-            {
-                res = true;
-                auto str = fmt1::format(u8"有{}个\"{}\"!", kv.second, kv.first);
-                ImGui::OpenPopup(u8"提示");
-                if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-                {
-                    ImGui::Text(str.c_str());
-                    if (ImGui::Button(u8"知道了"))
-                    {
-                        ImGui::CloseCurrentPopup();
-                    }
-                    ImGui::EndPopup();
-                }
-            }
-        }
-        return res;
-    }
-    void try_save(bool force = false)
-    {
-        if (saved_ == false || force)
-        {
-            refresh_pos_link();
-            if (current_file_.empty())
-            {
-                auto file = openfile();
-                if (!file.empty())
-                {
-                    current_file_ = file;
-                    loader_->nodesToFile(nodes_, current_file_);
-                    saved_ = true;
-                }
-            }
-            else
-            {
-                loader_->nodesToFile(nodes_, current_file_);
-                saved_ = true;
-            }
-        }
-    }
-    void try_exit()
-    {
-        if (saved_)
-        {
-            exit(0);
-        }
-        ImGui::OpenPopup(u8"退出");
-        if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-        {
-            ImGui::Text(u8"是否保存？");
-            if (ImGui::Button(u8"是"))
-            {
-                ImGui::CloseCurrentPopup();
-                try_save();
-                exit(0);
-                need_dialog_ = 0;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button(u8"否"))
-            {
-                ImGui::CloseCurrentPopup();
-                exit(0);
-                need_dialog_ = 0;
-            }
-            ImGui::SameLine();
-            if (ImGui::Button(u8"取消"))
-            {
-                ImGui::CloseCurrentPopup();
-                need_dialog_ = 0;
-            }
-            ImGui::EndPopup();
-        }
     }
 
 public:
@@ -406,12 +451,14 @@ public:
         //        emulate_three_button_mouse ? &ImGui::GetIO().KeyAlt : NULL;
         //}
         //ImGui::Columns(1);
+
         {
             select_id_ = -1;
             if (ImNodes::NumSelectedNodes() == 1)
             {
                 ImNodes::GetSelectedNodes(&select_id_);
             }
+            erase_select_ = 0;
         }
 
         ImNodes::BeginNodeEditor();
@@ -432,68 +479,114 @@ public:
             if (ImGui::BeginPopup("add node"))
             {
                 const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
-                if (select_id_ >= 0)
+                Node* node = nullptr;
+                for (auto& n : nodes_)
+                {
+                    auto p = ImNodes::GetNodeScreenSpacePos(n.id);
+                    auto size = ImNodes::GetNodeDimensions(n.id);
+                    int x = click_pos.x - p.x;
+                    int y = click_pos.y - p.y;
+                    //fmt1::print("{},{};{},{};{},{};{},{}\n", click_pos.x, click_pos.y, p.x, p.y, x, y,size.x,size.y);
+                    if (x >= 0 && y >= 0 && x < size.x && y < size.y)
+                    {
+                        node = &n;
+                        break;
+                    }
+                }
+                if (node)
                 {
                     if (ImGui::MenuItem(u8"添加输入点"))
                     {
-
+                        node->prev_pin++;
                     }
                     if (ImGui::MenuItem(u8"添加输出点"))
                     {
+                        node->next_pin++;
+                    }
+                    if (ImGui::MenuItem(u8"清除无连接点"))
+                    {
+                        std::vector<Link*> from_this_node;
+                        std::vector<Link*> to_this_node;
+                        std::map<int, Node*> n1;//pin->link(node*)
+                        for (auto& link : links_)
+                        {
+                            int from = link.from / Node::MAX_PIN * Node::MAX_PIN;
+                            int to = link.to / Node::MAX_PIN * Node::MAX_PIN;
+                            if (from == node->id)
+                            {
+                                from_this_node.push_back(&link);
+                            }
+                            if (to == node->id)
+                            {
+                                to_this_node.push_back(&link);
+                            }
+                        }
 
+                        auto have_link = [&](int id, std::vector<Link*>& this_node)
+                        {
+                            for (auto& l : this_node)
+                            {
+                                if (l->from == id || l->to == id)
+                                {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        };
+
+                        auto remove = [&have_link](int& begin_id, int &current_count, std::vector<Link*>& this_node) 
+                        {
+                            while (current_count > this_node.size())
+                            {
+                                for (int i = begin_id; i <= begin_id + current_count; i++)
+                                {
+                                    if (!have_link(i, this_node))
+                                    {
+                                        for (auto& l : this_node)
+                                        {
+                                            if (l->from > i)
+                                            {
+                                                l->from--;
+                                            }
+                                        }
+                                        current_count--;
+                                        break;
+                                    }
+                                }
+                            }
+                        };
+                        remove(node->id, node->next_pin, from_this_node);
+                        remove(node->text_id, node->prev_pin, to_this_node);
                     }
                     if (ImGui::MenuItem(u8"删除"))
                     {
-
+                        node->erased = 1;
+                        for (auto it = links_.begin(); it != links_.end();)
+                        {
+                            if (link_on_node(*it, node->id))
+                            {
+                                it = links_.erase(it);
+                            }
+                            else
+                            {
+                                it++;
+                            }
+                        }
                     }
                 }
                 else
                 {
-                    if (ImGui::MenuItem(u8"输入"))
+                    if (ImGui::MenuItem(u8"新建操作层"))
                     {
-                        int count = 0;
-                        for (auto& node : nodes_)
-                        {
-                            if (node.title.find("layer_in") == 0) { count++; }
-                        }
                         auto& ui_node = createNode();
-                        ui_node.title = "layer_in" + std::to_string(count);
+                        ui_node.title = fmt1::format("layer_{}", rand());
                         ui_node.type = "data";
                         ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                         saved_ = false;
                     }
-                    //if (ImGui::MenuItem(u8"输出") && root_node_id_ == -1)
-                    //{
-                    //    auto& ui_node = createNode();
-                    //    ui_node.type = ;
-                    //    ui_node.title = "layer_out";
-                    //    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    //    root_node_id_ = ui_node.id;
-                    //    saved_ = false;
-                    //}
-                    if (ImGui::MenuItem(u8"全连接"))
+                    if (ImGui::MenuItem(u8"删除选中"))
                     {
-                        auto& ui_node = createNode();
-                        ui_node.type = "fc";
-                        ui_node.title = fmt1::format("layer_fc{}", rand());
-                        ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                        saved_ = false;
-                    }
-                    if (ImGui::MenuItem(u8"卷积"))
-                    {
-                        auto& ui_node = createNode();
-                        ui_node.type = "conv";
-                        ui_node.title = fmt1::format("layer_conv{}", rand());
-                        ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                        saved_ = false;
-                    }
-                    if (ImGui::MenuItem(u8"池化"))
-                    {
-                        auto& ui_node = createNode();
-                        ui_node.type = "pool";
-                        ui_node.title = fmt1::format("layer_pool{}", rand());
-                        ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                        saved_ = false;
+                        erase_select_ = 1;
                     }
                 }
                 ImGui::EndPopup();
@@ -634,13 +727,13 @@ public:
             int start_attr, end_attr;
             if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
             {
-                if (start_attr % Node::MAX_PIN)
+                if (start_attr % Node::MAX_PIN >= Node::HALF_MAX_PIN)
                 {
                     // Ensure the edge is always directed from the text to
                     // whatever produces the text      
                     std::swap(start_attr, end_attr);
                 }
-                if (check_can_link(start_attr, end_attr))
+                if (check_can_link(start_attr, end_attr, true))
                 {
                     add_link(start_attr, end_attr, true);
                 }
@@ -661,7 +754,7 @@ public:
 
         {
             const int num_selected = ImNodes::NumSelectedLinks();
-            if (num_selected > 0 && ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())
+            if (num_selected > 0 && (erase_select_ || (ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())))
             {
                 static std::vector<int> selected_links;
                 selected_links.resize(static_cast<size_t>(num_selected));
@@ -676,7 +769,7 @@ public:
 
         {
             const int num_selected = ImNodes::NumSelectedNodes();
-            if (num_selected > 0 && ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())
+            if (num_selected > 0 && (erase_select_ || (ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())))
             {
                 static std::vector<int> selected_nodes;
                 selected_nodes.resize(static_cast<size_t>(num_selected));
@@ -687,10 +780,10 @@ public:
                     {
                         return node.id == node_id;
                     });
-                    iter->erased = true;
+                    iter->erased = 1;
                     for (auto it = links_.begin(); it != links_.end();)
                     {
-                        if (it->from == node_id || it->to == node_id + 1)
+                        if (link_on_node(*it, node_id))
                         {
                             it = links_.erase(it);
                         }
@@ -787,7 +880,7 @@ public:
     {
         begin_file_ = file;
     }
-};
+    };
 
 static ColorNodeEditor color_editor;
 } // namespace
