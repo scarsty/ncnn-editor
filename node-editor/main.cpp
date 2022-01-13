@@ -1,11 +1,20 @@
 #include "node_editor.h"
 #include <imgui.h>
 #include <imgui_impl_sdl.h>
+
+#ifdef USE_OPENGL3
 #include <imgui_impl_opengl3.h>
+#else
+#include <imgui_impl_sdlrenderer.h>
+#endif
+
 #include <imnodes.h>
 #include <stdio.h>
 #include <SDL.h>
+
+#ifdef USE_OPENGL3
 #include <SDL_opengl.h>
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -15,6 +24,7 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+#ifdef USE_OPENGL3
 #if __APPLE__
     // GL 3.2 Core + GLSL 150
     const char* glsl_version = "#version 150";
@@ -38,22 +48,44 @@ int main(int argc, char* argv[])
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
     SDL_DisplayMode current;
     SDL_GetCurrentDisplayMode(0, &current);
+#endif
+    int flag = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+#ifdef USE_OPENGL3
+    flag |= SDL_WINDOW_OPENGL;
+#endif
+
     SDL_Window* window = SDL_CreateWindow(
         "Net Editor",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         1280,
         720,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+        flag);
+
+#ifdef USE_OPENGL3
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
+#else
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    if (renderer == NULL)
+    {
+        SDL_Log("Error creating SDL_Renderer!");
+        return false;
+    }
+#endif
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
+#ifdef USE_OPENGL3
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
+#else
+    ImGui_ImplSDL2_InitForSDLRenderer(window);
+    ImGui_ImplSDLRenderer_Init(renderer);
+#endif
 
     ImNodes::CreateContext();
 
@@ -70,9 +102,11 @@ int main(int argc, char* argv[])
     bool done = false;
     bool initialized = false;
 
+
+    const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
     {
-        const ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+        //glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
     }
 
     while (!done)
@@ -89,7 +123,11 @@ int main(int argc, char* argv[])
         }
 
         // Start the Dear ImGui frame
+#ifdef USE_OPENGL3
         ImGui_ImplOpenGL3_NewFrame();
+#else
+        ImGui_ImplSDLRenderer_NewFrame();
+#endif
         ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
 
@@ -105,6 +143,7 @@ int main(int argc, char* argv[])
         // Rendering
         ImGui::Render();
 
+#ifdef USE_OPENGL3
         int fb_width, fb_height;
         SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
         glViewport(0, 0, fb_width, fb_height);
@@ -112,16 +151,28 @@ int main(int argc, char* argv[])
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
+#else
+        SDL_SetRenderDrawColor(renderer, (Uint8)(clear_color.x * 255), (Uint8)(clear_color.y * 255), (Uint8)(clear_color.z * 255), (Uint8)(clear_color.w * 255));
+        SDL_RenderClear(renderer);
+        ImGui_ImplSDLRenderer_RenderDrawData(ImGui::GetDrawData());
+        SDL_RenderPresent(renderer);
+#endif
     }
 
     example::NodeEditorShutdown();
     ImNodes::DestroyContext();
-
+#ifdef USE_OPENGL3
     ImGui_ImplOpenGL3_Shutdown();
+#else
+    ImGui_ImplSDLRenderer_Shutdown();
+#endif
     ImGui_ImplSDL2_Shutdown();
     ImGui::DestroyContext();
-
+#ifdef USE_OPENGL3
     SDL_GL_DeleteContext(gl_context);
+#else
+    SDL_DestroyRenderer(renderer);
+#endif
     SDL_DestroyWindow(window);
     SDL_Quit();
 
