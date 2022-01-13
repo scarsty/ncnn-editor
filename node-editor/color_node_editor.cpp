@@ -762,6 +762,7 @@ public:
                 {
                     links_.erase(links_.begin() + link_id);
                 }
+                ImNodes::ClearLinkSelection();
                 saved_ = false;
             }
         }
@@ -890,6 +891,7 @@ void NodeEditorInitialize(int argc, char* argv[])
     ImNodes::StyleColorsLight();
     ImNodesIO& ion = ImNodes::GetIO();
     ion.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyCtrl;
+    ion.EmulateThreeButtonMouse.Modifier = &ImGui::GetIO().KeyAlt;
     srand(time(0));
 #ifdef IMGUI_HAS_VIEWPORT
     ImGuiViewport* viewport = ImGui::GetMainViewport();

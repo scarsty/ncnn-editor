@@ -26,6 +26,7 @@ set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 # collect the source files
 if(APPLE)
     add_compile_options(-x objective-c++ -fobjc-weak)
+
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore")
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.node-editor)
     list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)

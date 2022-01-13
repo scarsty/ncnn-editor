@@ -42,6 +42,10 @@ cd build
 cmake -DCMAKE_SYSTEM_PROCESSOR=x86_64 ..
 make
 ```
+or
+```
+cmake -G "Xcode"
+```
 
 **SDL2 install**
 
