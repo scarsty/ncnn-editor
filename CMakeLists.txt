@@ -1,70 +1,73 @@
+# check cmake version first
+cmake_minimum_required(VERSION 3.13)
 
-cmake_minimum_required(VERSION 3.10)
+# disable inplace builds to prevent source tree corruption.
+if (" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
+    message (FATAL_ERROR "Building inplace are not allowed. You should create a separate directory.")
+endif ()
 
+# set cmake_install_prefix path
+if (NOT DEFINED CMAKE_INSTALL_PREFIX)
+    set (CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install" CACHE PATH "Installation directory")
+endif()
+
+# project name
 project(node-editor)
-set(CMAKE_VERBOSE_MAKEFILE on)
-set(CMAKE_CXX_COMPILER $ENV{CXX})
-set(CMAKE_CXX_FLAGS "-O3 -std=c++17 -DNDEBUG")
 
-if(APPLE)
-    include_directories(3rdparty/nb)
-    include_directories(3rdparty/imgui)
-    include_directories(3rdparty/imgui/backends)
-    include_directories(3rdparty/imgui/misc/cpp)
-    include_directories(3rdparty/imnodes)
-    include_directories(3rdparty/ImGuiFileDialog)
-    find_package(SDL2)
-    include_directories(${SDL2_INCLUDE_DIRS})
-else()
-    include_directories(/usr/include/SDL2 ./3rdparty/nb /usr/local/include . ./3rdparty/imgui ./example ./3rdparty/imgui/backends ./3rdparty/imgui/misc/cpp ./3rdparty/imnodes ./3rdparty/ImGuiFileDialog)
-    link_directories(/usr/local/lib)
-    find_package(SDL2)
-    include_directories(${SDL2_INCLUDE_DIRS})
-    link_libraries(${SDL2_LIBRARIES})
-endif(APPLE)
+# import IMGUI
+include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
 
+# add a target
+add_executable(${PROJECT_NAME})
+
+set_target_properties (${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS NDEBUG)
+set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+
+# collect the source files
+# aux_source_directory(${CMAKE_SOURCE_DIR}/node-editor NODE_EDITOR_SRCS)
 if(APPLE)
-add_compile_options(-x objective-c++)
+    add_compile_options(-x objective-c++)
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore")
-add_executable(node-editor
-    3rdparty/imgui/imgui.cpp
-    3rdparty/imgui/imgui_demo.cpp
-    3rdparty/imgui/imgui_draw.cpp
-    3rdparty/imgui/imgui_tables.cpp
-    3rdparty/imgui/imgui_widgets.cpp
-    3rdparty/imgui/backends/imgui_impl_opengl3.cpp
-    3rdparty/imgui/backends/imgui_impl_sdl.cpp
-    3rdparty/imgui/misc/cpp/imgui_stdlib.cpp
-    node-editor/color_node_editor.cpp
-    node-editor/main.mm
-    node-editor/loader.cpp
-    node-editor/ccccloader.cpp
-    node-editor/ncnnloader.cpp
-    imnodes2/imnodes.cpp
-    3rdparty/nb/convert.cpp
-    3rdparty/nb/File.cpp
-    3rdparty/ImGuiFileDialog/ImGuiFileDialog.cpp)
-target_link_libraries(node-editor SDL2 dl)
+    set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.node-editor)
+    list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
+    list (APPEND NODE_EDITOR_SRCS node-editor/main.mm)
+    list (APPEND NODE_EDITOR_SRCS node-editor/loader.cpp)
+    list (APPEND NODE_EDITOR_SRCS node-editor/ccccloader.cpp)
+    list (APPEND NODE_EDITOR_SRCS node-editor/ncnnloader.cpp)
 else()
-add_executable(node-editor
-    3rdparty/imgui/imgui.cpp
-    3rdparty/imgui/imgui_demo.cpp
-    3rdparty/imgui/imgui_draw.cpp
-    3rdparty/imgui/imgui_tables.cpp
-    3rdparty/imgui/imgui_widgets.cpp
-    3rdparty/imgui/backends/imgui_impl_opengl3.cpp
-    3rdparty/imgui/backends/imgui_impl_sdl.cpp
-    3rdparty/imgui/misc/cpp/imgui_stdlib.cpp
-    node-editor/color_node_editor.cpp
-    node-editor/main.cpp
-    node-editor/loader.cpp
-    node-editor/ccccloader.cpp
-    node-editor/ncnnloader.cpp
-    imnodes2/imnodes.cpp
-    3rdparty/nb/convert.cpp
-    3rdparty/nb/File.cpp
-    3rdparty/ImGuiFileDialog/ImGuiFileDialog.cpp)
-target_link_libraries(node-editor SDL2 GL dl)
+    list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
+    list (APPEND NODE_EDITOR_SRCS node-editor/main.mm)
+    list (APPEND NODE_EDITOR_SRCS node-editor/loader.cpp)
+    list (APPEND NODE_EDITOR_SRCS node-editor/ccccloader.cpp)
+    list (APPEND NODE_EDITOR_SRCS node-editor/ncnnloader.cpp)
 endif(APPLE)
 
-install(TARGETS node-editor RUNTIME DESTINATION bin)
+aux_source_directory(${CMAKE_SOURCE_DIR}/imnodes2    NODE_EDITOR_NODE_SRCS)
+list (APPEND NODE_EDITOR_NB_SRCS 3rdparty/nb/convert.cpp)
+list (APPEND NODE_EDITOR_NB_SRCS 3rdparty/nb/File.cpp)
+list (APPEND NODE_EDITOR_DIALOG_SRCS 3rdparty/ImGuiFileDialog/ImGuiFileDialog.cpp)
+
+target_sources (${PROJECT_NAME} PRIVATE ${NODE_EDITOR_SRCS})
+target_sources (${PROJECT_NAME} PRIVATE ${NODE_EDITOR_NODE_SRCS})
+target_sources (${PROJECT_NAME} PRIVATE ${NODE_EDITOR_NB_SRCS})
+target_sources (${PROJECT_NAME} PRIVATE ${NODE_EDITOR_DIALOG_SRCS})
+
+target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/example)
+target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/nb)
+target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/imnodes)
+target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/ImGuiFileDialog)
+
+target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
+find_package(SDL2)
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+
+if (UNIX)
+    target_link_directories (${PROJECT_NAME} PRIVATE /usr/local/lib)
+    target_link_libraries (${PROJECT_NAME} PRIVATE dl)
+endif ()
+
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+
+# summary
+include(${CMAKE_SOURCE_DIR}/cmake/summary.cmake)

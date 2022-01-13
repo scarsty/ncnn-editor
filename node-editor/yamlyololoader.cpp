@@ -33,7 +33,7 @@ void yamlyoloLoader::fileToNodes(const std::string& filename, std::deque<Node>& 
 {
     YAML::Node config;
     config = YAML::LoadFile(filename);
-    auto& back = config["backbone"];
+    auto back = config["backbone"];
     for (size_t i = 0; i < back.size(); i++)
     {
         auto n = yaml2l(back[i]);

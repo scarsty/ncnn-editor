@@ -1,4 +1,4 @@
-#include "node_editor.h"
+﻿#include "node_editor.h"
 
 #include <imnodes.h>
 #include <imgui.h>
@@ -57,20 +57,34 @@ private:
     int first_run_ = 1;
     int select_id_ = -1;
 
-    const int node_add_ = 10000;
+    int erase_select_ = 0;
 
     Node& createNode()
     {
         int n = nodes_.size();
         nodes_.emplace_back();
         auto& node = nodes_.back();
-        node.id = n * 2;
-        node.text_id = n * 2 + 1;
+        node.id = n * Node::MAX_PIN;
+        node.text_id = n * Node::MAX_PIN + Node::HALF_MAX_PIN;
         n++;
         return node;
     }
-    bool check_can_link(int from, int to)
+
+    bool check_can_link(int from, int to, bool manully = false)
     {
+        //allow one pin has only one link
+        if (manully)
+        {
+            for (auto& link : links_)
+            {
+                if (link.from == from || link.to == to)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+        //allow one pin has multi links
         int link_count = 0;
         for (auto& link : links_)
         {
@@ -92,8 +106,14 @@ private:
         }
         return true;
     }
-    void add_link(int from, int to)
+
+    void add_link(int from, int to, bool manully = false)
     {
+        if (manully)
+        {
+            links_.emplace_back(from, to);
+            return;
+        }
         std::function<int(int)> get = [&](int i)
         {
             bool have_same = false;
@@ -101,7 +121,7 @@ private:
             {
                 if (l.from == i || l.to == i)
                 {
-                    i += node_add_;
+                    i += 1;
                     have_same = true;
                     break;
                 }
@@ -110,59 +130,34 @@ private:
             return i;
         };
         links_.emplace_back(get(from), get(to));
+
+        //from = from / Node::MAX_PIN;
+        //to = to / Node::MAX_PIN;
+
     }
 
-    std::string openfile()
+    bool link_on_node(const Link& l, int node_id)
     {
-#ifdef _WIN32
-        need_dialog_ = 0;
-        OPENFILENAMEA ofn;
-        char szFile[1024];
-        ZeroMemory(&ofn, sizeof(ofn));
-        ofn.lStructSize = sizeof(ofn);
-        ofn.hwndOwner = NULL;
-        ofn.lpstrFile = szFile;
-        ofn.lpstrFile[0] = '\0';
-        ofn.nMaxFile = sizeof(szFile);
-        ofn.lpstrFilter = "All files\0*.*\0";
-        ofn.nFilterIndex = 1;
-        ofn.lpstrFileTitle = NULL;
-        ofn.nMaxFileTitle = 0;
-        ofn.lpstrInitialDir = NULL;
-        ofn.Flags = OFN_PATHMUSTEXIST;
-        if (GetOpenFileNameA(&ofn))
-        {
-            return szFile;
-        }
-        else
-        {
-            return "";
-        }
-#else
-        std::string filePathName;
-        ImGuiFileDialog::Instance()->OpenDialog("ChooseFileDlgKey", "Choose File", ".ini", ".");
-
-        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
-        {
-            // action if OK
-            if (ImGuiFileDialog::Instance()->IsOk())
-            {
-                filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
-                std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
-                // action
-            }
-
-            // close
-            ImGuiFileDialog::Instance()->Close();
-            need_dialog_ = 0;
-        }
-        return filePathName;
-#endif
+        int i = l.from - node_id;
+        int j = l.to - node_id;
+        return (i >= 0 && i < Node::MAX_PIN) || (j >= 0 && j < Node::MAX_PIN);
     }
+
+
     void refresh_pos_link()
     {
         if (check_same_name()) { return; }
-        std::map<int, Node* > n1;
+
+        std::map<int, std::pair<Node*, Node*>> n1;//pin->link(node*->node*)
+        for (const auto& link : links_)
+        {
+            int from = link.from / Node::MAX_PIN;
+            int to = link.to / Node::MAX_PIN;
+
+            n1[link.from] = { &nodes_[from],&nodes_[to] };
+            n1[link.to] = { &nodes_[from],&nodes_[to] };
+        }
+
         for (auto& node : nodes_)
         {
             auto pos = ImNodes::GetNodeGridSpacePos(node.id);
@@ -170,15 +165,23 @@ private:
             node.position_y = pos.y;
             node.prevs.clear();
             node.nexts.clear();
-            n1[node.id] = &node;
-            n1[node.text_id] = &node;
+
+            for (int i = node.id; i < node.id + node.next_pin; i++)
+            {
+                if (n1.count(i))
+                {
+                    node.nexts.push_back(n1[i].second);
+                }
+            }
+            for (int i = node.text_id; i < node.text_id + node.prev_pin; i++)
+            {
+                if (n1.count(i))
+                {
+                    node.prevs.push_back(n1[i].first);
+                }
+            }
         }
-        std::map<std::string, std::vector<std::string>> m2;
-        for (const auto& link : links_)
-        {
-            n1[link.from]->nexts.push_back(n1[link.to]);
-            n1[link.to]->prevs.push_back(n1[link.from]);
-        }
+
     }
 
     bool check_same_name()
@@ -209,6 +212,7 @@ private:
         }
         return res;
     }
+
     void try_save(bool force = false)
     {
         if (saved_ == false || force)
@@ -231,6 +235,7 @@ private:
             }
         }
     }
+
     void try_exit()
     {
         if (saved_)
@@ -263,6 +268,53 @@ private:
             }
             ImGui::EndPopup();
         }
+    }
+
+    std::string openfile()
+    {
+#ifdef _WIN32
+        need_dialog_ = 0;
+        OPENFILENAMEA ofn;
+        char szFile[1024];
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = NULL;
+        ofn.lpstrFile = szFile;
+        ofn.lpstrFile[0] = '\0';
+        ofn.nMaxFile = sizeof(szFile);
+        ofn.lpstrFilter = "All files\0*.*\0";
+        ofn.nFilterIndex = 1;
+        ofn.lpstrFileTitle = NULL;
+        ofn.nMaxFileTitle = 0;
+        ofn.lpstrInitialDir = NULL;
+        ofn.Flags = OFN_PATHMUSTEXIST;
+        if (GetOpenFileNameA(&ofn))
+        {
+            return szFile;
+        }
+        else
+        {
+            return "";
+        }
+#else
+        std::string filePathName;
+        ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose File", "{.ini,.param}", ".");
+        if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
+        {
+            // action if OK
+            if (ImGuiFileDialog::Instance()->IsOk())
+            {
+                filePathName = ImGuiFileDialog::Instance()->GetFilePathName();
+                std::string filePath = ImGuiFileDialog::Instance()->GetCurrentPath();
+                // action
+            }
+
+            // close
+            ImGuiFileDialog::Instance()->Close();
+            need_dialog_ = 0;
+        }
+        return filePathName;
+#endif
     }
 
 public:
@@ -398,12 +450,14 @@ public:
         //        emulate_three_button_mouse ? &ImGui::GetIO().KeyAlt : NULL;
         //}
         //ImGui::Columns(1);
+
         {
             select_id_ = -1;
             if (ImNodes::NumSelectedNodes() == 1)
             {
                 ImNodes::GetSelectedNodes(&select_id_);
             }
+            erase_select_ = 0;
         }
 
         ImNodes::BeginNodeEditor();
@@ -424,51 +478,115 @@ public:
             if (ImGui::BeginPopup("add node"))
             {
                 const ImVec2 click_pos = ImGui::GetMousePosOnOpeningCurrentPopup();
-                if (ImGui::MenuItem(u8"输入"))
+                Node* node = nullptr;
+                for (auto& n : nodes_)
                 {
-                    int count = 0;
-                    for (auto& node : nodes_)
+                    auto p = ImNodes::GetNodeScreenSpacePos(n.id);
+                    auto size = ImNodes::GetNodeDimensions(n.id);
+                    int x = click_pos.x - p.x;
+                    int y = click_pos.y - p.y;
+                    //fmt1::print("{},{};{},{};{},{};{},{}\n", click_pos.x, click_pos.y, p.x, p.y, x, y,size.x,size.y);
+                    if (x >= 0 && y >= 0 && x < size.x && y < size.y)
                     {
-                        if (node.title.find("layer_in") == 0) { count++; }
+                        node = &n;
+                        break;
                     }
-                    auto& ui_node = createNode();
-                    ui_node.title = "layer_in" + std::to_string(count);
-                    ui_node.type = "data";
-                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    saved_ = false;
                 }
-                //if (ImGui::MenuItem(u8"输出") && root_node_id_ == -1)
-                //{
-                //    auto& ui_node = createNode();
-                //    ui_node.type = ;
-                //    ui_node.title = "layer_out";
-                //    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                //    root_node_id_ = ui_node.id;
-                //    saved_ = false;
-                //}
-                if (ImGui::MenuItem(u8"全连接"))
+                if (node)
                 {
-                    auto& ui_node = createNode();
-                    ui_node.type = "fc";
-                    ui_node.title = fmt1::format("layer_fc{}", rand());
-                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    saved_ = false;
+                    if (ImGui::MenuItem(u8"添加输入点"))
+                    {
+                        node->prev_pin++;
+                    }
+                    if (ImGui::MenuItem(u8"添加输出点"))
+                    {
+                        node->next_pin++;
+                    }
+                    if (ImGui::MenuItem(u8"清除无连接点"))
+                    {
+                        std::vector<Link*> from_this_node;
+                        std::vector<Link*> to_this_node;
+                        std::map<int, Node*> n1;//pin->link(node*)
+                        for (auto& link : links_)
+                        {
+                            int from = link.from / Node::MAX_PIN * Node::MAX_PIN;
+                            int to = link.to / Node::MAX_PIN * Node::MAX_PIN;
+                            if (from == node->id)
+                            {
+                                from_this_node.push_back(&link);
+                            }
+                            if (to == node->id)
+                            {
+                                to_this_node.push_back(&link);
+                            }
+                        }
+
+                        auto have_link = [&](int id, std::vector<Link*>& this_node)
+                        {
+                            for (auto& l : this_node)
+                            {
+                                if (l->from == id || l->to == id)
+                                {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        };
+
+                        auto remove = [&have_link](int& begin_id, int &current_count, std::vector<Link*>& this_node) 
+                        {
+                            while (current_count > this_node.size())
+                            {
+                                for (int i = begin_id; i <= begin_id + current_count; i++)
+                                {
+                                    if (!have_link(i, this_node))
+                                    {
+                                        for (auto& l : this_node)
+                                        {
+                                            if (l->from > i)
+                                            {
+                                                l->from--;
+                                            }
+                                        }
+                                        current_count--;
+                                        break;
+                                    }
+                                }
+                            }
+                        };
+                        remove(node->id, node->next_pin, from_this_node);
+                        remove(node->text_id, node->prev_pin, to_this_node);
+                    }
+                    if (ImGui::MenuItem(u8"删除"))
+                    {
+                        node->erased = 1;
+                        for (auto it = links_.begin(); it != links_.end();)
+                        {
+                            if (link_on_node(*it, node->id))
+                            {
+                                it = links_.erase(it);
+                            }
+                            else
+                            {
+                                it++;
+                            }
+                        }
+                    }
                 }
-                if (ImGui::MenuItem(u8"卷积"))
+                else
                 {
-                    auto& ui_node = createNode();
-                    ui_node.type = "conv";
-                    ui_node.title = fmt1::format("layer_conv{}", rand());
-                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    saved_ = false;
-                }
-                if (ImGui::MenuItem(u8"池化"))
-                {
-                    auto& ui_node = createNode();
-                    ui_node.type = "pool";
-                    ui_node.title = fmt1::format("layer_pool{}", rand());
-                    ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                    saved_ = false;
+                    if (ImGui::MenuItem(u8"新建操作层"))
+                    {
+                        auto& ui_node = createNode();
+                        ui_node.title = fmt1::format("layer_{}", rand());
+                        ui_node.type = "data";
+                        ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
+                        saved_ = false;
+                    }
+                    if (ImGui::MenuItem(u8"删除选中"))
+                    {
+                        erase_select_ = 1;
+                    }
                 }
                 ImGui::EndPopup();
             }
@@ -523,18 +641,18 @@ public:
 
                 int table_width = node_width - 24;
 
-                if (node.prevs.size() > 0)
                 {
-                    ImGui::BeginTable("inb", node.prevs.size() + 9, 0, ImVec2(node_width - 10, 1), 0);
+                    int pin = node.prev_pin;
+                    ImGui::BeginTable("inb", pin + 9, 0, ImVec2(node_width - 10, 1), 0);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
-                    for (int i = 0; i < node.prevs.size(); i++)
+                    for (int i = 0; i < pin; i++)
                     {
                         ImGui::TableNextColumn();
-                        ImNodes::BeginInputAttribute(node.text_id + i * 10000);
+                        ImNodes::BeginInputAttribute(node.text_id + i);
                         ImNodes::EndInputAttribute();
                     }
                     ImGui::EndTable();
@@ -567,18 +685,18 @@ public:
                     ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
                 }
 
-                if (node.nexts.size() > 0)
                 {
-                    ImGui::BeginTable("out", node.nexts.size() + 9, 0, ImVec2(node_width - 10, 1), 0);
+                    int pin = node.next_pin;
+                    ImGui::BeginTable("out", pin + 9, 0, ImVec2(node_width - 10, 1), 0);
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
                     ImGui::TableNextColumn();
-                    for (int i = 0; i < node.nexts.size(); i++)
+                    for (int i = 0; i < pin; i++)
                     {
                         ImGui::TableNextColumn();
-                        ImNodes::BeginOutputAttribute(node.id + i * 10000);
+                        ImNodes::BeginOutputAttribute(node.id + i);
                         ImNodes::EndOutputAttribute();
                     }
                     ImGui::EndTable();
@@ -608,15 +726,15 @@ public:
             int start_attr, end_attr;
             if (ImNodes::IsLinkCreated(&start_attr, &end_attr))
             {
-                if (start_attr % 2)
+                if (start_attr % Node::MAX_PIN >= Node::HALF_MAX_PIN)
                 {
                     // Ensure the edge is always directed from the text to
                     // whatever produces the text      
                     std::swap(start_attr, end_attr);
                 }
-                if (check_can_link(start_attr, end_attr))
+                if (check_can_link(start_attr, end_attr, true))
                 {
-                    add_link(start_attr, end_attr);
+                    add_link(start_attr, end_attr, true);
                 }
                 saved_ = false;
             }
@@ -635,7 +753,7 @@ public:
 
         {
             const int num_selected = ImNodes::NumSelectedLinks();
-            if (num_selected > 0 && ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())
+            if (num_selected > 0 && (erase_select_ || (ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())))
             {
                 static std::vector<int> selected_links;
                 selected_links.resize(static_cast<size_t>(num_selected));
@@ -650,7 +768,7 @@ public:
 
         {
             const int num_selected = ImNodes::NumSelectedNodes();
-            if (num_selected > 0 && ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())
+            if (num_selected > 0 && (erase_select_ || (ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())))
             {
                 static std::vector<int> selected_nodes;
                 selected_nodes.resize(static_cast<size_t>(num_selected));
@@ -661,10 +779,10 @@ public:
                     {
                         return node.id == node_id;
                     });
-                    iter->erased = true;
+                    iter->erased = 1;
                     for (auto it = links_.begin(); it != links_.end();)
                     {
-                        if (it->from == node_id || it->to == node_id + 1)
+                        if (link_on_node(*it, node_id))
                         {
                             it = links_.erase(it);
                         }
@@ -723,8 +841,10 @@ public:
                 int count = 0;
                 for (auto& node : nodes_)
                 {
-                    node.id = count * 2;
-                    node.text_id = count * 2 + 1;
+                    node.id = count * Node::MAX_PIN;
+                    node.text_id = count * Node::MAX_PIN + Node::HALF_MAX_PIN;
+                    node.prev_pin = node.prevs.size();
+                    node.next_pin = node.nexts.size();
                     count++;
                     if (node.position_x != -1)
                     {
@@ -750,6 +870,8 @@ public:
             saved_ = true;
         }
 
+        //refresh_pos_link();
+
         ImGui::End();
         first_run_ = 0;
     }
@@ -757,7 +879,7 @@ public:
     {
         begin_file_ = file;
     }
-};
+    };
 
 static ColorNodeEditor color_editor;
 } // namespace

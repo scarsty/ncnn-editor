@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <string>
 #include <vector>
 #include <deque>
@@ -7,15 +7,22 @@
 
 struct Node
 {
+    enum
+    {
+        MAX_PIN = 256,    //一个node最多的pin数
+        HALF_MAX_PIN = MAX_PIN / 2,
+    };
+
     std::string title;
     std::string type;
     std::string text;
     std::map<std::string, std::string> values;
 
-    std::vector<Node*> prevs, nexts;
+    std::vector<Node*> prevs, nexts;    //需注意下面的prev_pin和next_pin是画图的点数，准许大于等于size
 
     //use to draw nodes
     int id, text_id;
+    int prev_pin = 0, next_pin = 0;
     int position_x = -1, position_y = -1;
     int erased = 0;
     int selected = 0;

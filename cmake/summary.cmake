@@ -49,5 +49,7 @@ message(STATUS "")
 
 message(STATUS "${PROJECT_NAME} other information:")
 # show building install path
+message(STATUS "  IMGUI Platform:               ${IMGUI_PLATFORM}")
+message(STATUS "  IMGUI Renderer:               ${IMGUI_RENDERER}")
 message(STATUS "  Package install path:         ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "")
