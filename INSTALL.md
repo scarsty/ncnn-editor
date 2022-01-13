@@ -39,8 +39,12 @@ Please use apt (or yum or pacman or brew) to install SDL2 and yaml-cpp if you ca
 ```
 mkdir build
 cd build
-cmake -DCMAKE_SYSTEM_PROCESSOR=x86 ..
+cmake -DCMAKE_SYSTEM_PROCESSOR=x86_64 ..
 make
+```
+or
+```
+cmake -G "Xcode"
 ```
 
 **SDL2 install**
