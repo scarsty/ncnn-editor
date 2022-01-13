@@ -1,5 +1,7 @@
 ## node-editor
 
+<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/logo.jpg'/>
+
 基于 [imnodes](https://github.com/Nelarius/imnodes) 的流程图编辑工具。
 
 目前的主要功能是用于神经网络结构的简单编辑，或者某些特殊流程图的编辑。
@@ -26,3 +28,4 @@
 
 <img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/lenet.png'/>
 <img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/ncnn.png'/>
+<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/ncnn2.png'/>
