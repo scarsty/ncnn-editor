@@ -72,9 +72,6 @@
     <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_sdlrenderer.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rdparty\ImGuiFileDialog\ImGuiFileDialog.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loader.h">

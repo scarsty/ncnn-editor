@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rdparty\ImGuiFileDialog\ImGuiFileDialog.cpp" />
     <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_sdlrenderer.cpp" />
     <ClCompile Include="..\3rdparty\nb\convert.cpp" />
     <ClCompile Include="..\3rdparty\nb\File.cpp" />
