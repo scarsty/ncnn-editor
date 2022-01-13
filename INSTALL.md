@@ -34,6 +34,15 @@ make
 
 Please use apt (or yum or pacman or brew) to install SDL2 and yaml-cpp if you can.
 
+**On MacOS**
+
+```
+mkdir build
+cd build
+cmake -DCMAKE_SYSTEM_PROCESSOR=x86 ..
+make
+```
+
 **SDL2 install**
 
 - `download the source from the offcial website:http://www.libsdl.org/`
