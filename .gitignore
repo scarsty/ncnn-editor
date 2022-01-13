@@ -3,3 +3,5 @@ node-editor/x64/
 x64/
 node-editor/imgui.ini
 build
+cmake-build-debug
+cmake-build-release
