@@ -2,9 +2,9 @@
 cmake_minimum_required(VERSION 3.13)
 
 # disable inplace builds to prevent source tree corruption.
-if (" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
-    message (FATAL_ERROR "Building inplace are not allowed. You should create a separate directory.")
-endif ()
+# if (" ${CMAKE_SOURCE_DIR}" STREQUAL " ${CMAKE_BINARY_DIR}")
+#     message (FATAL_ERROR "Building inplace are not allowed. You should create a separate directory.")
+# endif ()
 
 # set cmake_install_prefix path
 if (NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -24,9 +24,8 @@ set_target_properties (${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS NDEBUG)
 set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 # collect the source files
-# aux_source_directory(${CMAKE_SOURCE_DIR}/node-editor NODE_EDITOR_SRCS)
 if(APPLE)
-    add_compile_options(-x objective-c++)
+    add_compile_options(-x objective-c++ -fobjc-weak)
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore")
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.node-editor)
     list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
