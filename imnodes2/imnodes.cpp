@@ -2018,6 +2018,11 @@ void StyleColorsDark()
     GImNodes->Style.Colors[ImNodesCol_Link] = IM_COL32(61, 133, 224, 200);
     GImNodes->Style.Colors[ImNodesCol_LinkHovered] = IM_COL32(66, 150, 250, 255);
     GImNodes->Style.Colors[ImNodesCol_LinkSelected] = IM_COL32(66, 150, 250, 255);
+
+    GImNodes->Style.Colors[ImNodesCol_Link] = IM_COL32(66, 150, 250, 100);
+    GImNodes->Style.Colors[ImNodesCol_LinkHovered] = IM_COL32(99, 200, 250, 224);
+    GImNodes->Style.Colors[ImNodesCol_LinkSelected] = IM_COL32(255, 69, 91, 224);
+
     // pin colors match ImGui's button colors
     GImNodes->Style.Colors[ImNodesCol_Pin] = IM_COL32(53, 150, 250, 180);
     GImNodes->Style.Colors[ImNodesCol_PinHovered] = IM_COL32(53, 150, 250, 255);
@@ -2093,8 +2098,8 @@ void StyleColorsLight()
     // original imgui values: 66, 150, 250
     GImNodes->Style.Colors[ImNodesCol_Link] = IM_COL32(66, 150, 250, 100);
     // original imgui values: 117, 138, 204
-    GImNodes->Style.Colors[ImNodesCol_LinkHovered] = IM_COL32(66, 150, 250, 242);
-    GImNodes->Style.Colors[ImNodesCol_LinkSelected] = IM_COL32(66, 150, 250, 242);
+    GImNodes->Style.Colors[ImNodesCol_LinkHovered] = IM_COL32(99, 200, 250, 224);
+    GImNodes->Style.Colors[ImNodesCol_LinkSelected] = IM_COL32(255, 69, 91, 224);
     // original imgui values: 66, 150, 250
     GImNodes->Style.Colors[ImNodesCol_Pin] = IM_COL32(66, 150, 250, 160);
     GImNodes->Style.Colors[ImNodesCol_PinHovered] = IM_COL32(66, 150, 250, 255);

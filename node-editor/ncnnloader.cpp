@@ -145,6 +145,8 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
 
     push_cal_stack((Node*)&nodes[0], 1, nodes_turn, true);
 
+    nodes_turn.back()->nexts.resize(1);
+
     std::vector<std::string> lines(2);
     lines[0] = "7767517";
 

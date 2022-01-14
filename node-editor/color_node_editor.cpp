@@ -201,7 +201,7 @@ private:
                 ImGui::OpenPopup(u8"提示");
                 if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
-                    ImGui::Text(str.c_str());
+                    ImGui::TextUnformatted(str.c_str());
                     if (ImGui::Button(u8"知道了"))
                     {
                         ImGui::CloseCurrentPopup();
@@ -245,7 +245,7 @@ private:
         ImGui::OpenPopup(u8"退出");
         if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::Text(u8"是否保存？");
+            ImGui::TextUnformatted(u8"是否保存？");
             if (ImGui::Button(u8"是"))
             {
                 ImGui::CloseCurrentPopup();
@@ -859,12 +859,17 @@ public:
                 links_.clear();
                 for (auto& node : nodes_)
                 {
+                    int i_next = 0;
                     for (auto node1 : node.nexts)
                     {
-                        if (check_can_link(node.id, node1->text_id))
+                        for (int i_prev = 0; i_prev < node1->prevs.size(); i_prev++)
                         {
-                            add_link(node.id, node1->text_id);
+                            if (node1->prevs[i_prev] == &node)
+                            {
+                                add_link(node.id+i_next, node1->text_id + i_prev, true);
+                            }
                         }
+                        i_next++;
                     }
                 }
             }
