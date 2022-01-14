@@ -9,6 +9,30 @@
 #include "yamlyololoader.h"
 #include "ncnnloader.h"
 
+NodeLoader* create_loader(const std::string& filename)
+{
+    auto ext = convert::toLowerCase(File::getFileExt(filename));
+    if (ext == "ini")
+    {
+        return new ccccLoader();
+    }
+    else if (ext == "yaml")
+    {
+        return new yamlyoloLoader();
+    }
+    else if (ext == "param")
+    {
+        auto str = convert::readStringFromFile(filename);
+        int a = atoi(convert::findANumber(str).c_str());
+        if (a == 7767517)
+        {
+            return new ncnnLoader();
+        }
+    }
+    return new ccccLoader();
+}
+
+
 void NodeLoader::calPosition(std::deque<Node>& nodes)
 {
     int width = 250;
@@ -101,27 +125,51 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
     }
 }
 
-NodeLoader* create_loader(const std::string& filename)
+//最后一个参数为假，仅计算是否存在连接，为真则是严格计算传导顺序
+void NodeLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& stack, bool turn)
 {
-    auto ext = convert::toLowerCase(File::getFileExt(filename));
-    if (ext == "ini")
+    //lambda函数：层是否已经在向量中
+    auto contains = [&](std::vector<Node*>& v, Node* l) -> bool
     {
-        return new ccccLoader();
+        return std::find(v.begin(), v.end(), l) != v.end();
+    };
+
+    //层连接不能回环
+    if (layer == nullptr || contains(stack, layer))
+    {
+        return;
     }
-    else if (ext == "yaml")
+    std::vector<Node*> connect0, connect1;
+    connect1 = layer->nexts;
+    connect0 = layer->prevs;
+
+    if (direct < 0)
     {
-        return new yamlyoloLoader();
+        std::swap(connect0, connect1);
     }
-    else if (ext == "param")
+    //前面的层都被压入，才压入本层
+    bool contain_all0 = true;
+    for (auto& l : connect0)
     {
-        auto str = convert::readStringFromFile(filename);
-        int a = atoi(convert::findANumber(str).c_str());
-        if (a == 7767517)
+        if (!contains(stack, l))
         {
-            return new ncnnLoader();
+            contain_all0 = false;
+            break;
         }
     }
-    return new ccccLoader();
+    if (!turn || (!contains(stack, layer) && contain_all0))
+    {
+        stack.push_back(layer);
+    }
+    else
+    {
+        return;
+    }
+    for (auto& l : connect1)
+    {
+        push_cal_stack(l, direct, stack, turn);
+    }
 }
+
 
 

@@ -13,6 +13,7 @@ public:
     virtual void refreshNodeValues(Node&) {}
 public:
     void calPosition(std::deque<Node>& nodes);
+    void push_cal_stack(Node* layer, int direct, std::vector<Node*>& stack, bool turn);
 };
 
 NodeLoader* create_loader(const std::string& filename);

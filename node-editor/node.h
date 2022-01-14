@@ -25,12 +25,10 @@ struct Node
     int prev_pin = 0, next_pin = 0;
     int position_x = -1, position_y = -1;
     int erased = 0;
-    int selected = 0;
 
     // 辅助值
     std::vector<std::string> in, out;
-
-
+    int turn = 0;
 
     Node()
     {
