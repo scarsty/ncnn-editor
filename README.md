@@ -1,10 +1,18 @@
-## node-editor
+# node-editor
+
+<div align="right">
+
+<img src="assets/logo.png" width="100px">
+
+</div>
 
 基于 [imnodes](https://github.com/Nelarius/imnodes) 的流程图编辑工具。
 
 目前的主要功能是用于神经网络结构的简单编辑，或者某些特殊流程图的编辑。
 
 目标是老妪能训。
+
+QQ 群: 822911263
 
 ### 操作
 
@@ -24,12 +32,16 @@
 
 请大佬们pr支持新格式！
 
-<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/lenet.png'/>
-<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/ncnn.png'/>
-<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/images/ncnn2.png'/>
+<div align="center">
 
-### 授权
+<img src="assets/lenet.png">
+<img src="assets/ncnn.png">
+<img src="assets/ncnn2.png">
 
-### logo
+</div>
 
-<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/logo.png'/>
+## 授权
+
+```bash
+以 BSD 3-Clause License 授权发布。若将其商业应用，我们建议您提交一张书法照到官方 QQ 群。
+```
