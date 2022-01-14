@@ -1,4 +1,4 @@
-# node-editor
+# nn-editor
 
 <div align="right">
 

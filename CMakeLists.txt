@@ -12,7 +12,7 @@ if (NOT DEFINED CMAKE_INSTALL_PREFIX)
 endif()
 
 # project name
-project(node-editor)
+project(nn-editor)
 
 option(NETEDIT_LOADER_CCCC "support cccc model loader" ON)
 option(NETEDIT_LOADER_NCNN "support ncnn model loader" ON)
@@ -29,20 +29,20 @@ set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 
 # collect the source files
-list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
-list (APPEND NODE_EDITOR_SRCS node-editor/loader.cpp)
+list (APPEND NODE_EDITOR_SRCS nn-editor/nn_editor.cpp)
+list (APPEND NODE_EDITOR_SRCS nn-editor/loader.cpp)
 
 # cccc is always loaded. qing zhi chi cccc.
-list (APPEND NODE_EDITOR_SRCS node-editor/ccccloader.cpp)
+list (APPEND NODE_EDITOR_SRCS nn-editor/ccccloader.cpp)
 add_definitions(-DNETEDIT_LOADER_CCCC)
 
 if(NETEDIT_LOADER_NCNN)
-    list (APPEND NODE_EDITOR_SRCS node-editor/ncnnloader.cpp)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/ncnnloader.cpp)
     add_definitions(-DNETEDIT_LOADER_NCNN)
 endif()
 
 if(NETEDIT_LOADER_YAML_YOLO)
-    list (APPEND NODE_EDITOR_SRCS node-editor/yamlyololoader.cpp)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/yamlyololoader.cpp)
     add_definitions(-DNETEDIT_LOADER_YAML_YOLO)
 
     find_package(YAML-CPP)
@@ -54,10 +54,10 @@ if(APPLE)
     add_compile_options(-x objective-c++ -fobjc-weak -fno-objc-arc)
 
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore")
-    set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.node-editor)
-    list (APPEND NODE_EDITOR_SRCS node-editor/main.mm)
+    set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.nn-editor)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
 else()
-    list (APPEND NODE_EDITOR_SRCS node-editor/main.cpp)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/main.cpp)
 endif(APPLE)
 
 aux_source_directory(${CMAKE_SOURCE_DIR}/imnodes2    NODE_EDITOR_NODE_SRCS)

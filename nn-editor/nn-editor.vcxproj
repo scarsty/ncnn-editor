@@ -32,7 +32,7 @@
     <ClCompile Include="..\3rdparty\imgui\misc\cpp\imgui_stdlib.cpp" />
     <ClCompile Include="..\imnodes2\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
-    <ClCompile Include="color_node_editor.cpp" />
+    <ClCompile Include="nn_editor.cpp" />
     <ClCompile Include="loader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
