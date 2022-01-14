@@ -1,6 +1,6 @@
 ## node-editor
 
-<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/logo.jpg'/>
+<img src='https://raw.githubusercontent.com/scarsty/node-editor/master/logo.png'/>
 
 基于 [imnodes](https://github.com/Nelarius/imnodes) 的流程图编辑工具。
 

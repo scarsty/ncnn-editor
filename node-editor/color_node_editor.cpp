@@ -533,7 +533,7 @@ public:
                             return false;
                         };
 
-                        auto remove = [&have_link](int& begin_id, int &current_count, std::vector<Link*>& this_node) 
+                        auto remove = [&have_link](int& begin_id, int& current_count, std::vector<Link*>& this_node)
                         {
                             while (current_count > this_node.size())
                             {
@@ -643,19 +643,21 @@ public:
 
                 {
                     int pin = node.prev_pin;
-                    ImGui::BeginTable("inb", pin + 9, 0, ImVec2(node_width - 10, 1), 0);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    for (int i = 0; i < pin; i++)
+                    if (ImGui::BeginTable("inb", pin + 9, 0, ImVec2(node_width - 10, 1), 0))
                     {
                         ImGui::TableNextColumn();
-                        ImNodes::BeginInputAttribute(node.text_id + i);
-                        ImNodes::EndInputAttribute();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        for (int i = 0; i < pin; i++)
+                        {
+                            ImGui::TableNextColumn();
+                            ImNodes::BeginInputAttribute(node.text_id + i);
+                            ImNodes::EndInputAttribute();
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::EndTable();
                 }
 
                 //if (graph_.num_edges_from_node(node.text_id) == 0ull)
@@ -668,38 +670,42 @@ public:
                 if (node.id == select_id_)
                 {
                     loader_->refreshNodeValues(node);
-                    ImGui::BeginTable("value", 2, 0, { node_width, 0 });
-                    ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
-                    for (auto& kv : node.values)
+                    if (ImGui::BeginTable("value", 2, 0, { node_width, 0 }))
                     {
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(kv.first.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::PushItemWidth(100);
-                        ImGui::InputText(("##" + kv.first).c_str(), &kv.second);
-                        ImGui::PopItemWidth();
-                        ImGui::TableNextRow();
+                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
+                        for (auto& kv : node.values)
+                        {
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(kv.first.c_str());
+                            ImGui::TableNextColumn();
+                            ImGui::PushItemWidth(100);
+                            ImGui::InputText(("##" + kv.first).c_str(), &kv.second);
+                            ImGui::PopItemWidth();
+                            ImGui::TableNextRow();
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::EndTable();
                     ImGui::PushItemWidth(node_width);
                     ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
                 }
 
                 {
                     int pin = node.next_pin;
-                    ImGui::BeginTable("out", pin + 9, 0, ImVec2(node_width - 10, 1), 0);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    for (int i = 0; i < pin; i++)
+                    if (ImGui::BeginTable("out", pin + 9, 0, ImVec2(node_width - 10, 1), 0))
                     {
                         ImGui::TableNextColumn();
-                        ImNodes::BeginOutputAttribute(node.id + i);
-                        ImNodes::EndOutputAttribute();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        for (int i = 0; i < pin; i++)
+                        {
+                            ImGui::TableNextColumn();
+                            ImNodes::BeginOutputAttribute(node.id + i);
+                            ImNodes::EndOutputAttribute();
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::EndTable();
                 }
 
                 ImNodes::EndNode();
@@ -866,7 +872,7 @@ public:
                         {
                             if (node1->prevs[i_prev] == &node)
                             {
-                                add_link(node.id+i_next, node1->text_id + i_prev, true);
+                                add_link(node.id + i_next, node1->text_id + i_prev, true);
                             }
                         }
                         i_next++;
@@ -885,7 +891,7 @@ public:
     {
         begin_file_ = file;
     }
-    };
+};
 
 static ColorNodeEditor color_editor;
 } // namespace
