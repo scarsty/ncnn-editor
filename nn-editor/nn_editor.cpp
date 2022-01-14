@@ -334,7 +334,7 @@ public:
         auto flags = ImGuiWindowFlags_MenuBar;
 
         // The node editor window
-        std::string window_title = u8"网络结构编辑";
+        std::string window_title = u8"Neural Net Editor";
         ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
         ImGui::Begin(window_title.c_str(), NULL, flags);
 
@@ -899,6 +899,7 @@ static ColorNodeEditor color_editor;
 void NodeEditorInitialize(int argc, char* argv[])
 {
     ImGui::StyleColorsLight();
+    ImGui::GetIO().IniFilename = nullptr;
     ImNodes::StyleColorsLight();
     ImNodesIO& ion = ImNodes::GetIO();
     ion.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyCtrl;

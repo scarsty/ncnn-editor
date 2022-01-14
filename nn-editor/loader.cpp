@@ -5,9 +5,9 @@
 #include "File.h"
 #include "convert.h"
 
-#ifdef NETEDIT_LOADER_CCCC
+//#ifdef NETEDIT_LOADER_CCCC
 #include "ccccloader.h"
-#endif // NETEDIT_LOADER_CCCC
+//#endif // NETEDIT_LOADER_CCCC
 
 #ifdef NETEDIT_LOADER_YAML_YOLO
 #include "yamlyololoader.h"
