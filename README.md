@@ -1,6 +1,10 @@
-## node-editor
+# node-editor
 
-<img src="logo.png" width="400px">
+<div align="right">
+
+<img src="logo.png" width="100px">
+
+</div>
 
 基于 [imnodes](https://github.com/Nelarius/imnodes) 的流程图编辑工具。
 
