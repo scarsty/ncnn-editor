@@ -5,9 +5,17 @@
 #include "File.h"
 #include "convert.h"
 
+#ifdef NETEDIT_LOADER_CCCC
 #include "ccccloader.h"
+#endif // NETEDIT_LOADER_CCCC
+
+#ifdef NETEDIT_LOADER_YAML_YOLO
 #include "yamlyololoader.h"
+#endif // NETEDIT_LOADER_YAML_YOLO
+
+#ifdef NETEDIT_LOADER_NCNN
 #include "ncnnloader.h"
+#endif // NETEDIT_LOADER_NCNN
 
 void NodeLoader::calPosition(std::deque<Node>& nodes)
 {
@@ -108,11 +116,14 @@ NodeLoader* create_loader(const std::string& filename)
     {
         return new ccccLoader();
     }
-    else if (ext == "yaml")
+#ifdef NETEDIT_LOADER_YAML_YOLO
+    if (ext == "yaml")
     {
         return new yamlyoloLoader();
     }
-    else if (ext == "param")
+#endif // NETEDIT_LOADER_YAML_YOLO
+#ifdef NETEDIT_LOADER_NCNN
+    if (ext == "param")
     {
         auto str = convert::readStringFromFile(filename);
         int a = atoi(convert::findANumber(str).c_str());
@@ -121,6 +132,7 @@ NodeLoader* create_loader(const std::string& filename)
             return new ncnnLoader();
         }
     }
+#endif NETEDIT_LOADER_NCNN
     return new ccccLoader();
 }
 
