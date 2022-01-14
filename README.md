@@ -34,9 +34,9 @@ QQ 群: 822911263
 
 <div align="center">
 
-<img src="images/lenet.png">
-<img src="images/ncnn.png">
-<img src="images/ncnn2.png">
+<img src="assets/lenet.png">
+<img src="assets/ncnn.png">
+<img src="assets/ncnn2.png">
 
 </div>
 
