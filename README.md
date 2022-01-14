@@ -8,6 +8,8 @@
 
 目标是老妪能训。
 
+QQ 群: 822911263
+
 ### 操作
 
 * 按住中键，或者Alt+左键可以拖动整个图。
@@ -30,4 +32,8 @@
 <img src="images/ncnn.png">
 <img src="images/ncnn2.png">
 
-### 授权
+## 授权
+
+```bash
+以 BSD 3-Clause License 授权发布。若将其商业应用，我们建议您提交一张书法照到官方 QQ 群。
+```
