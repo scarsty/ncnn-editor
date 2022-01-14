@@ -2,7 +2,7 @@
 
 <div align="right">
 
-<img src="logo.png" width="100px">
+<img src="assets/logo.png" width="100px">
 
 </div>
 
