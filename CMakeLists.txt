@@ -14,6 +14,10 @@ endif()
 # project name
 project(node-editor)
 
+option(NETEDIT_LOADER_CCCC "support cccc model loader" ON)
+option(NETEDIT_LOADER_NCNN "support ncnn model loader" ON)
+option(NETEDIT_LOADER_YAML_YOLO "support yaml yolo model loader" ON)
+
 # import IMGUI
 include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
 
@@ -23,25 +27,37 @@ add_executable(${PROJECT_NAME})
 set_target_properties (${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS NDEBUG)
 set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
+
 # collect the source files
+list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
+list (APPEND NODE_EDITOR_SRCS node-editor/loader.cpp)
+
+# cccc is always loaded. qing zhi chi cccc.
+list (APPEND NODE_EDITOR_SRCS node-editor/ccccloader.cpp)
+add_definitions(-DNETEDIT_LOADER_CCCC)
+
+if(NETEDIT_LOADER_NCNN)
+    list (APPEND NODE_EDITOR_SRCS node-editor/ncnnloader.cpp)
+    add_definitions(-DNETEDIT_LOADER_NCNN)
+endif()
+
+if(NETEDIT_LOADER_YAML_YOLO)
+    list (APPEND NODE_EDITOR_SRCS node-editor/yamlyololoader.cpp)
+    add_definitions(-DNETEDIT_LOADER_YAML_YOLO)
+
+    find_package(YAML-CPP)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${YAML_CPP_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${YAML_CPP_LIBRARIES})
+endif()
+
 if(APPLE)
     add_compile_options(-x objective-c++ -fobjc-weak -fno-objc-arc)
 
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore")
     set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.node-editor)
-    list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
     list (APPEND NODE_EDITOR_SRCS node-editor/main.mm)
-    list (APPEND NODE_EDITOR_SRCS node-editor/loader.cpp)
-    list (APPEND NODE_EDITOR_SRCS node-editor/ccccloader.cpp)
-    list (APPEND NODE_EDITOR_SRCS node-editor/ncnnloader.cpp)
-    list (APPEND NODE_EDITOR_SRCS node-editor/yamlyololoader.cpp)
 else()
-    list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
-    list (APPEND NODE_EDITOR_SRCS node-editor/main.mm)
-    list (APPEND NODE_EDITOR_SRCS node-editor/loader.cpp)
-    list (APPEND NODE_EDITOR_SRCS node-editor/ccccloader.cpp)
-    list (APPEND NODE_EDITOR_SRCS node-editor/ncnnloader.cpp)
-    list (APPEND NODE_EDITOR_SRCS node-editor/yamlyololoader.cpp)
+    list (APPEND NODE_EDITOR_SRCS node-editor/main.cpp)
 endif(APPLE)
 
 aux_source_directory(${CMAKE_SOURCE_DIR}/imnodes2    NODE_EDITOR_NODE_SRCS)
@@ -61,11 +77,8 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
 find_package(SDL2)
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
-find_package(YAML-CPP)
-target_include_directories(${PROJECT_NAME} PRIVATE ${YAML_CPP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${YAML_CPP_LIBRARIES})
 
 if (UNIX)
     target_link_directories (${PROJECT_NAME} PRIVATE /usr/local/lib)
