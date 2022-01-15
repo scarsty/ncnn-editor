@@ -17,8 +17,22 @@
 #include "ncnnloader.h"
 #endif // NETEDIT_LOADER_NCNN
 
-NodeLoader* create_loader(const std::string& filename)
+NodeLoader* create_loader(const std::string& filename, int index)
 {
+    if (index > 0)
+    {
+        switch (index)
+        {
+        case 1:
+            return new ccccLoader();
+        case 2:
+            return new yamlyoloLoader();
+        case 3:
+            return new ncnnLoader();
+        default:
+            break;
+        }
+    }
     auto ext = convert::toLowerCase(File::getFileExt(filename));
     if (ext == "ini")
     {
@@ -42,6 +56,13 @@ NodeLoader* create_loader(const std::string& filename)
     }
 #endif NETEDIT_LOADER_NCNN
     return new ccccLoader();
+}
+
+const char* file_filter()
+{
+#ifdef _WIN32
+    return "CCCC Example\0*.ini\0yolort\0*.yaml\0ncnn & pnnx\0*.param\0";
+#endif
 }
 
 

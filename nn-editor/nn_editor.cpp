@@ -220,7 +220,7 @@ private:
             refresh_pos_link();
             if (current_file_.empty())
             {
-                auto file = openfile();
+                auto file = openfile(file_filter(), &loader_);
                 if (!file.empty())
                 {
                     current_file_ = file;
@@ -270,7 +270,7 @@ private:
         }
     }
 
-    std::string openfile()
+    std::string openfile(const char* filter, NodeLoader** loader_ptr = nullptr)
     {
 #ifdef _WIN32
         need_dialog_ = 0;
@@ -282,12 +282,16 @@ private:
         ofn.lpstrFile = szFile;
         ofn.lpstrFile[0] = '\0';
         ofn.nMaxFile = sizeof(szFile);
-        ofn.lpstrFilter = "All files\0*.*\0";
+        ofn.lpstrFilter = filter;
         ofn.nFilterIndex = 1;
         ofn.lpstrFileTitle = NULL;
         ofn.nMaxFileTitle = 0;
         ofn.lpstrInitialDir = NULL;
         ofn.Flags = OFN_PATHMUSTEXIST;
+        if (loader_ptr)
+        {
+            *loader_ptr = create_loader("", ofn.nFilterIndex);
+        }
         if (GetOpenFileNameA(&ofn))
         {
             return szFile;
@@ -355,7 +359,7 @@ public:
                 if (ImGui::MenuItem(u8"另存为..."))
                 {
                     refresh_pos_link();
-                    auto file = openfile();
+                    auto file = openfile(file_filter(), &loader_);
                     if (!file.empty())
                     {
                         if (File::getFileExt(file) != "ini")
@@ -363,7 +367,7 @@ public:
                             file = File::changeFileExt(file, "ini");
                         }
                         current_file_ = file;
-                        //loader_->saveFile(current_file_);
+                        loader_->nodesToFile(nodes_, current_file_);
                         saved_ = true;
                     }
                 }
@@ -833,7 +837,7 @@ public:
             }
             else
             {
-                file = openfile();
+                file = openfile("All files\0*.*\0");
             }
             //std::string file = "squeezenet_v1.1.param";
             if (!file.empty())
