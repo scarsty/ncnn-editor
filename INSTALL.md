@@ -1,6 +1,6 @@
-# How to Build in the Linux
+# Build on Linux
 
-Install required build dependecies:
+Install build dependencies:
 
 - git
 - cmake
@@ -19,7 +19,7 @@ cd node-editor
 git submodule update --init 
 ```
 
-**And you can use this to build this repo**
+**And you can use these to build this repo**
 
 Please modify the **CMakeLists.txt**
 
@@ -49,7 +49,7 @@ cmake -G "Xcode"
 
 **SDL2 install**
 
-- `download the source from the offcial website:http://www.libsdl.org/`
+- `download the source from offcial website:http://www.libsdl.org/`
 
 ```
 wget https://www.libsdl.org/release/SDL2-2.0.18.zip
