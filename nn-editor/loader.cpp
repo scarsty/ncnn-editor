@@ -25,10 +25,14 @@ NodeLoader* create_loader(const std::string& filename, int index)
         {
         case 1:
             return new ccccLoader();
+        #if NETEDIT_LOADER_YAML_YOLO
         case 2:
             return new yamlyoloLoader();
+        #endif
+        #if NETEDIT_LOADER_NCNN
         case 3:
             return new ncnnLoader();
+        #endif
         default:
             break;
         }
