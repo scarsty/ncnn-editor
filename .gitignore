@@ -1,7 +1,7 @@
 .vs/
-node-editor/x64/
+nn-editor/x64/
 x64/
-node-editor/imgui.ini
+nn-editor/imgui.ini
 build
 cmake-build-debug
 cmake-build-release

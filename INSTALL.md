@@ -11,11 +11,11 @@ Install build dependencies:
 - OpenGL
 - [yaml-cpp](https://github.com/jbeder/yaml-cpp)
 
-**Git clone the node-editor repo with submodule**
+**Git clone the nn-editor repo with submodule**
 
 ```
-git clone https://github.com/scarsty/node-editor
-cd node-editor
+git clone https://github.com/scarsty/nn-editor
+cd nn-editor
 git submodule update --init 
 ```
 
