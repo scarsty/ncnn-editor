@@ -1056,6 +1056,14 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
         }
     }
     case ImNodesClickInteractionType_None:
+    {
+        const bool dragging = GImNodes->AltMouseDragging;
+
+        if (dragging)
+        {
+            editor.Panning += ImGui::GetIO().MouseDelta;
+        }
+    }
         break;
     default:
         assert(!"Unreachable code!");
@@ -1923,7 +1931,7 @@ ImNodesIO::LinkDetachWithModifierClick::LinkDetachWithModifierClick() : Modifier
 
 ImNodesIO::ImNodesIO()
     : EmulateThreeButtonMouse(), LinkDetachWithModifierClick(),
-      AltMouseButton(ImGuiMouseButton_Middle), AutoPanningSpeed(1000.0f)
+      AltMouseButton(ImGuiMouseButton_Right), AutoPanningSpeed(1000.0f)
 {
 }
 

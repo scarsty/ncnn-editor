@@ -469,9 +469,25 @@ public:
         // Handle new nodes
         // These are driven by the user, so we place this code before rendering the nodes
         {
+            static ImVec2 right_click_pos0, right_click_pos1;
+            bool right_clicked = false;
+
+            if (ImGui::IsMouseClicked(1))
+            {
+                right_click_pos0 = ImGui::GetMousePos();
+            }
+            if (ImGui::IsMouseReleased(1))
+            {
+                right_click_pos1 = ImGui::GetMousePos();
+                if (right_click_pos1.x == right_click_pos0.x && right_click_pos1.y == right_click_pos0.y)
+                {
+                    right_clicked = true;
+                }
+            }
+
             const bool open_popup = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
                 ImNodes::IsEditorHovered() &&
-                (ImGui::IsMouseReleased(1));
+                (right_clicked);
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.f, 8.f));
             if (!ImGui::IsAnyItemHovered() && open_popup)
@@ -489,7 +505,6 @@ public:
                     auto size = ImNodes::GetNodeDimensions(n.id);
                     int x = click_pos.x - p.x;
                     int y = click_pos.y - p.y;
-                    //fmt1::print("{},{};{},{};{},{};{},{}\n", click_pos.x, click_pos.y, p.x, p.y, x, y,size.x,size.y);
                     if (x >= 0 && y >= 0 && x < size.x && y < size.y)
                     {
                         node = &n;
@@ -898,7 +913,7 @@ public:
 };
 
 static ColorNodeEditor color_editor;
-} // namespace
+    } // namespace
 
 void NodeEditorInitialize(int argc, char* argv[])
 {
