@@ -10,10 +10,6 @@ void ccccLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
 
     std::string prefix = "layer_";
     auto sections = ini.getAllSections();
-    std::sort(sections.begin(), sections.end(), [&](const std::string& l, const std::string& r)
-    {
-        return ini.getSectionNo(l) < ini.getSectionNo(r);
-    });
 
     int x = -1;
     int y = -1;

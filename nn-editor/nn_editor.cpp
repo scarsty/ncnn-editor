@@ -111,6 +111,13 @@ private:
     {
         if (manully)
         {
+            for (auto& l : links_)
+            {
+                if (l.from == from || l.to == to)
+                {
+                    return;
+                }
+            }
             links_.emplace_back(from, to);
             return;
         }

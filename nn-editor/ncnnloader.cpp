@@ -29,7 +29,7 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
         {
             Node node;
             node.title = v[1];
-            node.type = v[0];            
+            node.type = v[0];
 
             int input_count = atoi(v[2].c_str());
             int output_count = atoi(v[3].c_str());
@@ -95,8 +95,14 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
 void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& filename)
 {
     std::vector<Node*> nodes_turn;
-
-    push_cal_stack((Node*)&nodes[0], 1, nodes_turn, true);
+    for (auto& n : nodes)
+    {
+        if (n.prevs.size() == 0)
+        {
+            push_cal_stack((Node*)&n, 1, nodes_turn, true);
+            break;
+        }
+    }
 
     nodes_turn.back()->nexts.resize(1);
 

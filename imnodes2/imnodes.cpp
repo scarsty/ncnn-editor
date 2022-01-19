@@ -2106,7 +2106,7 @@ void StyleColorsLight()
     // original imgui values: 66, 150, 250
     GImNodes->Style.Colors[ImNodesCol_Link] = IM_COL32(66, 150, 250, 100);
     // original imgui values: 117, 138, 204
-    GImNodes->Style.Colors[ImNodesCol_LinkHovered] = IM_COL32(99, 200, 250, 224);
+    GImNodes->Style.Colors[ImNodesCol_LinkHovered] = IM_COL32(66, 150, 250, 224);
     GImNodes->Style.Colors[ImNodesCol_LinkSelected] = IM_COL32(255, 69, 91, 224);
     // original imgui values: 66, 150, 250
     GImNodes->Style.Colors[ImNodesCol_Pin] = IM_COL32(66, 150, 250, 160);
