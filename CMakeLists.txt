@@ -25,11 +25,14 @@ set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 # collect the source files
 if(APPLE)
-    enable_language(OBJCXX)
-    set(OBJCXX_EXTENSIONS -x objective-c++ -fobjc-weak)
-    # set_target_properties (${PROJECT_NAME} PROPERTIES XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_WEAK ON)
-    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore")
-    set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_FRAMEWORK_IDENTIFIER org.cmake.node-editor)
+    set(CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
+    enable_language(OBJC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak")
+    set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak")
+    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation")
+    set_target_properties(${PROJECT_NAME} PROPERTIES 
+    MACOSX_BUNDLE TRUE
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/node-editor/Info.plist)
     list (APPEND NODE_EDITOR_SRCS node-editor/color_node_editor.cpp)
     list (APPEND NODE_EDITOR_SRCS node-editor/main.mm)
     list (APPEND NODE_EDITOR_SRCS node-editor/loader.cpp)
@@ -72,7 +75,10 @@ endif ()
 find_package(YAML-CPP)
 target_include_directories(${PROJECT_NAME} PRIVATE ${YAML-CPP_INCLUDE_DIRS})
 target_link_libraries (${PROJECT_NAME} PRIVATE yaml-cpp)
-install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+if(NOT APPLE)
+    install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+endif(NOT APPLE)
+
 
 # summary
 include(${CMAKE_SOURCE_DIR}/cmake/summary.cmake)
