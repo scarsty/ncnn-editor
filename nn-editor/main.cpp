@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 #endif
 
     SDL_Window* window = SDL_CreateWindow(
-        "Net Editor",
+        "Neural Net Editor",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         1280,

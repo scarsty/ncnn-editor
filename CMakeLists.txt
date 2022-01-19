@@ -12,7 +12,11 @@ if (NOT DEFINED CMAKE_INSTALL_PREFIX)
 endif()
 
 # project name
-project(node-editor)
+project(nn-editor)
+
+option(NETEDIT_LOADER_CCCC "support cccc model loader" ON)
+option(NETEDIT_LOADER_NCNN "support ncnn model loader" ON)
+option(NETEDIT_LOADER_YAML_YOLO "support yaml yolo model loader" ON)
 
 # import IMGUI
 include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
@@ -23,7 +27,29 @@ add_executable(${PROJECT_NAME})
 set_target_properties (${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS NDEBUG)
 set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
+
 # collect the source files
+list (APPEND NODE_EDITOR_SRCS nn-editor/nn_editor.cpp)
+list (APPEND NODE_EDITOR_SRCS nn-editor/loader.cpp)
+
+# cccc is always loaded. qing zhi chi cccc.
+list (APPEND NODE_EDITOR_SRCS nn-editor/ccccloader.cpp)
+add_definitions(-DNETEDIT_LOADER_CCCC)
+
+if(NETEDIT_LOADER_NCNN)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/ncnnloader.cpp)
+    add_definitions(-DNETEDIT_LOADER_NCNN)
+endif()
+
+if(NETEDIT_LOADER_YAML_YOLO)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/yamlyololoader.cpp)
+    add_definitions(-DNETEDIT_LOADER_YAML_YOLO)
+
+    find_package(YAML-CPP)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${YAML_CPP_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${YAML_CPP_LIBRARIES})
+endif()
+
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
     enable_language(OBJC)
@@ -65,7 +91,7 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
 find_package(SDL2)
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 
 if (UNIX)

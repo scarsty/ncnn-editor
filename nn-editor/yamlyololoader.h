@@ -1,6 +1,6 @@
 #pragma once
 #include "loader.h"
-//#include "yaml-cpp/yaml.h"
+#include "yaml-cpp/yaml.h"
 #include <fstream>
 
 
@@ -15,5 +15,6 @@ public:
         return { "repeat", "" };
     }
 private:
+    YAML::Node config_;
 };
 

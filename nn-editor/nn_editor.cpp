@@ -111,6 +111,13 @@ private:
     {
         if (manully)
         {
+            for (auto& l : links_)
+            {
+                if (l.from == from || l.to == to)
+                {
+                    return;
+                }
+            }
             links_.emplace_back(from, to);
             return;
         }
@@ -201,7 +208,7 @@ private:
                 ImGui::OpenPopup(u8"提示");
                 if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
-                    ImGui::Text(str.c_str());
+                    ImGui::TextUnformatted(str.c_str());
                     if (ImGui::Button(u8"知道了"))
                     {
                         ImGui::CloseCurrentPopup();
@@ -220,7 +227,7 @@ private:
             refresh_pos_link();
             if (current_file_.empty())
             {
-                auto file = openfile();
+                auto file = openfile(file_filter(), &loader_);
                 if (!file.empty())
                 {
                     current_file_ = file;
@@ -245,7 +252,7 @@ private:
         ImGui::OpenPopup(u8"退出");
         if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::Text(u8"是否保存？");
+            ImGui::TextUnformatted(u8"是否保存？");
             if (ImGui::Button(u8"是"))
             {
                 ImGui::CloseCurrentPopup();
@@ -270,7 +277,7 @@ private:
         }
     }
 
-    std::string openfile()
+    std::string openfile(const char* filter, NodeLoader** loader_ptr = nullptr)
     {
 #ifdef _WIN32
         need_dialog_ = 0;
@@ -282,12 +289,16 @@ private:
         ofn.lpstrFile = szFile;
         ofn.lpstrFile[0] = '\0';
         ofn.nMaxFile = sizeof(szFile);
-        ofn.lpstrFilter = "All files\0*.*\0";
+        ofn.lpstrFilter = filter;
         ofn.nFilterIndex = 1;
         ofn.lpstrFileTitle = NULL;
         ofn.nMaxFileTitle = 0;
         ofn.lpstrInitialDir = NULL;
         ofn.Flags = OFN_PATHMUSTEXIST;
+        if (loader_ptr)
+        {
+            *loader_ptr = create_loader("", ofn.nFilterIndex);
+        }
         if (GetOpenFileNameA(&ofn))
         {
             return szFile;
@@ -334,7 +345,7 @@ public:
         auto flags = ImGuiWindowFlags_MenuBar;
 
         // The node editor window
-        std::string window_title = u8"网络结构编辑";
+        std::string window_title = u8"Neural Net Editor";
         ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
         ImGui::Begin(window_title.c_str(), NULL, flags);
 
@@ -355,7 +366,7 @@ public:
                 if (ImGui::MenuItem(u8"另存为..."))
                 {
                     refresh_pos_link();
-                    auto file = openfile();
+                    auto file = openfile(file_filter(), &loader_);
                     if (!file.empty())
                     {
                         if (File::getFileExt(file) != "ini")
@@ -363,7 +374,7 @@ public:
                             file = File::changeFileExt(file, "ini");
                         }
                         current_file_ = file;
-                        //loader_->saveFile(current_file_);
+                        loader_->nodesToFile(nodes_, current_file_);
                         saved_ = true;
                     }
                 }
@@ -465,9 +476,25 @@ public:
         // Handle new nodes
         // These are driven by the user, so we place this code before rendering the nodes
         {
+            static ImVec2 right_click_pos0, right_click_pos1;
+            bool right_clicked = false;
+
+            if (ImGui::IsMouseClicked(1))
+            {
+                right_click_pos0 = ImGui::GetMousePos();
+            }
+            if (ImGui::IsMouseReleased(1))
+            {
+                right_click_pos1 = ImGui::GetMousePos();
+                if (right_click_pos1.x == right_click_pos0.x && right_click_pos1.y == right_click_pos0.y)
+                {
+                    right_clicked = true;
+                }
+            }
+
             const bool open_popup = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
                 ImNodes::IsEditorHovered() &&
-                (ImGui::IsMouseReleased(1));
+                (right_clicked);
 
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.f, 8.f));
             if (!ImGui::IsAnyItemHovered() && open_popup)
@@ -485,7 +512,6 @@ public:
                     auto size = ImNodes::GetNodeDimensions(n.id);
                     int x = click_pos.x - p.x;
                     int y = click_pos.y - p.y;
-                    //fmt1::print("{},{};{},{};{},{};{},{}\n", click_pos.x, click_pos.y, p.x, p.y, x, y,size.x,size.y);
                     if (x >= 0 && y >= 0 && x < size.x && y < size.y)
                     {
                         node = &n;
@@ -533,7 +559,7 @@ public:
                             return false;
                         };
 
-                        auto remove = [&have_link](int& begin_id, int &current_count, std::vector<Link*>& this_node) 
+                        auto remove = [&have_link](int& begin_id, int& current_count, std::vector<Link*>& this_node)
                         {
                             while (current_count > this_node.size())
                             {
@@ -643,19 +669,21 @@ public:
 
                 {
                     int pin = node.prev_pin;
-                    ImGui::BeginTable("inb", pin + 9, 0, ImVec2(node_width - 10, 1), 0);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    for (int i = 0; i < pin; i++)
+                    if (ImGui::BeginTable("inb", pin + 9, 0, ImVec2(node_width - 10, 1), 0))
                     {
                         ImGui::TableNextColumn();
-                        ImNodes::BeginInputAttribute(node.text_id + i);
-                        ImNodes::EndInputAttribute();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        for (int i = 0; i < pin; i++)
+                        {
+                            ImGui::TableNextColumn();
+                            ImNodes::BeginInputAttribute(node.text_id + i);
+                            ImNodes::EndInputAttribute();
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::EndTable();
                 }
 
                 //if (graph_.num_edges_from_node(node.text_id) == 0ull)
@@ -668,38 +696,42 @@ public:
                 if (node.id == select_id_)
                 {
                     loader_->refreshNodeValues(node);
-                    ImGui::BeginTable("value", 2, 0, { node_width, 0 });
-                    ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
-                    for (auto& kv : node.values)
+                    if (ImGui::BeginTable("value", 2, 0, { node_width, 0 }))
                     {
-                        ImGui::TableNextColumn();
-                        ImGui::TextUnformatted(kv.first.c_str());
-                        ImGui::TableNextColumn();
-                        ImGui::PushItemWidth(100);
-                        ImGui::InputText(("##" + kv.first).c_str(), &kv.second);
-                        ImGui::PopItemWidth();
-                        ImGui::TableNextRow();
+                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
+                        for (auto& kv : node.values)
+                        {
+                            ImGui::TableNextColumn();
+                            ImGui::TextUnformatted(kv.first.c_str());
+                            ImGui::TableNextColumn();
+                            ImGui::PushItemWidth(100);
+                            ImGui::InputText(("##" + kv.first).c_str(), &kv.second);
+                            ImGui::PopItemWidth();
+                            ImGui::TableNextRow();
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::EndTable();
                     ImGui::PushItemWidth(node_width);
                     ImGui::InputTextMultiline("##text", &node.text, ImVec2(0, 20));
                 }
 
                 {
                     int pin = node.next_pin;
-                    ImGui::BeginTable("out", pin + 9, 0, ImVec2(node_width - 10, 1), 0);
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    ImGui::TableNextColumn();
-                    for (int i = 0; i < pin; i++)
+                    if (ImGui::BeginTable("out", pin + 9, 0, ImVec2(node_width - 10, 1), 0))
                     {
                         ImGui::TableNextColumn();
-                        ImNodes::BeginOutputAttribute(node.id + i);
-                        ImNodes::EndOutputAttribute();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        ImGui::TableNextColumn();
+                        for (int i = 0; i < pin; i++)
+                        {
+                            ImGui::TableNextColumn();
+                            ImNodes::BeginOutputAttribute(node.id + i);
+                            ImNodes::EndOutputAttribute();
+                        }
+                        ImGui::EndTable();
                     }
-                    ImGui::EndTable();
                 }
 
                 ImNodes::EndNode();
@@ -827,7 +859,7 @@ public:
             }
             else
             {
-                file = openfile();
+                file = openfile("All files\0*.*\0");
             }
             //std::string file = "squeezenet_v1.1.param";
             if (!file.empty())
@@ -859,12 +891,17 @@ public:
                 links_.clear();
                 for (auto& node : nodes_)
                 {
+                    int i_next = 0;
                     for (auto node1 : node.nexts)
                     {
-                        if (check_can_link(node.id, node1->text_id))
+                        for (int i_prev = 0; i_prev < node1->prevs.size(); i_prev++)
                         {
-                            add_link(node.id, node1->text_id);
+                            if (node1->prevs[i_prev] == &node)
+                            {
+                                add_link(node.id + i_next, node1->text_id + i_prev, true);
+                            }
                         }
+                        i_next++;
                     }
                 }
             }
@@ -880,14 +917,15 @@ public:
     {
         begin_file_ = file;
     }
-    };
+};
 
 static ColorNodeEditor color_editor;
-} // namespace
+    } // namespace
 
 void NodeEditorInitialize(int argc, char* argv[])
 {
     ImGui::StyleColorsLight();
+    ImGui::GetIO().IniFilename = nullptr;
     ImNodes::StyleColorsLight();
     ImNodesIO& ion = ImNodes::GetIO();
     ion.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyCtrl;
