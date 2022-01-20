@@ -76,13 +76,14 @@ int main(int argc, char* argv[])
     bool show_demo_window = true;
     bool show_another_window = false;
     float clear_color[4] = {0.45f, 0.55f, 0.60f, 1.00f};
+    example::NodeEditorInitialize(argc, argv);
 
     // Main loop
     bool done = false;
     while (!done)
     {
-        @autoreleasepool
-        {
+        // @autoreleasepool
+        // {
             // Poll and handle events (inputs, window resize, etc.)
             // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
             // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -92,6 +93,11 @@ int main(int argc, char* argv[])
             while (SDL_PollEvent(&event))
             {
                 ImGui_ImplSDL2_ProcessEvent(&event);
+                example::NodeEditorSetEvent(&event);
+                if (event.type == SDL_QUIT)
+                    done = true;
+                if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(window))
+                    done = true;
             }
 
             int width, height;
@@ -111,14 +117,6 @@ int main(int argc, char* argv[])
             ImGui_ImplMetal_NewFrame(renderPassDescriptor);
             ImGui_ImplSDL2_NewFrame();
             ImGui::NewFrame();
-
-            if (!initialized)
-        {
-            initialized = true;
-            example::NodeEditorInitialize(argc, argv);
-        }
-
-        example::NodeEditorSetEvent(&event);
         example::NodeEditorShow();
 
             // Rendering
@@ -130,7 +128,7 @@ int main(int argc, char* argv[])
 
             [commandBuffer presentDrawable:drawable];
             [commandBuffer commit];
-        }
+        // }
     }
 
     // Cleanup
