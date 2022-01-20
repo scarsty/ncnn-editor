@@ -143,6 +143,11 @@ endif()
 if(NOT IMGUI_RENDERER)
     CHECK_PACKAGES()
 
+    # (penguinliong) SDL2 platform MUST match SDL2 renderer.
+    if (IMGUI_PLATFORM MATCHES SDL2)
+        set (IMGUI_RENDERER SDL2)
+    endif()
+
     if (Vulkan_FOUND AND (NOT IMGUI_RENDERER))
         set (IMGUI_RENDERER VULKAN)
     endif()
@@ -207,6 +212,8 @@ target_sources (IMGUI INTERFACE ${IMGUI_BASE_DIR}/misc/cpp/imgui_stdlib.cpp)
 
 # judge platform
 if (IMGUI_PLATFORM)
+    message("-- ImGui platform is " ${IMGUI_PLATFORM})
+
     if     (IMGUI_PLATFORM MATCHES WIN32)
         target_sources (IMGUI INTERFACE ${IMGUI_BASE_DIR}/backends/imgui_impl_win32.cpp)
     elseif (IMGUI_PLATFORM MATCHES SDL2)
@@ -226,6 +233,8 @@ endif ()
 
 # judge renderer
 if (IMGUI_RENDERER)
+    message("-- ImGui renderer is " ${IMGUI_RENDERER})
+
     if     (IMGUI_RENDERER MATCHES VULKAN)
         target_sources (IMGUI INTERFACE ${IMGUI_BASE_DIR}/backends/imgui_impl_vulkan.cpp)
     elseif (IMGUI_RENDERER MATCHES SDL2)
@@ -261,6 +270,8 @@ endif()
 if     (IMGUI_PLATFORM MATCHES WIN32)
     # TODO: link what?
 elseif (IMGUI_PLATFORM MATCHES SDL2)
+    # TODO: (penguinliong) Remember to copy the SDL dynamic library to the
+    # binary dir in a future update.
     target_link_libraries (IMGUI INTERFACE SDL2::SDL2)
 elseif (IMGUI_PLATFORM MATCHES GLFW)
     # TODO: link what? header where?
@@ -272,7 +283,8 @@ endif()
 
 # for renderer
 if     (IMGUI_RENDERER MATCHES VULKAN)
-    target_link_libraries (IMGUI INTERFACE vulkan)
+    target_include_directories(IMGUI INTERFACE ${Vulkan_INCLUDE_DIR})
+    target_link_libraries (IMGUI INTERFACE ${Vulkan_LIBRARY})
 elseif (IMGUI_RENDERER MATCHES SDL2)
     # TODO: this part may not work
     #target_link_libraries (IMGUI INTERFACE SDL2main)

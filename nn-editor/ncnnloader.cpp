@@ -29,7 +29,7 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
         {
             Node node;
             node.title = v[1];
-            node.type = v[0];            
+            node.type = v[0];
 
             int input_count = atoi(v[2].c_str());
             int output_count = atoi(v[3].c_str());
@@ -95,55 +95,16 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
 void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& filename)
 {
     std::vector<Node*> nodes_turn;
-
-    //lambda函数：层是否已经在向量中
-    auto contains = [&](std::vector<Node*>& v, Node* l) -> bool
+    for (auto& n : nodes)
     {
-        return std::find(v.begin(), v.end(), l) != v.end();
-    };
+        if (n.prevs.size() == 0)
+        {
+            push_cal_stack((Node*)&n, 1, nodes_turn, true);
+            break;
+        }
+    }
 
-    //lambda函数：递归将层压入向量
-    //最后一个参数为假，仅计算是否存在连接，为真则是严格计算传导顺序
-    std::function<void(Node*, int, std::vector<Node*>&, bool)> push_cal_stack = [&](Node* layer, int direct, std::vector<Node*>& stack, bool turn)
-    {
-        //层连接不能回环
-        if (layer == nullptr || contains(stack, layer))
-        {
-            return;
-        }
-        std::vector<Node*> connect0, connect1;
-        connect1 = layer->nexts;
-        connect0 = layer->prevs;
-
-        if (direct < 0)
-        {
-            std::swap(connect0, connect1);
-        }
-        //前面的层都被压入，才压入本层
-        bool contain_all0 = true;
-        for (auto& l : connect0)
-        {
-            if (!contains(stack, l))
-            {
-                contain_all0 = false;
-                break;
-            }
-        }
-        if (!turn || (!contains(stack, layer) && contain_all0))
-        {
-            stack.push_back(layer);
-        }
-        else
-        {
-            return;
-        }
-        for (auto& l : connect1)
-        {
-            push_cal_stack(l, direct, stack, turn);
-        }
-    };
-
-    push_cal_stack((Node*)&nodes[0], 1, nodes_turn, true);
+    nodes_turn.back()->nexts.resize(1);
 
     std::vector<std::string> lines(2);
     lines[0] = "7767517";
