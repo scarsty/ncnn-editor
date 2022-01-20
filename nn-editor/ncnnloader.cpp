@@ -8,7 +8,6 @@
 
 ncnnLoader::ncnnLoader()
 {
-    std::cout << mainPath();
     YAML::Node node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
     for (auto n : node)
     {

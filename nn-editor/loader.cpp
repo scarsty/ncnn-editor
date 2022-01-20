@@ -1,4 +1,4 @@
-#include "loader.h"
+﻿#include "loader.h"
 
 #include <algorithm>
 
@@ -68,93 +68,38 @@ const char* file_filter()
 
 void NodeLoader::calPosition(std::deque<Node>& nodes)
 {
-    int width = 250;
-
+    //连接关系
+    std::vector<Node*> nodes_turn;
     for (auto& n : nodes)
     {
-        if (n.position_x == -1 && n.position_y == -1)
+        if (n.prevs.size() == 0)
         {
-            if (n.prevs.empty())
-            {
-                n.position_x = width * 2;
-                n.position_y = 150;
-            }
-            else
-            {
-                n.position_x = n.prevs[0]->position_x;
-                n.position_y = n.prevs[0]->position_y + 150;
-            }
+            push_cal_stack((Node*)&n, 1, nodes_turn, true);
+            break;
         }
-        int x_sum = 0, x_count = 0;
-        for (auto& n1 : n.prevs)
+    }
+    //层序
+    for (auto& n : nodes_turn)
+    {
+        if (n->prevs.size() > 0)
         {
-            if (n1->position_x > 0)
+            for (auto& np : n->prevs)
             {
-                x_sum += n1->position_x;
-                x_count++;
-            }
-        }
-        if (x_count >= 2 || x_count == 1 && n.prevs[0]->nexts.size() == 1)
-        {
-            n.position_x = x_sum / x_count;
-        }
-        int count = 0;
-        for (auto& n1 : n.nexts)
-        {
-            if (n1->position_x < 0)
-            {
-                n1->position_x = n.position_x + (count++) * width;
-                if (n.nexts.size() > 1)
-                {
-                    n1->position_x -= width / 2 * (n.nexts.size() - 1);
-                }
-            }
-            //if (n1->position_y < 0)
-            {
-                n1->position_y = std::max(n1->position_y, n.position_y + 150);
+                n->turn = (std::max)(n->turn, np->turn + 1);
             }
         }
     }
-    //同一下级的横坐标打散
-    for (auto& n : nodes)
+    //每层个数
+    std::map<int, int> turn_count, turn_count1;
+    for (auto& n : nodes_turn)
     {
-        std::map<int, Node*> x_map;
-        auto v = n.prevs;
-        //有些情况上下级间不止一个连接, 不去重会过于偏右
-        //std::sort(v.begin(), v.end());
-        //v.erase(std::unique(v.begin(), v.end()), v.end());
-        for (auto& n1 : v)
-        {
-            if (x_map.count(n1->position_x))
-            {
-                n1->position_x += width;
-            }
-            x_map[n1->position_x] = n1;
-            n.position_y = std::max(n.position_y, n1->position_y + 150);
-        }
+        turn_count[n->turn]++;
     }
-    // avoid the same position
-    std::map<std::pair<int, int>, Node*> node_pos_map;
-    for (auto& n : nodes)
+    int width = 400;
+    for (auto& n : nodes_turn)
     {
-        for (auto& kv : node_pos_map)
-        {
-            int x = kv.first.first;
-            int y = kv.first.second;
-            if (y == n.position_y && abs(x - n.position_x) < width)
-            {
-                if (n.position_x >= x)
-                {
-                    n.position_x = x + width;
-                }
-                else
-                {
-                    n.position_x = x - width;
-                }
-                break;
-            }
-        }
-        node_pos_map[{n.position_x, n.position_y}] = &n;
+        n->position_y = 150 * (n->turn + 1);
+        n->position_x = width * 2 - width * (turn_count[n->turn] / 2.0) + width * (turn_count1[n->turn]++);
     }
 }
 
@@ -162,7 +107,7 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
 void NodeLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& stack, bool turn)
 {
     //lambda函数：层是否已经在向量中
-    auto contains = [&](std::vector<Node*>& v, Node* l) -> bool
+    auto contains = [](std::vector<Node*>& v, Node* l) -> bool
     {
         return std::find(v.begin(), v.end(), l) != v.end();
     };
@@ -202,4 +147,9 @@ void NodeLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& sta
     {
         push_cal_stack(l, direct, stack, turn);
     }
+
+
 }
+
+
+

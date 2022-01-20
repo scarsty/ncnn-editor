@@ -34,25 +34,15 @@ static Node yaml2l(YAML::Node y)
 
 void yamlyoloLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
-<<<<<<< HEAD
-    YAML::Node config;
-    config = YAML::LoadFile(filename);
-    auto back = config["backbone"];
-=======
     config_ = YAML::LoadFile(filename);
     auto back = config_["backbone"];
->>>>>>> da7a303340aea839da2a37c9846872a1cd3696f1
     for (size_t i = 0; i < back.size(); i++)
     {
         auto n = yaml2l(back[i]);
         n.title = "back_" + std::to_string(i);
         nodes.emplace_back(std::move(n));
     }
-<<<<<<< HEAD
-    auto head = config["head"];
-=======
     auto head = config_["head"];
->>>>>>> da7a303340aea839da2a37c9846872a1cd3696f1
     for (size_t i = 0; i < head.size(); i++)
     {
         auto n = yaml2l(head[i]);
@@ -83,9 +73,6 @@ void yamlyoloLoader::fileToNodes(const std::string& filename, std::deque<Node>& 
 }
 
 void yamlyoloLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& filename)
-<<<<<<< HEAD
-{}
-=======
 {
     std::vector<Node*> nodes_turn;
     push_cal_stack((Node*)&nodes[0], 1, nodes_turn, true);
@@ -155,4 +142,3 @@ void yamlyoloLoader::nodesToFile(const std::deque<Node>& nodes, const std::strin
     fout << config_;
 
 }
->>>>>>> da7a303340aea839da2a37c9846872a1cd3696f1
