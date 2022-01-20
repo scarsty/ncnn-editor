@@ -1,4 +1,4 @@
-﻿#include "node_editor.h"
+#include "node_editor.h"
 
 #include <imnodes.h>
 #include <imgui.h>
@@ -26,6 +26,10 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <commdlg.h>
+#endif
+
+#ifdef __APPLE__
+#include "MacOSCode.h"
 #endif
 
 namespace example
@@ -297,6 +301,15 @@ private:
             return "";
         }
 #else
+#ifdef __APPLE__
+        need_dialog_ = 0;
+        std::string filePathName;
+        char* n = MacOSCode::openFile();
+        if(n){
+            filePathName =n;
+        }
+        return filePathName;
+#else
         std::string filePathName;
         ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose File", "{.ini,.param}", ".");
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
@@ -314,6 +327,7 @@ private:
             need_dialog_ = 0;
         }
         return filePathName;
+#endif
 #endif
     }
 
@@ -882,7 +896,7 @@ public:
     }
     };
 
-static ColorNodeEditor color_editor;
+static ColorNodeEditor color_editor = ColorNodeEditor();
 } // namespace
 
 void NodeEditorInitialize(int argc, char* argv[])

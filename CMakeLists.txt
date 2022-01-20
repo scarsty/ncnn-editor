@@ -29,7 +29,7 @@ if(APPLE)
     enable_language(OBJC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak")
     set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak")
-    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation")
+    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation -framework Cocoa")
     set_target_properties(${PROJECT_NAME} PROPERTIES 
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/node-editor/Info.plist)

@@ -4,9 +4,39 @@
 #include <stdio.h>
 #include <SDL.h>
 #include "node_editor.h"
+#include <imnodes.h>
 
 #import <Metal/Metal.h>
 #import <QuartzCore/QuartzCore.h>
+#import <Cocoa/Cocoa.h>
+
+namespace MacOSCode{
+char* openFile(){
+    @autoreleasepool {
+        id panl = [NSOpenPanel openPanel];
+        [panl setAllowsMultipleSelection:NO];
+        [panl setCanChooseDirectories:NO];
+        [panl setCanCreateDirectories:YES];
+        [panl setCanChooseFiles:YES];
+        if([panl runModal]==NSModalResponseOK){
+            NSString* filepath = [[[panl URLs] firstObject] path];
+            if(filepath){
+                if([filepath length] > 0){
+                    char* f = new char[[filepath length]]();
+                    memcpy(f, [filepath cStringUsingEncoding:NSUTF8StringEncoding], [filepath length]);
+                    return f;
+                }else{
+                    return NULL;
+                }
+            }else{
+                return NULL;
+            }
+        }else{
+            return NULL;
+        }
+    }
+}
+}
 
 int main(int argc, char* argv[])
 {
@@ -17,7 +47,7 @@ int main(int argc, char* argv[])
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
-
+    ImNodes::CreateContext();
     // Setup style
     ImGui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
@@ -29,14 +59,14 @@ int main(int argc, char* argv[])
     // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
     // - Read 'docs/FONTS.txt' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
-    //io.Fonts->AddFontDefault();
+//    io.Fonts->AddFontDefault();
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
     //IM_ASSERT(font != NULL);
-
+    io.Fonts->AddFontFromFileTTF("/System/Library/Fonts/PingFang.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
     // depending on whether SDL_INIT_GAMECONTROLLER is enabled or disabled.. updating to latest version of SDL is recommended!)
