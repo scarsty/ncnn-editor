@@ -59,13 +59,9 @@ if(APPLE)
     set_target_properties(${PROJECT_NAME} PROPERTIES 
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/node-editor/Info.plist)
-    list (APPEND NODE_EDITOR_SRCS nn-editor/color_node_editor.cpp)
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
-    list (APPEND NODE_EDITOR_SRCS nn-editor/loader.cpp)
 else()
-    list (APPEND NODE_EDITOR_SRCS nn-editor/color_node_editor.cpp)
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
-    list (APPEND NODE_EDITOR_SRCS nn-editor/loader.cpp)
 endif(APPLE)
 
 aux_source_directory(${CMAKE_SOURCE_DIR}/imnodes2    NODE_EDITOR_NODE_SRCS)
