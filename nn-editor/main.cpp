@@ -97,7 +97,11 @@ int main(int argc, char* argv[])
 #ifdef _WIN32
     io.Fonts->AddFontFromFileTTF("c:/windows/fonts/msyh.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
 #else
+#ifdef __APPLE__
+    io.Fonts->AddFontFromFileTTF("/System/Library/Fonts/Songti.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+#else
     io.Fonts->AddFontFromFileTTF("/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
+#endif
 #endif
     bool done = false;
     bool initialized = false;
