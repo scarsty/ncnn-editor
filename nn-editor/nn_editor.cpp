@@ -958,6 +958,7 @@ void NodeEditorInitialize(int argc, char* argv[])
     {
         ex1::color_editor.setBeginFile(argv[1]);
     }
+    NodeLoader::mainPath() = File::getFilePath(argv[0]);
 }
 
 void NodeEditorShow() { ex1::color_editor.show(); }

@@ -1,7 +1,29 @@
 #include "ncnnloader.h"
 #include "convert.h"
 #include "fmt1.h"
+#include "File.h"
 #include <functional>
+#include "yaml-cpp/yaml.h"
+#include <iostream>
+
+ncnnLoader::ncnnLoader()
+{
+    std::cout << mainPath();
+    YAML::Node node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
+    for (auto n : node)
+    {
+        //std::cout << n;
+        if (n["attributes"].IsSequence())
+        {
+            for (int i = 0; i < n["attributes"].size(); i++)
+            {
+                auto index = std::to_string(i);
+                int_to_string_[n["name"].as<std::string>()][index] = n["attributes"][i]["name"].as<std::string>();
+                string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = index;
+            }
+        }
+    }
+}
 
 void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
@@ -136,15 +158,28 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
                 l += n->title + "_" + n1->title + " ";
             }
         }
+        std::vector<std::string> v;
         for (auto& kv : n->values)
         {
-            l += kv.first + "=" + kv.second + " ";
+            if (string_to_int_[n->type].count(kv.first))
+            {
+                v.push_back(string_to_int_[n->type][kv.first] + "=" + kv.second + " ");
+            }
+            else
+            {
+                v.push_back(kv.first + "=" + kv.second + " ");
+            }
+        }
+        std::sort(v.begin(), v.end());
+        for (auto& kv : v)
+        {
+            l += kv;
         }
         l.pop_back();
         //l += convert::replaceAllSubString(n->text, "\n", " ");
         lines.push_back(std::move(l));
     }
-    lines[1] = fmt1::format("{} {}", nodes_turn.size(), blob_count + 1);
+    lines[1] = fmt1::format("{} {}", nodes_turn.size(), blob_count);
     std::string str;
     for (auto& l : lines)
     {
@@ -162,30 +197,18 @@ void ncnnLoader::refreshNodeValues(Node& n)
         auto kv = convert::splitString(str, "=");
         if (kv.size() >= 2)
         {
-            n.values[kv[0]] = kv[1];
+            //n.values[kv[0]] = kv[1];
+            if (int_to_string_[n.type].count(kv[0]))
+            {
+                n.values[int_to_string_[n.type][kv[0]]] = kv[1];
+            }
+            else
+            {
+                n.values[kv[0]] = kv[1];
+            }
         }
     }
     n.text = "";
 }
 
-//std::vector<std::string> ncnnLoader::efftiveKeys(const std::string& type)
-//{
-//    return { "" };
-//    if (type == "Convolution")
-//    {
-//        return { "channel", "window", "stride", "padding" };
-//    }
-//    else if (type == "Pooling")
-//    {
-//        return { "pooltype", "window", "stride", "padding" };
-//    }
-//    else if (type == "InnerProduct")
-//    {
-//        return { "node" };
-//    }
-//    else if (type == "input")
-//    {
-//        return { "data" };
-//    }
-//    return { "" };
-//}
+

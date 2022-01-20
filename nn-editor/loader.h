@@ -14,6 +14,11 @@ public:
 public:
     void calPosition(std::deque<Node>& nodes);
     void push_cal_stack(Node* layer, int direct, std::vector<Node*>& stack, bool turn);
+    static std::string& mainPath()
+    {
+        static std::string path;
+        return path;
+    }
 };
 
 NodeLoader* create_loader(const std::string& filename, int filter_index = -1);
