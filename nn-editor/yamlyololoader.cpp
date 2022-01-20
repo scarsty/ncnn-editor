@@ -44,7 +44,6 @@ void yamlyoloLoader::fileToNodes(const std::string& filename, std::deque<Node>& 
         nodes.emplace_back(std::move(n));
     }
     auto head = config["head"];
-
     for (size_t i = 0; i < head.size(); i++)
     {
         auto n = yaml2l(head[i]);
