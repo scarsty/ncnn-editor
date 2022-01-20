@@ -1,13 +1,15 @@
 #include "ncnnloader.h"
 #include "convert.h"
 #include "fmt1.h"
+#include "File.h"
 #include <functional>
 #include "yaml-cpp/yaml.h"
 #include <iostream>
 
 ncnnLoader::ncnnLoader()
 {
-    YAML::Node node = YAML::LoadFile("ncnn-metadata.json");
+    std::cout << _pgmptr;
+    YAML::Node node = YAML::LoadFile(File::getFilePath(_pgmptr) + "/ncnn-metadata.json");
     for (auto n : node)
     {
         //std::cout << n;
