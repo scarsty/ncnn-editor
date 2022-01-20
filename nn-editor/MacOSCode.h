@@ -1,0 +1,3 @@
+namespace MacOSCode{
+char* openFile();
+}
