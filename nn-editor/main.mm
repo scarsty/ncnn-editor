@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     // Inform SDL that we will be using metal for rendering. Without this hint initialization of metal renderer may fail.
     SDL_SetHint(SDL_HINT_RENDER_DRIVER, "metal");
 
-    SDL_Window* window = SDL_CreateWindow("Net Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+    SDL_Window* window = SDL_CreateWindow("Neural Net Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1280, 720, SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
     if (window == NULL)
     {
         printf("Error creating window: %s\n", SDL_GetError());

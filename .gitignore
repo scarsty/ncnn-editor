@@ -5,3 +5,5 @@ nn-editor/imgui.ini
 build
 cmake-build-debug
 cmake-build-release
+.vscode/
+3rdparty/
