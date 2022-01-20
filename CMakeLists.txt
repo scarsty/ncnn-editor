@@ -58,7 +58,7 @@ if(APPLE)
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation -framework Cocoa")
     set_target_properties(${PROJECT_NAME} PROPERTIES 
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/node-editor/Info.plist)
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/Info.plist)
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
 else()
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
