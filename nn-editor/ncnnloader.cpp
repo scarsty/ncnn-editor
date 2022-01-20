@@ -8,8 +8,8 @@
 
 ncnnLoader::ncnnLoader()
 {
-    std::cout << _pgmptr;
-    YAML::Node node = YAML::LoadFile(File::getFilePath(_pgmptr) + "/ncnn-metadata.json");
+    std::cout << mainPath();
+    YAML::Node node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
     for (auto n : node)
     {
         //std::cout << n;
