@@ -53,12 +53,16 @@ endif()
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
     enable_language(OBJC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak")
-    set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak -Wunused-command-line-argument")
+    set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak -Wunused-command-line-argument")
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation -framework Cocoa")
+    set(RESOURCE_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/ncnn-metadata.json)
+    target_sources(${PROJECT_NAME} PRIVATE ${RESOURCE_FILES})
     set_target_properties(${PROJECT_NAME} PROPERTIES 
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/Info.plist)
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/Info.plist
+    RESOURCE ${RESOURCE_FILES})
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
 else()
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
