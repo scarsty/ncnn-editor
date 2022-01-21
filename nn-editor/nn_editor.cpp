@@ -879,6 +879,7 @@ public:
             if (!file.empty())
             {
                 nodes_.clear();
+                delete loader_;
                 loader_ = create_loader(file);    //此处有内存泄漏,不管了
                 loader_->fileToNodes(file, nodes_);
                 current_file_ = file;
