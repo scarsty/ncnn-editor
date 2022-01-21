@@ -112,8 +112,8 @@ int main(int argc, char* argv[])
     bool done = false;
     while (!done)
     {
-        // @autoreleasepool
-        // {
+        @autoreleasepool
+        {
             // Poll and handle events (inputs, window resize, etc.)
             // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
             // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application.
@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 
             [commandBuffer presentDrawable:drawable];
             [commandBuffer commit];
-        // }
+        }
     }
 
     // Cleanup
