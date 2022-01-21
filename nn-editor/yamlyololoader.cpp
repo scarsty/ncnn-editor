@@ -34,15 +34,16 @@ static Node yaml2l(YAML::Node y)
 
 void yamlyoloLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
-    config_ = YAML::LoadFile(filename);
-    auto back = config_["backbone"];
+    YAML::Node config;
+    config = YAML::LoadFile(filename);
+    auto back = config["backbone"];
     for (size_t i = 0; i < back.size(); i++)
     {
         auto n = yaml2l(back[i]);
         n.title = "back_" + std::to_string(i);
         nodes.emplace_back(std::move(n));
     }
-    auto head = config_["head"];
+    auto head = config["head"];
     for (size_t i = 0; i < head.size(); i++)
     {
         auto n = yaml2l(head[i]);
