@@ -17,7 +17,6 @@
 #include "ncnnloader.h"
 #endif // NETEDIT_LOADER_NCNN
 
-
 NodeLoader* create_loader(const std::string& filename, int index)
 {
     if (index > 0)
@@ -108,7 +107,7 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
 void NodeLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& stack, bool turn)
 {
     //lambda函数：层是否已经在向量中
-    auto contains = [&](std::vector<Node*>& v, Node* l) -> bool
+    auto contains = [](std::vector<Node*>& v, Node* l) -> bool
     {
         return std::find(v.begin(), v.end(), l) != v.end();
     };
@@ -148,4 +147,7 @@ void NodeLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& sta
     {
         push_cal_stack(l, direct, stack, turn);
     }
+
+
 }
+
