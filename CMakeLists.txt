@@ -81,7 +81,7 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
 find_package(SDL2)
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 
 if (UNIX)
@@ -89,9 +89,12 @@ if (UNIX)
     target_link_libraries (${PROJECT_NAME} PRIVATE dl)
 endif ()
 target_link_libraries (${PROJECT_NAME} PRIVATE yaml-cpp)
-if(NOT APPLE)
+if(APPLE)
+    install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION bin)
+else()
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-endif(NOT APPLE)
+endif(APPLE)
+
 
 
 # summary

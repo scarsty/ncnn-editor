@@ -67,55 +67,6 @@ const char* file_filter()
 }
 
 
-NodeLoader* create_loader(const std::string& filename, int index)
-{
-    if (index > 0)
-    {
-        switch (index)
-        {
-        case 1:
-            return new ccccLoader();
-        case 2:
-            return new yamlyoloLoader();
-        case 3:
-            return new ncnnLoader();
-        default:
-            break;
-        }
-    }
-    auto ext = convert::toLowerCase(File::getFileExt(filename));
-    if (ext == "ini")
-    {
-        return new ccccLoader();
-    }
-#ifdef NETEDIT_LOADER_YAML_YOLO
-    if (ext == "yaml")
-    {
-        return new yamlyoloLoader();
-    }
-#endif // NETEDIT_LOADER_YAML_YOLO
-#ifdef NETEDIT_LOADER_NCNN
-    if (ext == "param")
-    {
-        auto str = convert::readStringFromFile(filename);
-        int a = atoi(convert::findANumber(str).c_str());
-        if (a == 7767517)
-        {
-            return new ncnnLoader();
-        }
-    }
-#endif NETEDIT_LOADER_NCNN
-    return new ccccLoader();
-}
-
-const char* file_filter()
-{
-#ifdef _WIN32
-    return "CCCC Example\0*.ini\0yolort\0*.yaml\0ncnn & pnnx\0*.param\0";
-#endif
-}
-
-
 void NodeLoader::calPosition(std::deque<Node>& nodes)
 {
     //连接关系
