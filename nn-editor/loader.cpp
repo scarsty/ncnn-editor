@@ -151,5 +151,3 @@ void NodeLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& sta
 
 }
 
-
-

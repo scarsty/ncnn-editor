@@ -53,12 +53,16 @@ endif()
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
     enable_language(OBJC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak")
-    set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak -Wunused-command-line-argument")
+    set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak -Wunused-command-line-argument")
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation -framework Cocoa")
+    set(RESOURCE_FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/ncnn-metadata.json)
+    target_sources(${PROJECT_NAME} PRIVATE ${RESOURCE_FILES})
     set_target_properties(${PROJECT_NAME} PROPERTIES 
     MACOSX_BUNDLE TRUE
-    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/Info.plist)
+    MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/Info.plist
+    RESOURCE ${RESOURCE_FILES})
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
 else()
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
@@ -81,7 +85,7 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
 find_package(SDL2)
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 
 if (UNIX)
@@ -89,9 +93,12 @@ if (UNIX)
     target_link_libraries (${PROJECT_NAME} PRIVATE dl)
 endif ()
 target_link_libraries (${PROJECT_NAME} PRIVATE yaml-cpp)
-if(NOT APPLE)
+if(APPLE)
+    install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION bin)
+else()
     install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
-endif(NOT APPLE)
+endif(APPLE)
+
 
 
 # summary
