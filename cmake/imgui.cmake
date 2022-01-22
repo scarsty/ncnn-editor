@@ -20,14 +20,10 @@ endif()
 #       SDL2, GLFW, GLUT(guys who know this?)
 #       Vulkan, Metal, OpenGL, WebGPU, DirectX
 macro (CHECK_PACKAGES)
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/3rdparty/cmake-modern-findsdl2)
-    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
-        find_package(SDL2 QUIET)
-    endif()
-
-    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.7)
-        find_package(Vulkan QUIET)
-    endif()
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
+    find_package(SDL2 QUIET)
+    find_package(GLFW QUIET)
+    find_package(Vulkan QUIET)
 endmacro()
 
 # check platform
