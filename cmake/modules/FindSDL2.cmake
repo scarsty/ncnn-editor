@@ -31,8 +31,11 @@ IMPORTED Targets
 
 This module defines :prop_tgt:`IMPORTED` targets if SDL2 has been found:
 
+``SDL2::SDL2MAIN``
+  The SDL2main library.
+
 ``SDL2::SDL2``
-  The main SDL2 library.
+  The SDL2 library(including SDL2main).
 
 Result Variables
 ^^^^^^^^^^^^^^^^
@@ -91,7 +94,7 @@ endif()
 
 # SDL-2.0 is the name used by FreeBSD ports...
 # don't confuse it for the version number.
-find_library(SDL2_LIBRARY_TEMP
+find_library(SDL2_LIBRARY
     NAMES
         SDL2
         SDL-2.0
@@ -108,11 +111,6 @@ find_library(SDL2_LIBRARY_TEMP
     PATH_SUFFIXES
         ${_SDL2_PATH_SUFFIX}
     )
-
-# Hide this cache variable from the user, it's an internal implementation
-# detail. The documented library variable for the user is SDL2_LIBRARY
-# which is derived from SDL2_LIBRARY_TEMP further below.
-set_property(CACHE SDL2_LIBRARY_TEMP PROPERTY TYPE INTERNAL)
 
 if(NOT SDL2_INCLUDE_DIR MATCHES ".framework")
     # Non-OS X framework versions expect you to also dynamically link to
@@ -139,56 +137,6 @@ if(NOT SDL2_INCLUDE_DIR MATCHES ".framework")
 endif()
 
 unset(_SDL2_PATH_SUFFIX)
-
-# SDL2 may require threads on your system.
-# The Apple build may not need an explicit flag because one of the
-# frameworks may already provide it.
-# But for non-OSX systems, I will use the CMake Threads package.
-if(NOT APPLE)
-    find_package(Threads)
-endif()
-
-# MinGW needs an additional link flag, -mwindows
-# It's total link flags should look like -lmingw32 -lSDL2main -lSDL2 -mwindows
-if(MINGW)
-    set(MINGW32_LIBRARY mingw32 "-mwindows" CACHE STRING "link flags for MinGW")
-endif()
-
-if(SDL2_LIBRARY_TEMP)
-    # For SDL2main
-    if(SDL2MAIN_LIBRARY)
-        list(FIND SDL2_LIBRARY_TEMP "${SDL2MAIN_LIBRARY}" _SDL2_MAIN_INDEX)
-        if(_SDL2_MAIN_INDEX EQUAL -1)
-            set(SDL2_LIBRARY_TEMP "${SDL2MAIN_LIBRARY}" ${SDL2_LIBRARY_TEMP})
-        endif()
-        unset(_SDL2_MAIN_INDEX)
-    endif()
-
-    # For OS X, SDL2 uses Cocoa as a backend so it must link to Cocoa.
-    # CMake doesn't display the -framework Cocoa string in the UI even
-    # though it actually is there if I modify a pre-used variable.
-    # I think it has something to do with the CACHE STRING.
-    # So I use a temporary variable until the end so I can set the
-    # "real" variable in one-shot.
-    if(APPLE)
-        set(SDL2_LIBRARY_TEMP ${SDL2_LIBRARY_TEMP} "-framework Cocoa")
-    endif()
-
-    # For threads, as mentioned Apple doesn't need this.
-    # In fact, there seems to be a problem if I used the Threads package
-    # and try using this line, so I'm just skipping it entirely for OS X.
-    if(NOT APPLE)
-        set(SDL2_LIBRARY_TEMP ${SDL2_LIBRARY_TEMP} ${CMAKE_THREAD_LIBS_INIT})
-    endif()
-
-    # For MinGW library
-    if(MINGW)
-        set(SDL2_LIBRARY_TEMP ${MINGW32_LIBRARY} ${SDL2_LIBRARY_TEMP})
-    endif()
-
-    # Set the final string here so the GUI reflects the final state.
-    set(SDL2_LIBRARY ${SDL2_LIBRARY_TEMP} CACHE STRING "Where the SDL2 Library can be found")
-endif()
 
 # checkout version from header
 if(SDL2_INCLUDE_DIR AND EXISTS "${SDL2_INCLUDE_DIR}/SDL_version.h")
@@ -220,16 +168,26 @@ find_package_handle_standard_args(SDL2
 
 # add targets
 if (SDL2_FOUND)
-    set(SDL2_LIBRARIES ${SDL2_LIBRARY})
-    set(SDL2_INCLUDE_DIRS ${SDL2_INCLUDE_DIR})
-
     # define the target named SDL2::SDL2
     if(NOT TARGET SDL2::SDL2)
         add_library(SDL2::SDL2 UNKNOWN IMPORTED)
         set_target_properties(SDL2::SDL2 PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIR})
-        set_target_properties(SDL2::SDL2 PROPERTIES INTERFACE_LINK_LIBRARIES "${SDL2_LIBRARY}")
-        set_property(TARGET SDL2::SDL2 APPEND PROPERTY IMPORTED_LOCATION ${SDL2_LIBRARY})
+
+        # Link against Cocoa on macOS.
+        if(APPLE)
+            set_property(TARGET SDL2::SDL2 APPEND PROPERTY INTERFACE_LINK_OPTIONS -framework Cocoa)
+        endif()
+        if(MINGW)
+            #set_property(TARGET SDL2::SDL2 APPEND PROPERTY INTERFACE_LINK_OPTIONS -mwindows)
+        endif()
+
+        set_target_properties(SDL2::SDL2
+            PROPERTIES
+                INTERFACE_LINK_LIBRARIES ${SDL2MAIN_LIBRARY}
+                IMPORTED_LOCATION ${SDL2_LIBRARY}
+            )
+
     endif()
 endif()
 
-mark_as_advanced(SDL2_INCLUDE_DIR SDL2_LIBRARY)
+mark_as_advanced(SDL2_INCLUDE_DIR SDL2MAIN_LIBRARY SDL2_LIBRARY)
