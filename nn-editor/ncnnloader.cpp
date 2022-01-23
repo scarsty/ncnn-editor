@@ -12,7 +12,7 @@ ncnnLoader::ncnnLoader()
     #ifdef __APPLE__
     node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
     #else
-    node= = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
+    node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
     #endif
     for (auto n : node)
     {
