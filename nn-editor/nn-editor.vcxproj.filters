@@ -69,9 +69,6 @@
     <ClCompile Include="yamlyololoader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_sdlrenderer.cpp">
-      <Filter>imgui</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="loader.h">

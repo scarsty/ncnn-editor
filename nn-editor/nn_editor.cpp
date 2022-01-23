@@ -38,7 +38,7 @@ namespace ex1
 {
 
 static float current_time_seconds = 0.f;
-static bool  emulate_three_button_mouse = false;
+static bool emulate_three_button_mouse = false;
 
 class ColorNodeEditor
 {
@@ -804,6 +804,7 @@ public:
                 static std::vector<int> selected_links;
                 selected_links.resize(static_cast<size_t>(num_selected));
                 ImNodes::GetSelectedLinks(selected_links.data());
+                std::sort(selected_links.begin(), selected_links.end(), std::greater<int>());
                 for (const int link_id : selected_links)
                 {
                     links_.erase(links_.begin() + link_id);
