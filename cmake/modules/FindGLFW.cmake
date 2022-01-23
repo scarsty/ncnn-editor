@@ -110,7 +110,7 @@ else ()
 endif()
 
 # start to searching libglfw
-find_library(GLFW_LIBRARY_TEMP
+find_library(GLFW_LIBRARY
     NAMES
         glfw
         glfw3
@@ -123,47 +123,6 @@ find_library(GLFW_LIBRARY_TEMP
     )
 
 unset(_GLFW_PATH_SUFFIX)
-
-# GLFW may require threads on your system.
-# The Apple build may not need an explicit flag because one of the
-# frameworks may already provide it.
-# But for non-OSX systems, I will use the CMake Threads package.
-if(NOT APPLE)
-    find_package(Threads)
-endif()
-
-# MinGW needs an additional link flag, -mwindows
-# It's total link flags should look like -lmingw32 -lGLFW -mwindows
-if(MINGW)
-    set(MINGW32_LIBRARY mingw32 "-mwindows" CACHE STRING "link flags for MinGW")
-endif()
-
-if(GLFW_LIBRARY_TEMP)
-    # For OS X, GLFW uses Cocoa as a backend so it must link to Cocoa.
-    # CMake doesn't display the -framework Cocoa string in the UI even
-    # though it actually is there if I modify a pre-used variable.
-    # I think it has something to do with the CACHE STRING.
-    # So I use a temporary variable until the end so I can set the
-    # "real" variable in one-shot.
-    if(APPLE)
-        set(GLFW_LIBRARY_TEMP ${GLFW_LIBRARY_TEMP} "-framework Cocoa")
-    endif()
-
-    # For threads, as mentioned Apple doesn't need this.
-    # In fact, there seems to be a problem if I used the Threads package
-    # and try using this line, so I'm just skipping it entirely for OS X.
-    if(NOT APPLE)
-        set(GLFW_LIBRARY_TEMP ${GLFW_LIBRARY_TEMP} ${CMAKE_THREAD_LIBS_INIT})
-    endif()
-
-    # For MinGW library
-    if(MINGW)
-        set(GLFW_LIBRARY_TEMP ${MINGW32_LIBRARY} ${GLFW_LIBRARY_TEMP})
-    endif()
-
-    # Set the final string here so the GUI reflects the final state.
-    set(GLFW_LIBRARY ${GLFW_LIBRARY_TEMP} CACHE STRING "Where the GLFW Library can be found")
-endif()
 
 # check version of GLFW
 if(GLFW_INCLUDE_DIR AND EXISTS "${GLFW_INCLUDE_DIR}/GLFW/glfw3.h")
@@ -190,18 +149,24 @@ find_package_handle_standard_args(GLFW
         GLFW_INCLUDE_DIR
         GLFW_LIBRARY
     VERSION_VAR
-        GLFW_VERSION_STRING)
+        GLFW_VERSION_STRING
+    )
 
 # add targets
 if (GLFW_FOUND)
-    set(GLFW_LIBRARIES ${GLFW_LIBRARY})
-    set(GLFW_INCLUDE_DIRS ${GLFW_INCLUDE_DIR})
-
     # define the target named GLFW::GLFW
     if(NOT TARGET GLFW::GLFW)
         add_library(GLFW::GLFW UNKNOWN IMPORTED)
         set_target_properties(GLFW::GLFW PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${GLFW_INCLUDE_DIR})
-        set_target_properties(GLFW::GLFW PROPERTIES INTERFACE_LINK_LIBRARIES "${GLFW_LIBRARY}")
+
+        # Link against Cocoa on macOS.
+        if(APPLE)
+            set_property(TARGET SDL2::SDL2MAIN APPEND PROPERTY INTERFACE_LINK_OPTIONS -framework Cocoa)
+        endif()
+        if(MINGW)
+            set_property(TARGET SDL2::SDL2MAIN APPEND PROPERTY INTERFACE_LINK_OPTIONS mingw32 -mwindows)
+        endif()
+
         set_property(TARGET GLFW::GLFW APPEND PROPERTY IMPORTED_LOCATION ${GLFW_LIBRARY})
     endif()
 endif()
