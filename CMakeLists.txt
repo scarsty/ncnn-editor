@@ -65,7 +65,7 @@ if(APPLE)
     RESOURCE ${RESOURCE_FILES})
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
 else()
-    list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/main.cpp)
 endif(APPLE)
 
 aux_source_directory(${CMAKE_SOURCE_DIR}/imnodes2    NODE_EDITOR_NODE_SRCS)

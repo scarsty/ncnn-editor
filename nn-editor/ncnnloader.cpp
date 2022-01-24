@@ -9,11 +9,11 @@
 ncnnLoader::ncnnLoader()
 {
     YAML::Node node;
-    #ifdef __APPLE__
+#ifdef __APPLE__
     node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
-    #else
-    node= = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
-    #endif
+#else
+    node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
+#endif
     for (auto n : node)
     {
         //std::cout << n;
@@ -165,13 +165,16 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
         std::vector<std::string> v;
         for (auto& kv : n->values)
         {
-            if (string_to_int_[n->type].count(kv.first))
+            if (!kv.second.empty())
             {
-                v.push_back(string_to_int_[n->type][kv.first] + "=" + kv.second + " ");
-            }
-            else
-            {
-                v.push_back(kv.first + "=" + kv.second + " ");
+                if (string_to_int_[n->type].count(kv.first))
+                {
+                    v.push_back(string_to_int_[n->type][kv.first] + "=" + kv.second + " ");
+                }
+                else
+                {
+                    v.push_back(kv.first + "=" + kv.second + " ");
+                }
             }
         }
         std::sort(v.begin(), v.end());
@@ -209,6 +212,13 @@ void ncnnLoader::refreshNodeValues(Node& n)
             else
             {
                 n.values[kv[0]] = kv[1];
+            }
+        }
+        for (auto& kv: string_to_int_[n.type])
+        {
+            if (!n.values.count(kv.first) && kv.first!="")
+            {
+                n.values[kv.first] = "";
             }
         }
     }

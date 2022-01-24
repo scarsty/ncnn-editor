@@ -38,7 +38,7 @@ namespace ex1
 {
 
 static float current_time_seconds = 0.f;
-static bool  emulate_three_button_mouse = false;
+static bool emulate_three_button_mouse = false;
 
 class ColorNodeEditor
 {
@@ -346,7 +346,7 @@ private:
 public:
     SDL_Event event;
 
-    ColorNodeEditor() : nodes_(), root_node_id_(-1),
+    ColorNodeEditor() :
         minimap_location_(ImNodesMiniMapLocation_BottomRight)
     {
         loader_ = create_loader("");
@@ -713,7 +713,8 @@ public:
                     loader_->refreshNodeValues(node);
                     if (ImGui::BeginTable("value", 2, 0, { node_width, 0 }))
                     {
-                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
+                        ImGui::TableSetupColumn("value1", ImGuiTableColumnFlags_WidthFixed, 120);
+                        ImGui::TableSetupColumn("value2", ImGuiTableColumnFlags_WidthFixed, 60);
                         for (auto& kv : node.values)
                         {
                             ImGui::TableNextColumn();
@@ -804,6 +805,7 @@ public:
                 static std::vector<int> selected_links;
                 selected_links.resize(static_cast<size_t>(num_selected));
                 ImNodes::GetSelectedLinks(selected_links.data());
+                std::sort(selected_links.begin(), selected_links.end(), std::greater<int>());
                 for (const int link_id : selected_links)
                 {
                     links_.erase(links_.begin() + link_id);
