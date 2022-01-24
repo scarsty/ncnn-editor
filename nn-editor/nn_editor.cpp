@@ -345,7 +345,7 @@ private:
 public:
     SDL_Event event;
 
-    ColorNodeEditor() : nodes_(), root_node_id_(-1),
+    ColorNodeEditor() :
         minimap_location_(ImNodesMiniMapLocation_BottomRight)
     {
         loader_ = create_loader("");
@@ -712,7 +712,8 @@ public:
                     loader_->refreshNodeValues(node);
                     if (ImGui::BeginTable("value", 2, 0, { node_width, 0 }))
                     {
-                        ImGui::TableSetupColumn("value", ImGuiTableColumnFlags_WidthFixed, 80);
+                        ImGui::TableSetupColumn("value1", ImGuiTableColumnFlags_WidthFixed, 120);
+                        ImGui::TableSetupColumn("value2", ImGuiTableColumnFlags_WidthFixed, 60);
                         for (auto& kv : node.values)
                         {
                             ImGui::TableNextColumn();
