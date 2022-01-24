@@ -21,9 +21,8 @@ ncnnLoader::ncnnLoader()
         {
             for (int i = 0; i < n["attributes"].size(); i++)
             {
-                auto index = std::to_string(i);
-                int_to_string_[n["name"].as<std::string>()][index] = n["attributes"][i]["name"].as<std::string>();
-                string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = index;
+                int_to_string_[n["name"].as<std::string>()][i] = n["attributes"][i]["name"].as<std::string>();
+                string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = i;
             }
         }
     }
@@ -169,7 +168,7 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
             {
                 if (string_to_int_[n->type].count(kv.first))
                 {
-                    v.push_back(string_to_int_[n->type][kv.first] + "=" + kv.second + " ");
+                    v.push_back(std::to_string(string_to_int_[n->type][kv.first]) + "=" + kv.second + " ");
                 }
                 else
                 {
@@ -199,26 +198,45 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
 void ncnnLoader::refreshNodeValues(Node& n)
 {
     auto strs = convert::splitString(n.text, " ");
-    for (auto& str : strs)
+    if (!is_pnnx_)
     {
-        auto kv = convert::splitString(str, "=");
-        if (kv.size() >= 2)
+        for (auto& kv : int_to_string_[n.type])
         {
-            //n.values[kv[0]] = kv[1];
-            if (int_to_string_[n.type].count(kv[0]))
+            if (!n.values.count(kv.second) && kv.second != "")
             {
-                n.values[int_to_string_[n.type][kv[0]]] = kv[1];
+                n.values[kv.second] = "";
+                for (auto& str : strs)
+                {
+                    auto kv1 = convert::splitString(str, "=");
+                    if (kv1.size() >= 2)
+                    {
+                        auto i = atoi(kv1[0].c_str());
+                        if (int_to_string_[n.type][i] == kv.second)
+                        {
+                            n.values[kv.second] = kv1[1];
+                        }
+                    }
+
+                }
             }
-            else
+        }
+        for (auto& str : strs)
+        {
+            auto kv = convert::splitString(str, "=");
+            if (kv.size() >= 2 && int_to_string_[n.type].count(atoi(kv[0].c_str())) == 0)
             {
                 n.values[kv[0]] = kv[1];
             }
         }
-        for (auto& kv: string_to_int_[n.type])
+    }
+    else
+    {
+        for (auto& str : strs)
         {
-            if (!n.values.count(kv.first) && kv.first!="")
+            auto kv = convert::splitString(str, "=");
+            if (kv.size() >= 2)
             {
-                n.values[kv.first] = "";
+                n.values[kv[0]] = kv[1];
             }
         }
     }
