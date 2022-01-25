@@ -21,7 +21,7 @@
 #include "convert.h"
 #include "File.h"
 
-#include "loader.h"
+#include "nodeloader.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -316,7 +316,8 @@ private:
         need_dialog_ = 0;
         std::string filePathName;
         char* n = MacOSCode::openFile();
-        if(n){
+        if(n)
+        {
             filePathName =n;
         }
         return filePathName;

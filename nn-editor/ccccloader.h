@@ -1,5 +1,5 @@
 #pragma once
-#include "loader.h"
+#include "nodeloader.h"
 
 class ccccLoader : public NodeLoader
 {

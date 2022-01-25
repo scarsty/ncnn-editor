@@ -54,7 +54,7 @@
     <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_opengl3.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="loader.cpp">
+    <ClCompile Include="nodeloader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ncnnloader.cpp">
@@ -71,7 +71,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="loader.h">
+    <ClInclude Include="nodeloader.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="yamlyololoader.h">

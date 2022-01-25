@@ -32,14 +32,14 @@
     <ClCompile Include="..\imnodes2\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
     <ClCompile Include="nn_editor.cpp" />
-    <ClCompile Include="loader.cpp" />
+    <ClCompile Include="nodeloader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
     <ClCompile Include="yamlyololoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ccccloader.h" />
-    <ClInclude Include="loader.h" />
+    <ClInclude Include="nodeloader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="resource.h" />
