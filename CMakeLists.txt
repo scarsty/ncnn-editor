@@ -30,7 +30,7 @@ set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 # collect the source files
 list (APPEND NODE_EDITOR_SRCS nn-editor/nn_editor.cpp)
-list (APPEND NODE_EDITOR_SRCS nn-editor/loader.cpp)
+list (APPEND NODE_EDITOR_SRCS nn-editor/nodeloader.cpp)
 
 # cccc is always loaded. qing zhi chi cccc.
 list (APPEND NODE_EDITOR_SRCS nn-editor/ccccloader.cpp)
@@ -83,8 +83,8 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/imnodes)
 target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/ImGuiFileDialog)
 
-target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
-find_package(SDL2)
+target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI glfw)
+find_package(SDL2 REQUIRED)
 target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 
