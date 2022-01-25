@@ -21,6 +21,9 @@ option(NETEDIT_LOADER_YAML_YOLO "support yaml yolo model loader" ON)
 # import IMGUI
 include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
 
+# overlook, take care of severe warnings
+include(${CMAKE_SOURCE_DIR}/cmake/overlook.cmake)
+
 # add a target
 add_executable(${PROJECT_NAME})
 
@@ -59,7 +62,7 @@ if(APPLE)
     set(RESOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/ncnn-metadata.json)
     target_sources(${PROJECT_NAME} PRIVATE ${RESOURCE_FILES})
-    set_target_properties(${PROJECT_NAME} PROPERTIES 
+    set_target_properties(${PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/Info.plist
     RESOURCE ${RESOURCE_FILES})

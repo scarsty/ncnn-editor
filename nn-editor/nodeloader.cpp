@@ -63,6 +63,7 @@ const char* file_filter()
 #ifdef _WIN32
     return "CCCC Example\0*.ini\0yolort\0*.yaml\0ncnn & pnnx\0*.param\0";
 #endif
+    return nullptr;
 }
 
 

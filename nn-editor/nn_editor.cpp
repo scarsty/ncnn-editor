@@ -857,7 +857,7 @@ public:
         }
 
         if (event.type == SDL_QUIT
-            || event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+            || (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE) )
         {
             need_dialog_ = 1;
         }
@@ -867,7 +867,7 @@ public:
             //ImGui::OpenPopup(u8"退出");
             try_exit();
         }
-        if (need_dialog_ == 2 || !begin_file_.empty() && first_run_)
+        if (need_dialog_ == 2 || (!begin_file_.empty() && first_run_))
         {
             std::string file;
             if (!begin_file_.empty() && first_run_)
