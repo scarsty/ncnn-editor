@@ -21,8 +21,8 @@ endif()
 #       Vulkan, Metal, OpenGL, WebGPU, DirectX
 macro (CHECK_PACKAGES)
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/modules)
-    find_package(SDL2 QUIET)
-    find_package(GLFW QUIET)
+    find_package(SDL2 REQUIRED)
+    find_package(glfw3 REQUIRED)
     find_package(Vulkan QUIET)
 endmacro()
 
