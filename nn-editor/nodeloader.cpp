@@ -54,7 +54,7 @@ NodeLoader* create_loader(const std::string& filename, int index)
             return new ncnnLoader();
         }
     }
-#endif NETEDIT_LOADER_NCNN
+#endif // NETEDIT_LOADER_NCNN
     return new ccccLoader();
 }
 

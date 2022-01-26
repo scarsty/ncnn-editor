@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     if (renderer == NULL)
     {
         SDL_Log("Error creating SDL_Renderer!");
-        return false;
+        return -1;
     }
 #endif
 
