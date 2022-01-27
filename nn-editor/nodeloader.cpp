@@ -54,7 +54,7 @@ NodeLoader* create_loader(const std::string& filename, int index)
             return new ncnnLoader();
         }
     }
-#endif NETEDIT_LOADER_NCNN
+#endif // NETEDIT_LOADER_NCNN
     return new ccccLoader();
 }
 
@@ -101,6 +101,53 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
     {
         n->position_y = 150 * (n->turn + 1);
         n->position_x = width * 2 - width * (turn_count[n->turn] / 2.0) + width * (turn_count1[n->turn]++);
+    }
+    //同一层的上下层打散
+    for (auto& n : nodes_turn)
+    {
+        if (n->prevs.size() <= 1)
+        {
+            int count = n->nexts.size();
+            int count1 = 0;
+            for (auto& n1 : n->nexts)
+            {
+                if (n1->nexts.size() > 1)
+                    n1->position_x = n->position_x + width / 2 - width * (count / 2.0) + width * (count1++);
+            }
+        }
+        if (n->nexts.size() <= 1)
+        {
+            int count = n->prevs.size();
+            int count1 = 0;
+            for (auto& n1 : n->prevs)
+            {
+                if (n1->prevs.size() > 1)
+                n1->position_x = n->position_x + width / 2 - width * (count / 2.0) + width * (count1++);
+            }
+        }
+    }
+
+    std::map<std::pair<int, int>, Node*> node_pos_map;
+    for (auto& n : nodes)
+    {
+        for (auto& kv : node_pos_map)
+        {
+            int x = kv.first.first;
+            int y = kv.first.second;
+            if (y == n.position_y && abs(x - n.position_x) < width)
+            {
+                if (n.position_x >= x)
+                {
+                    n.position_x = x + width;
+                }
+                else
+                {
+                    n.position_x = x - width;
+                }
+                break;
+            }
+        }
+        node_pos_map[{n.position_x, n.position_y}] = &n;
     }
 }
 
