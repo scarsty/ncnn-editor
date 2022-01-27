@@ -320,6 +320,7 @@ private:
         {
             filePathName =n;
         }
+        delete n;
         return filePathName;
 #else
         std::string filePathName;
@@ -361,8 +362,9 @@ public:
 
         // The node editor window
         std::string window_title = u8"Neural Net Editor";
-        ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
         ImGui::Begin(window_title.c_str(), NULL, flags);
+        ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
+        window_title.clear();
 
         //if (ImGui::)   //close window
         if (ImGui::BeginMenuBar())
@@ -476,6 +478,7 @@ public:
         //        emulate_three_button_mouse ? &ImGui::GetIO().KeyAlt : NULL;
         //}
         //ImGui::Columns(1);
+        ImNodes::BeginNodeEditor();
 
         {
             select_id_ = -1;
@@ -485,8 +488,6 @@ public:
             }
             erase_select_ = 0;
         }
-
-        ImNodes::BeginNodeEditor();
 
         // Handle new nodes
         // These are driven by the user, so we place this code before rendering the nodes
@@ -765,7 +766,6 @@ public:
             }
         }
         ImNodes::MiniMap(0.5f, minimap_location_);
-        ImNodes::EndNodeEditor();
 
         // Handle new links
         // These are driven by Imnodes, so we place the code after EndNodeEditor().
@@ -927,7 +927,8 @@ public:
         }
 
         //refresh_pos_link();
-
+        
+        ImNodes::EndNodeEditor();
         ImGui::End();
         first_run_ = 0;
     }
