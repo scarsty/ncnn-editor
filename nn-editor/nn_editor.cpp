@@ -880,16 +880,7 @@ public:
             //std::string file = "squeezenet_v1.1.param";
             if (!file.empty())
             {
-                if (nodes_.size()>0)
-                {
-                    for(auto node : nodes_){
-                        node.in.clear();
-                        node.out.clear();
-                        node.prevs.clear();
-                        node.nexts.clear();
-                    }
-                    nodes_.clear();
-                }
+                nodes_.clear();
                 delete loader_;
                 loader_ = create_loader(file);    //此处有内存泄漏,不管了
                 loader_->fileToNodes(file, nodes_);
