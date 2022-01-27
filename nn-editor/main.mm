@@ -11,31 +11,31 @@
 #import <Cocoa/Cocoa.h>
 
 namespace MacOSCode{
-char* openFile(){
-    @autoreleasepool {
-        id panl = [NSOpenPanel openPanel];
-        [panl setAllowsMultipleSelection:NO];
-        [panl setCanChooseDirectories:NO];
-        [panl setCanCreateDirectories:YES];
-        [panl setCanChooseFiles:YES];
-        if([panl runModal]==NSModalResponseOK){
-            NSString* filepath = [[[panl URLs] firstObject] path];
-            if(filepath){
-                if([filepath length] > 0){
-                    char* f = new char[[filepath length]]();
-                    memcpy(f, [filepath cStringUsingEncoding:NSUTF8StringEncoding], [filepath length]);
-                    return f;
+    char* openFile(){
+        @autoreleasepool {
+            id panl = [NSOpenPanel openPanel];
+            [panl setAllowsMultipleSelection:NO];
+            [panl setCanChooseDirectories:NO];
+            [panl setCanCreateDirectories:YES];
+            [panl setCanChooseFiles:YES];
+            if([panl runModal]==NSModalResponseOK){
+                NSString* filepath = [[[panl URLs] firstObject] path];
+                if(filepath){
+                    if([filepath length] > 0){
+                        char* f = new char[[filepath length]]();
+                        memcpy(f, [filepath cStringUsingEncoding:NSUTF8StringEncoding], [filepath length]);
+                        return f;
+                    }else{
+                        return NULL;
+                    }
                 }else{
                     return NULL;
                 }
             }else{
                 return NULL;
             }
-        }else{
-            return NULL;
         }
     }
-}
 }
 
 int main(int argc, char* argv[])
