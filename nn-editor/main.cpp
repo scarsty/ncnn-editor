@@ -119,11 +119,11 @@ int main(int argc, char* argv[])
         while (SDL_PollEvent(&event))
         {
             ImGui_ImplSDL2_ProcessEvent(&event);
-            //if (event.type == SDL_QUIT)
-            //    done = true;
-            //if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
-            //    event.window.windowID == SDL_GetWindowID(window))
-            //    done = true;
+            if (event.type == SDL_QUIT)
+                example::NodeEditorSetExit(1);;
+            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
+                event.window.windowID == SDL_GetWindowID(window))
+                example::NodeEditorSetExit(1);;
         }
 
         // Start the Dear ImGui frame
@@ -141,7 +141,6 @@ int main(int argc, char* argv[])
             example::NodeEditorInitialize(argc, argv);
         }
 
-        example::NodeEditorSetEvent(&event);
         example::NodeEditorShow();
 
         // Rendering
