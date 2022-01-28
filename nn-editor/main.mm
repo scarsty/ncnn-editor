@@ -94,7 +94,7 @@ namespace MacOSCode{
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
     //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
     //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != NULL);
+//    IM_ASSERT(font != NULL);
     io.Fonts->AddFontFromFileTTF("/System/Library/Fonts/PingFang.ttc", 15.0f, NULL, io.Fonts->GetGlyphRangesChineseFull());
 
     return self;
@@ -252,7 +252,13 @@ namespace MacOSCode{
 
 int main(int argc, const char * argv[])
 {
-    return NSApplicationMain(argc, argv);
+    @autoreleasepool {
+        id d =[AppDelegate new];
+        id app = [NSApplication sharedApplication];
+        [app setDelegate:d];
+        [app run];
+    }
+    return 0;
 }
 
 // int main(int argc, char* argv[])
