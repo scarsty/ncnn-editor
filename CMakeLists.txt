@@ -58,7 +58,7 @@ if(APPLE)
     enable_language(OBJC)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak -Wunused-command-line-argument")
     set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak -Wunused-command-line-argument")
-    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation -framework Cocoa")
+    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework MetalKit -framework Foundation -framework Cocoa")
     set(RESOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/ncnn-metadata.json)
     target_sources(${PROJECT_NAME} PRIVATE ${RESOURCE_FILES})
@@ -87,9 +87,12 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/ImGuiFileDialog)
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
-find_package(SDL2 REQUIRED)
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+if(NOT APPLE)
+    find_package(SDL2 REQUIRED)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+endif(NOT APPLE)
+
 
 if (UNIX)
     target_link_directories (${PROJECT_NAME} PRIVATE /usr/local/lib)
