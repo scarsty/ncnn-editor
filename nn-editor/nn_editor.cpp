@@ -477,6 +477,7 @@ public:
         //        emulate_three_button_mouse ? &ImGui::GetIO().KeyAlt : NULL;
         //}
         //ImGui::Columns(1);
+        ImNodes::BeginNodeEditor();
 
         {
             select_id_ = -1;
@@ -767,7 +768,6 @@ public:
         ImNodes::MiniMap(0.5f, minimap_location_);
 
         ImNodes::EndNodeEditor();
-
         // Handle new links
         // These are driven by Imnodes, so we place the code after EndNodeEditor().
 
@@ -928,7 +928,7 @@ public:
         }
 
         //refresh_pos_link();
-
+        
         ImGui::End();
         first_run_ = 0;
     }

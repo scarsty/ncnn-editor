@@ -22,7 +22,7 @@ option(NETEDIT_LOADER_YAML_YOLO "support yaml yolo model loader" ON)
 include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
 
 # overlook, take care of severe warnings
-include(${CMAKE_SOURCE_DIR}/cmake/overlook.cmake)
+# include(${CMAKE_SOURCE_DIR}/cmake/overlook.cmake)
 
 # add a target
 add_executable(${PROJECT_NAME})
@@ -55,17 +55,17 @@ endif()
 
 if(APPLE)
     set(CMAKE_OSX_ARCHITECTURES ${CMAKE_SYSTEM_PROCESSOR})
-    enable_language(OBJC)
+    enable_language(OBJCXX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-weak -Wunused-command-line-argument")
-    set(CMAKE_OBJCCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak -Wunused-command-line-argument")
-    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework QuartzCore -framework Foundation -framework Cocoa")
+    set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak -Wunused-command-line-argument")
+    set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework MetalKit -framework Foundation -framework Cocoa -framework Carbon -framework GameController")
     set(RESOURCE_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/ncnn-metadata.json)
     target_sources(${PROJECT_NAME} PRIVATE ${RESOURCE_FILES})
     set_target_properties(${PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE TRUE
     MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/Info.plist
-    RESOURCE ${RESOURCE_FILES})
+    RESOURCE "${RESOURCE_FILES}")
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.mm)
 else()
     list (APPEND NODE_EDITOR_SRCS nn-editor/main.cpp)
@@ -87,9 +87,12 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/ImGuiFileDialog)
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
-find_package(SDL2 REQUIRED)
-target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+if(NOT APPLE)
+    find_package(SDL2 REQUIRED)
+    target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
+endif(NOT APPLE)
+
 
 if (UNIX)
     target_link_directories (${PROJECT_NAME} PRIVATE /usr/local/lib)
