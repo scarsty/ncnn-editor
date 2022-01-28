@@ -5,6 +5,56 @@
 #include <map>
 #include <unordered_map>
 
+template <class T1, class T2>
+struct OrderMap : public std::vector<std::pair<T1, T2>>
+{
+    T2& operator[](T1 t)
+    {
+        for (auto& k : *this)
+        {
+            if (k.first == t)
+            {
+                return k.second;
+            }
+        }
+        this->emplace_back();
+        this->back().first = t;
+        return this->back().second;
+    }
+    const T2& operator[](T1 t) const
+    {
+        for (auto& k : *this)
+        {
+            if (k.first == t)
+            {
+                return k.value;
+            }
+        }
+    }
+    size_t count(T1 t) const
+    {
+        for (auto& k : *this)
+        {
+            if (k.first == t)
+            {
+                return 1;
+            }
+        }
+        return 0;
+    }
+    void erase(T1 t)
+    {
+        for (auto it = this->begin(); it != this->end(); it++)
+        {
+            if (it->first == t)
+            {
+                erase(it);
+                return;
+            }
+        }
+    }
+};
+
 struct Node
 {
     enum
@@ -16,7 +66,7 @@ struct Node
     std::string title;
     std::string type;
     std::string text;
-    std::map<std::string, std::string> values;
+    OrderMap<std::string, std::string> values;
 
     std::vector<Node*> prevs, nexts;    //需注意下面的prev_pin和next_pin是画图的点数，准许大于等于size
 
@@ -29,19 +79,6 @@ struct Node
     // 辅助值
     std::vector<std::string> in, out;
     int turn = 0;
-
-    Node()
-    {
-        //values =
-        //{
-        //    { "active", "" },
-        //    { "window", "" },
-        //    { "stride", "" },
-        //    { "padding", "" },
-        //    { "channel", "" },
-        //    { "node", "" },
-        //};
-    }
 };
 
 

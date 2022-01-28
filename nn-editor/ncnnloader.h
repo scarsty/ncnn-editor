@@ -1,5 +1,5 @@
 #pragma once
-#include "loader.h"
+#include "nodeloader.h"
 
 class ncnnLoader : public NodeLoader
 {
@@ -11,7 +11,7 @@ public:
     virtual void refreshNodeValues(Node&) override;
 private:
     bool is_pnnx_ = false;
-    std::map<std::string, std::map<std::string, std::string>> int_to_string_;
-    std::map<std::string, std::map<std::string, std::string>> string_to_int_;
+    std::map<std::string, std::map<int, std::string>> int_to_string_;
+    std::map<std::string, std::map<std::string, int>> string_to_int_;
 };
 

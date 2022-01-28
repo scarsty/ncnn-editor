@@ -6,9 +6,6 @@
 
 #include "node.h"
 
-#include <SDL.h>
-#include <SDL_keycode.h>
-#include <SDL_timer.h>
 #include <algorithm>
 #include <cassert>
 #include <chrono>
@@ -21,7 +18,7 @@
 #include "convert.h"
 #include "File.h"
 
-#include "loader.h"
+#include "nodeloader.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -316,7 +313,8 @@ private:
         need_dialog_ = 0;
         std::string filePathName;
         char* n = MacOSCode::openFile();
-        if(n){
+        if(n)
+        {
             filePathName =n;
         }
         delete n;
@@ -344,7 +342,7 @@ private:
     }
 
 public:
-    SDL_Event event;
+    int is_exiting_ = 0;
 
     ColorNodeEditor() :
         minimap_location_(ImNodesMiniMapLocation_BottomRight)
@@ -355,14 +353,16 @@ public:
     void show()
     {
         // Update timer context
-        current_time_seconds = 0.001f * SDL_GetTicks();
+        current_time_seconds ++;
 
         auto flags = ImGuiWindowFlags_MenuBar;
 
         // The node editor window
         std::string window_title = u8"Neural Net Editor";
-        ImGui::Begin(window_title.c_str(), NULL, flags);
         ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
+
+        ImGui::Begin(window_title.c_str(), NULL, flags);
+        
         window_title.clear();
 
         //if (ImGui::)   //close window
@@ -488,6 +488,7 @@ public:
             erase_select_ = 0;
         }
 
+        ImNodes::BeginNodeEditor();
         // Handle new nodes
         // These are driven by the user, so we place this code before rendering the nodes
         {
@@ -801,7 +802,7 @@ public:
 
         {
             const int num_selected = ImNodes::NumSelectedLinks();
-            if (num_selected > 0 && (erase_select_ || (ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())))
+            if (num_selected > 0 && (erase_select_  || (ImGui::IsKeyReleased(ImGuiKey_Delete) && !ImGui::IsAnyItemActive())))
             {
                 static std::vector<int> selected_links;
                 selected_links.resize(static_cast<size_t>(num_selected));
@@ -818,7 +819,7 @@ public:
 
         {
             const int num_selected = ImNodes::NumSelectedNodes();
-            if (num_selected > 0 && (erase_select_ || (ImGui::IsKeyReleased(SDL_SCANCODE_DELETE) && !ImGui::IsAnyItemActive())))
+            if (num_selected > 0 && (erase_select_  || (ImGui::IsKeyReleased(ImGuiKey_Delete) && !ImGui::IsAnyItemActive())))
             {
                 static std::vector<int> selected_nodes;
                 selected_nodes.resize(static_cast<size_t>(num_selected));
@@ -851,15 +852,15 @@ public:
             saved_ = false;
         }
 
-        if (ImGui::IsKeyReleased(SDL_SCANCODE_S) && ImGui::GetIO().KeyCtrl)
+        if (ImGui::IsKeyReleased(ImGuiKey_S) && ImGui::GetIO().KeyCtrl)
         {
             try_save(true);
         }
 
-        if (event.type == SDL_QUIT
-            || event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)
+        if (is_exiting_)
         {
             need_dialog_ = 1;
+            is_exiting_ = 0;
         }
 
         if (need_dialog_ == 1)
@@ -867,7 +868,7 @@ public:
             //ImGui::OpenPopup(u8"退出");
             try_exit();
         }
-        if (need_dialog_ == 2 || !begin_file_.empty() && first_run_)
+        if (need_dialog_ == 2 || (!begin_file_.empty() && first_run_))
         {
             std::string file;
             if (!begin_file_.empty() && first_run_)
@@ -967,7 +968,7 @@ void NodeEditorInitialize(int argc, char* argv[])
 
 void NodeEditorShow() { ex1::color_editor.show(); }
 
-void NodeEditorSetEvent(void* e) { ex1::color_editor.event = *(SDL_Event*)e; }
+void NodeEditorSetExit(int e) { ex1::color_editor.is_exiting_ = e; }
 
 void NodeEditorShutdown() {}
 } // namespace example

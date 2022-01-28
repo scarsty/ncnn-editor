@@ -32,14 +32,14 @@
     <ClCompile Include="..\imnodes2\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
     <ClCompile Include="nn_editor.cpp" />
-    <ClCompile Include="loader.cpp" />
+    <ClCompile Include="nodeloader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
     <ClCompile Include="yamlyololoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ccccloader.h" />
-    <ClInclude Include="loader.h" />
+    <ClInclude Include="nodeloader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
     <ClInclude Include="resource.h" />
@@ -69,7 +69,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>ClangCL</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
@@ -146,7 +146,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;USE_OPENGL3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;../3rdparty/nb;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -155,7 +155,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\project\microsoft\vcpkg\installed\x64-windows\lib\manual-link;D:\project\microsoft\vcpkg\installed\x64-windows\debug\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sdl2main.lib;opengl32.lib;sdl2d.lib;yaml-cppd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sdl2main.lib;opengl32.lib;yaml-cppd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
