@@ -205,12 +205,12 @@ private:
             if (kv.second > 1)
             {
                 res = true;
-                auto str = fmt1::format(u8"有{}个\"{}\"!", kv.second, kv.first);
-                ImGui::OpenPopup(u8"提示");
-                if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+                auto str = fmt1::format(u8"There are {} \"{}\"!", kv.second, kv.first);
+                ImGui::OpenPopup(u8"Note");
+                if (ImGui::BeginPopupModal(u8"Exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
                     ImGui::TextUnformatted(str.c_str());
-                    if (ImGui::Button(u8"知道了"))
+                    if (ImGui::Button(u8"OK"))
                     {
                         ImGui::CloseCurrentPopup();
                     }
@@ -250,11 +250,11 @@ private:
         {
             exit(0);
         }
-        ImGui::OpenPopup(u8"退出");
-        if (ImGui::BeginPopupModal(u8"退出", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        ImGui::OpenPopup(u8"Exit");
+        if (ImGui::BeginPopupModal(u8"Exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::TextUnformatted(u8"是否保存？");
-            if (ImGui::Button(u8"是"))
+            ImGui::TextUnformatted(u8"Do you want to save the change?");
+            if (ImGui::Button(u8"Yes"))
             {
                 ImGui::CloseCurrentPopup();
                 try_save();
@@ -262,14 +262,14 @@ private:
                 need_dialog_ = 0;
             }
             ImGui::SameLine();
-            if (ImGui::Button(u8"否"))
+            if (ImGui::Button(u8"No"))
             {
                 ImGui::CloseCurrentPopup();
                 exit(0);
                 need_dialog_ = 0;
             }
             ImGui::SameLine();
-            if (ImGui::Button(u8"取消"))
+            if (ImGui::Button(u8"Cancel"))
             {
                 ImGui::CloseCurrentPopup();
                 need_dialog_ = 0;
@@ -368,18 +368,18 @@ public:
         //if (ImGui::)   //close window
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu(u8"文件"))
+            if (ImGui::BeginMenu(u8"File"))
             {
-                if (ImGui::MenuItem(u8"打开..."))
+                if (ImGui::MenuItem(u8"Open..."))
                 {
                     need_dialog_ = 2;
 
                 }
-                if (ImGui::MenuItem(u8"保存"))
+                if (ImGui::MenuItem(u8"Save"))
                 {
                     try_save(true);
                 }
-                if (ImGui::MenuItem(u8"另存为..."))
+                if (ImGui::MenuItem(u8"Save as..."))
                 {
                     refresh_pos_link();
                     auto file = openfile(file_filter(), &loader_);
@@ -394,7 +394,7 @@ public:
                         saved_ = true;
                     }
                 }
-                if (ImGui::MenuItem(u8"退出"))
+                if (ImGui::MenuItem(u8"Exit"))
                 {
                     //try_exit();
                     need_dialog_ = 1;
@@ -404,13 +404,13 @@ public:
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu(u8"缩略图位置"))
+            if (ImGui::BeginMenu(u8"MiniMap"))
             {
                 const char* names[] = {
-                    u8"左上",
-                    u8"右上",
-                    u8"左下",
-                    u8"右下",
+                    u8"`+ ",
+                    u8" +`",
+                    u8".+ ",
+                    u8" +.",
                 };
                 int locations[] = {
                     ImNodesMiniMapLocation_TopLeft,
@@ -428,19 +428,19 @@ public:
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu(u8"样式"))
+            if (ImGui::BeginMenu(u8"Style"))
             {
-                if (ImGui::MenuItem(u8"经典"))
+                if (ImGui::MenuItem(u8"Classic"))
                 {
                     ImGui::StyleColorsClassic();
                     ImNodes::StyleColorsClassic();
                 }
-                if (ImGui::MenuItem(u8"暗"))
+                if (ImGui::MenuItem(u8"Dark"))
                 {
                     ImGui::StyleColorsDark();
                     ImNodes::StyleColorsDark();
                 }
-                if (ImGui::MenuItem(u8"亮"))
+                if (ImGui::MenuItem(u8"Light"))
                 {
                     ImGui::StyleColorsLight();
                     ImNodes::StyleColorsLight();
@@ -453,19 +453,19 @@ public:
         {
             //ImGui::Columns(2);
             //ImGui::TextUnformatted("A -- add node");
-            ImGui::TextUnformatted(u8"Delete -- 删除选中的层或连接");
+            ImGui::TextUnformatted(u8"Delete -- Erase selected ops and links");
             //ImGui::NextColumn();
-            std::string str = u8"没有打开的文件";
+            std::string str = u8"No opened file";
             if (!current_file_.empty())
             {
-                str = fmt1::format(u8"当前文件：{}，", current_file_);
+                str = fmt1::format(u8"Current file: {}, ", current_file_);
                 if (saved_)
                 {
-                    str += u8"已保存";
+                    str += u8"Saved";
                 }
                 else
                 {
-                    str += u8"未保存";
+                    str += u8"Unsaved";
                 }
             }
             ImGui::TextUnformatted(str.c_str());
@@ -477,7 +477,7 @@ public:
         //        emulate_three_button_mouse ? &ImGui::GetIO().KeyAlt : NULL;
         //}
         //ImGui::Columns(1);
-        ImNodes::BeginNodeEditor();
+
 
         {
             select_id_ = -1;
@@ -536,15 +536,15 @@ public:
                 }
                 if (node)
                 {
-                    if (ImGui::MenuItem(u8"添加输入点"))
+                    if (ImGui::MenuItem(u8"Add input pin"))
                     {
                         node->prev_pin++;
                     }
-                    if (ImGui::MenuItem(u8"添加输出点"))
+                    if (ImGui::MenuItem(u8"Add output pin"))
                     {
                         node->next_pin++;
                     }
-                    if (ImGui::MenuItem(u8"清除无连接点"))
+                    if (ImGui::MenuItem(u8"Clear unlinked pins"))
                     {
                         std::vector<Link*> from_this_node;
                         std::vector<Link*> to_this_node;
@@ -599,7 +599,7 @@ public:
                         remove(node->id, node->next_pin, from_this_node);
                         remove(node->text_id, node->prev_pin, to_this_node);
                     }
-                    if (ImGui::MenuItem(u8"删除"))
+                    if (ImGui::MenuItem(u8"Erase"))
                     {
                         node->erased = 1;
                         for (auto it = links_.begin(); it != links_.end();)
@@ -617,7 +617,7 @@ public:
                 }
                 else
                 {
-                    if (ImGui::MenuItem(u8"新建操作层"))
+                    if (ImGui::MenuItem(u8"New Op"))
                     {
                         auto& ui_node = createNode();
                         ui_node.title = fmt1::format("layer_{}", rand());
@@ -625,7 +625,7 @@ public:
                         ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                         saved_ = false;
                     }
-                    if (ImGui::MenuItem(u8"删除选中"))
+                    if (ImGui::MenuItem(u8"Erase all selected"))
                     {
                         erase_select_ = 1;
                     }
@@ -884,7 +884,7 @@ public:
             {
                 nodes_.clear();
                 delete loader_;
-                loader_ = create_loader(file);    //此处有内存泄漏,不管了
+                loader_ = create_loader(file);
                 loader_->fileToNodes(file, nodes_);
                 current_file_ = file;
                 ImVec2 pos;
