@@ -60,8 +60,7 @@ if(APPLE)
     set(CMAKE_OBJCXX_FLAGS "${CMAKE_OBJCXX_FLAGS} -x objective-c++ -fobjc-weak -Wunused-command-line-argument")
     set(CMAKE_EXE_LINKER_FLAGS "-framework Metal -framework MetalKit -framework Foundation -framework Cocoa -framework Carbon -framework GameController")
     set(RESOURCE_FILES
-    ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/ncnn-metadata.json
-    ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/fz.TTF)
+    ${CMAKE_CURRENT_SOURCE_DIR}/nn-editor/ncnn-metadata.json)
     target_sources(${PROJECT_NAME} PRIVATE ${RESOURCE_FILES})
     set_target_properties(${PROJECT_NAME} PROPERTIES
     MACOSX_BUNDLE TRUE
