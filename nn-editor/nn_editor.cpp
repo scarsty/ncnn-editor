@@ -766,6 +766,7 @@ public:
         }
         ImNodes::MiniMap(0.5f, minimap_location_);
 
+        ImNodes::EndNodeEditor();
         // Handle new links
         // These are driven by Imnodes, so we place the code after EndNodeEditor().
 
@@ -927,7 +928,6 @@ public:
 
         //refresh_pos_link();
         
-        ImNodes::EndNodeEditor();
         ImGui::End();
         first_run_ = 0;
     }
