@@ -70,6 +70,7 @@ struct Node
 
     std::vector<Node*> prevs, nexts;    //需注意下面的prev_pin和next_pin是画图的点数，准许大于等于size
 
+    //以下子类可以不处理
     //use to draw nodes
     int id, text_id;
     int prev_pin = 0, next_pin = 0;

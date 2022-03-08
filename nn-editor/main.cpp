@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
     }
 
 #ifdef USE_OPENGL3
-#if __APPLE__
+#ifdef __APPLE__
     // GL 3.2 Core + GLSL 150
     const char* glsl_version = "#version 150";
     SDL_GL_SetAttribute(

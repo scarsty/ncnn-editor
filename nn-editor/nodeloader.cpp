@@ -17,6 +17,8 @@
 #include "ncnnloader.h"
 #endif // NETEDIT_LOADER_NCNN
 
+#include "onnxloader.h"
+
 NodeLoader* create_loader(const std::string& filename, int index)
 {
     if (index > 0)
@@ -55,6 +57,10 @@ NodeLoader* create_loader(const std::string& filename, int index)
         }
     }
 #endif // NETEDIT_LOADER_NCNN
+    if (ext == "onnx")
+    {
+        return new onnxloader();
+    }
     return new ccccLoader();
 }
 
@@ -80,49 +86,49 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
         }
     }
     //层序
-    for (auto& n : nodes_turn)
+    for (auto& n : nodes)
     {
-        if (n->prevs.size() > 0)
+        if (n.prevs.size() > 0)
         {
-            for (auto& np : n->prevs)
+            for (auto& np : n.prevs)
             {
-                n->turn = (std::max)(n->turn, np->turn + 1);
+                n.turn = (std::max)(n.turn, np->turn + 1);
             }
         }
     }
     //每层个数
     std::map<int, int> turn_count, turn_count1;
-    for (auto& n : nodes_turn)
+    for (auto& n : nodes)
     {
-        turn_count[n->turn]++;
+        turn_count[n.turn]++;
     }
     int width = 400;
-    for (auto& n : nodes_turn)
+    for (auto& n : nodes)
     {
-        n->position_y = 150 * (n->turn + 1);
-        n->position_x = width * 2 - width * (turn_count[n->turn] / 2.0) + width * (turn_count1[n->turn]++);
+        n.position_y = 150 * (n.turn + 1);
+        n.position_x = width * 2 - width * (turn_count[n.turn] / 2.0) + width * (turn_count1[n.turn]++);
     }
     //同一层的上下层打散
-    for (auto& n : nodes_turn)
+    for (auto& n : nodes)
     {
-        if (n->prevs.size() <= 1)
+        //if (n.prevs.size() <= 1)
         {
-            int count = n->nexts.size();
+            int count = n.nexts.size();
             int count1 = 0;
-            for (auto& n1 : n->nexts)
+            for (auto& n1 : n.nexts)
             {
                 if (n1->nexts.size() > 1)
-                    n1->position_x = n->position_x + width / 2 - width * (count / 2.0) + width * (count1++);
+                    n1->position_x = n.position_x + width / 2 - width * (count / 2.0) + width * (count1++);
             }
         }
-        if (n->nexts.size() <= 1)
+        //if (n.nexts.size() <= 1)
         {
-            int count = n->prevs.size();
+            int count = n.prevs.size();
             int count1 = 0;
-            for (auto& n1 : n->prevs)
+            for (auto& n1 : n.prevs)
             {
                 if (n1->prevs.size() > 1)
-                n1->position_x = n->position_x + width / 2 - width * (count / 2.0) + width * (count1++);
+                    n1->position_x = n.position_x + width / 2 - width * (count / 2.0) + width * (count1++);
             }
         }
     }

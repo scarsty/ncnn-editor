@@ -9,3 +9,6 @@ cmake-build-release
 3rdparty/
 .idea
 .cache/
+models/
+nn-editor/onnx.pb.cc
+nn-editor/onnx.pb.h

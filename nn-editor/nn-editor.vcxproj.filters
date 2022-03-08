@@ -69,6 +69,12 @@
     <ClCompile Include="yamlyololoader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="onnxloader.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="onnx.pb.cc">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nodeloader.h">
@@ -87,6 +93,12 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="onnxloader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="onnx.pb.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
