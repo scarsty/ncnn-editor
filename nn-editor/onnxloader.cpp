@@ -1,8 +1,13 @@
 #include "onnxloader.h"
 
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
+#include "yaml-cpp/yaml.h"
+
+#include "fmt1.h"
 
 #define ONNX_ML
 
@@ -550,6 +555,24 @@ int getLayerParams(const onnx::NodeProto& node_proto, std::string& params)
 
 onnxloader::onnxloader()
 {
+    YAML::Node node;
+#ifdef __APPLE__
+    node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
+#else
+    node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
+#endif
+    for (auto n : node)
+    {
+        //std::cout << n;
+        if (n["attributes"].IsSequence())
+        {
+            for (int i = 0; i < n["attributes"].size(); i++)
+            {
+                int_to_string_[n["name"].as<std::string>()][i] = n["attributes"][i]["name"].as<std::string>();
+                string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = i;
+            }
+        }
+    }
 }
 
 void onnxloader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
@@ -588,22 +611,83 @@ void onnxloader::fileToNodes(const std::string& filename, std::deque<Node>& node
 
             for (int i = 0; i < graph_proto.node_size(); i++)
             {
+                Node node;
+
                 const onnx::NodeProto node_proto = graph_proto.node(i);
                 std::string params;
                 getLayerParams(node_proto, params);
-
-                Node node;
-
                 node.title = node_proto.name();
                 node.type = node_proto.op_type();
                 node.text = params;
-                for (int i = 0; i < node_proto.input_size(); i++)
+
+                //node_proto.
+
+                for (int k = 0; k < node_proto.attribute_size(); k++)
                 {
-                    node.in.push_back(node_proto.input(i));
+                    auto a = node_proto.attribute(k);
+                    std::string atr = a.s();
+                    switch (a.type())
+                    {
+                    case onnx::AttributeProto_AttributeType_FLOAT:
+                        atr = std::to_string(a.f());
+                        break;
+                    case onnx::AttributeProto_AttributeType_INT:
+                        atr = std::to_string(a.i());
+                        break;
+                    case onnx::AttributeProto_AttributeType_STRING:
+                        atr = a.s();
+                        break;
+                    case onnx::AttributeProto_AttributeType_TENSOR:
+                        break;
+                    case onnx::AttributeProto_AttributeType_GRAPH:
+                        break;
+                    case onnx::AttributeProto_AttributeType_SPARSE_TENSOR:
+                        break;
+                    case onnx::AttributeProto_AttributeType_TYPE_PROTO:
+                        break;
+                    case onnx::AttributeProto_AttributeType_FLOATS:
+                        for (auto a1 : a.floats())
+                        {
+                            atr += std::to_string(a1) + " ";
+                        }
+                        break;
+                    case onnx::AttributeProto_AttributeType_INTS:
+                        for (auto a1 : a.ints())
+                        {
+                            atr += std::to_string(a1) + " ";
+                        }
+                        break;
+                    case onnx::AttributeProto_AttributeType_STRINGS:
+                        for (auto a1 : a.strings())
+                        {
+                            atr += a1 + " ";
+                        }
+                        break;
+                    case onnx::AttributeProto_AttributeType_TENSORS:
+                        break;
+                    case onnx::AttributeProto_AttributeType_GRAPHS:
+                        break;
+                    case onnx::AttributeProto_AttributeType_SPARSE_TENSORS:
+                        break;
+                    case onnx::AttributeProto_AttributeType_TYPE_PROTOS:
+                        break;
+                    }
+                    auto type_name = a.AttributeType_Name(a.type());
+                    //auto pos = type_name.find("_");
+                    //if (pos != std::string::npos)
+                    //{
+                    //    type_name = type_name.substr(pos);
+                    //}
+                    node.values[a.name() + "(" + type_name+ ")"] = atr;
                 }
-                for (int i = 0; i < node_proto.output_size(); i++)
+
+                for (int j = 0; j < node_proto.input_size(); j++)
                 {
-                    node.out.push_back(node_proto.output(i));
+                    node.in.push_back(node_proto.input(j));
+                }
+                for (int j = 0; j < node_proto.output_size(); j++)
+                {
+                    node.out.push_back(node_proto.output(j));
                 }
                 node.prevs.resize(node_proto.input_size());
                 //node.nexts.resize(node_proto.output_size());
@@ -635,7 +719,7 @@ void onnxloader::fileToNodes(const std::string& filename, std::deque<Node>& node
             }
 
         }
-    }       
+    }
     for (auto& node1 : nodes)
     {
         for (auto& node2 : nodes)

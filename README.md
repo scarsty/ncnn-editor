@@ -26,6 +26,8 @@ QQ 群: 822911263
 
 ### 支持的格式
 
+配置文件来自<https://github.com/lutzroeder/netron>等。
+
 * ini范例
 * [ncnn](https://github.com/Tencent/ncnn/wiki/param-and-model-file-structure) 完全支持
 * [pnnx](https://github.com/pnnx/pnnx) 该格式与ncnn基本一致，故可以直接支持，增加参数需手动
