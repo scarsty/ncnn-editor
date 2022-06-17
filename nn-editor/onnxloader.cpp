@@ -4,7 +4,9 @@
 #include <fstream>
 #include <sstream>
 
-#include "onnx.pb.h"
+#define ONNX_ML
+
+#include "onnx/onnx_pb.h"
 
 
 int calculateTensorDims

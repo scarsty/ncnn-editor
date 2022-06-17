@@ -96,6 +96,17 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
             }
         }
     }
+    //层序
+    for (auto& n : nodes)
+    {
+        if (n.nexts.size() > 0 && n.prevs.empty())
+        {
+            for (auto& np : n.nexts)
+            {
+                n.turn = (std::max)(n.turn, np->turn - 1);
+            }
+        }
+    }
     //每层个数
     std::map<int, int> turn_count, turn_count1;
     for (auto& n : nodes)
