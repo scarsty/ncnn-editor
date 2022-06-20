@@ -555,24 +555,24 @@ int getLayerParams(const onnx::NodeProto& node_proto, std::string& params)
 
 onnxloader::onnxloader()
 {
-    YAML::Node node;
-#ifdef __APPLE__
-    node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
-#else
-    node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
-#endif
-    for (auto n : node)
-    {
-        //std::cout << n;
-        if (n["attributes"].IsSequence())
-        {
-            for (int i = 0; i < n["attributes"].size(); i++)
-            {
-                int_to_string_[n["name"].as<std::string>()][i] = n["attributes"][i]["name"].as<std::string>();
-                string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = i;
-            }
-        }
-    }
+//    YAML::Node node;
+//#ifdef __APPLE__
+//    node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
+//#else
+//    node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
+//#endif
+//    for (auto n : node)
+//    {
+//        //std::cout << n;
+//        if (n["attributes"].IsSequence())
+//        {
+//            for (int i = 0; i < n["attributes"].size(); i++)
+//            {
+//                int_to_string_[n["name"].as<std::string>()][i] = n["attributes"][i]["name"].as<std::string>();
+//                string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = i;
+//            }
+//        }
+//    }
 }
 
 void onnxloader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)

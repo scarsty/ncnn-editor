@@ -10,7 +10,7 @@
 	path = 3rdparty/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog
 	branch = Lib_Only
-[submodule "3rdparty/nb"]
-	path = 3rdparty/nb
-	url = https://github.com/scarsty/nb
+[submodule "3rdparty/mlcc"]
+	path = 3rdparty/mlcc
+	url = https://github.com/scarsty/mlcc
 	branch = master
