@@ -127,7 +127,7 @@ inline CubicBezier GetCubicBezier(
     }
 
     const float  link_length = ImSqrt(ImLengthSqr(end - start));
-    const ImVec2 offset = ImVec2(0.25f * link_length, 0.f);
+    const ImVec2 offset = ImVec2(0.f, 0.25f * link_length);
     CubicBezier  cubic_bezier;
     cubic_bezier.P0 = start;
     cubic_bezier.P1 = start + offset;
@@ -552,10 +552,10 @@ ImVec2 GetScreenSpacePinCoordinates(
     const ImNodesAttributeType type)
 {
     IM_ASSERT(type == ImNodesAttributeType_Input || type == ImNodesAttributeType_Output);
-    const float x = type == ImNodesAttributeType_Input
-                        ? (node_rect.Min.x - GImNodes->Style.PinOffset)
-                        : (node_rect.Max.x + GImNodes->Style.PinOffset);
-    return ImVec2(x, 0.5f * (attribute_rect.Min.y + attribute_rect.Max.y));
+    const float y = type == ImNodesAttributeType_Input
+                        ? (node_rect.Min.y - GImNodes->Style.PinOffset)
+                        : (node_rect.Max.y + GImNodes->Style.PinOffset);
+    return ImVec2(0.5f * (attribute_rect.Min.x + attribute_rect.Max.x), y);
 }
 
 ImVec2 GetScreenSpacePinCoordinates(const ImNodesEditorContext& editor, const ImPinData& pin)
@@ -1115,6 +1115,14 @@ void ClickInteractionUpdate(ImNodesEditorContext& editor)
         }
     }
     case ImNodesClickInteractionType_None:
+    {
+        //const bool dragging = GImNodes->AltMouseDragging;
+
+        //if (dragging)
+        //{
+        //    editor.Panning += ImGui::GetIO().MouseDelta;
+        //}
+    }
         break;
     default:
         IM_ASSERT(!"Unreachable code!");
@@ -1987,7 +1995,7 @@ ImNodesIO::MultipleSelectModifier::MultipleSelectModifier() : Modifier(NULL) {}
 
 ImNodesIO::ImNodesIO()
     : EmulateThreeButtonMouse(), LinkDetachWithModifierClick(),
-      AltMouseButton(ImGuiMouseButton_Middle), AutoPanningSpeed(1000.0f)
+      AltMouseButton(ImGuiMouseButton_Right), AutoPanningSpeed(1000.0f)
 {
 }
 
@@ -2087,6 +2095,11 @@ void StyleColorsDark(ImNodesStyle* dest)
     dest->Colors[ImNodesCol_Link] = IM_COL32(61, 133, 224, 200);
     dest->Colors[ImNodesCol_LinkHovered] = IM_COL32(66, 150, 250, 255);
     dest->Colors[ImNodesCol_LinkSelected] = IM_COL32(66, 150, 250, 255);
+
+    dest->Colors[ImNodesCol_Link] = IM_COL32(66, 150, 250, 100);
+    dest->Colors[ImNodesCol_LinkHovered] = IM_COL32(99, 200, 250, 224);
+    dest->Colors[ImNodesCol_LinkSelected] = IM_COL32(255, 69, 91, 224);
+
     // pin colors match ImGui's button colors
     dest->Colors[ImNodesCol_Pin] = IM_COL32(53, 150, 250, 180);
     dest->Colors[ImNodesCol_PinHovered] = IM_COL32(53, 150, 250, 255);
