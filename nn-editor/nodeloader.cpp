@@ -19,6 +19,11 @@
 
 #include "onnxloader.h"
 
+#define M_PI 3.14159265358979323846
+extern "C"
+{
+#include "sfg.h"
+}
 NodeLoader* create_loader(const std::string& filename, int index)
 {
     if (index > 0)
@@ -75,6 +80,44 @@ const char* file_filter()
 
 void NodeLoader::calPosition(std::deque<Node>& nodes)
 {
+    auto status = sfg_init();
+
+    //graph g;
+
+    int i = 1;
+    for (auto& n : nodes)
+    {
+        n.turn = i;
+        sfg_addnode(i, 200, 50);
+        i++;
+    }
+    i = 1;
+    for (auto& n : nodes)
+    {
+        for (auto& nn : n.nexts)
+        {
+            sfg_addedge(i++, n.turn, nn->turn, 0,0);
+            //g.add_edge(n.turn, nn->turn);
+        }
+    }
+    sfg_xspacing(50);
+    sfg_yspacing(50);
+    sfg_layout();
+    for (        auto& n : nodes)
+    {
+        n.position_x = sfg_nodexpos(n.turn);
+        n.position_y = sfg_nodeypos(n.turn);
+
+    }
+    sfg_deinit();
+
+
+
+
+
+
+
+    return;
     //连接关系
     std::vector<Node*> nodes_turn;
     for (auto& n : nodes)

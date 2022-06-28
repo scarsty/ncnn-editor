@@ -14,3 +14,6 @@
 	path = 3rdparty/mlcc
 	url = https://github.com/scarsty/mlcc
 	branch = master
+[submodule "3rdparty/singlefilegraph"]
+	path = 3rdparty/singlefilegraph
+	url = https://github.com/gml4gtk/singlefilegraph

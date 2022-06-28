@@ -72,6 +72,9 @@
     <ClCompile Include="onnxloader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\3rdparty\singlefilegraph\sfg.c">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="nodeloader.h">
