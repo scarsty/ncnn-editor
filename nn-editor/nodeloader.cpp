@@ -5,20 +5,10 @@
 #include "File.h"
 #include "convert.h"
 
-//#ifdef NETEDIT_LOADER_CCCC
 #include "ccccloader.h"
-//#endif // NETEDIT_LOADER_CCCC
-
-#ifdef NETEDIT_LOADER_YAML_YOLO
 #include "yamlyololoader.h"
-#endif // NETEDIT_LOADER_YAML_YOLO
-
-#ifdef NETEDIT_LOADER_NCNN
 #include "ncnnloader.h"
-#endif // NETEDIT_LOADER_NCNN
-
 #include "onnxloader.h"
-
 #include "ptLoader.h"
 
 #define M_PI 3.14159265358979323846
@@ -47,13 +37,10 @@ NodeLoader* create_loader(const std::string& filename, int index)
     {
         return new ccccLoader();
     }
-#ifdef NETEDIT_LOADER_YAML_YOLO
     if (ext == "yaml")
     {
         return new yamlyoloLoader();
     }
-#endif // NETEDIT_LOADER_YAML_YOLO
-#ifdef NETEDIT_LOADER_NCNN
     if (ext == "param")
     {
         auto str = convert::readStringFromFile(filename);
@@ -63,11 +50,10 @@ NodeLoader* create_loader(const std::string& filename, int index)
             return new ncnnLoader();
         }
     }
-#endif // NETEDIT_LOADER_NCNN
-    //if (ext == "onnx")
-    //{
-    //    return new onnxloader();
-    //}
+    if (ext == "onnx")
+    {
+        return new onnxloader();
+    }
     if (ext == "pt")
     {
         return new ptLoader();
