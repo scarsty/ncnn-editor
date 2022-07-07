@@ -1,10 +1,10 @@
 #pragma once
-#include "nodeloader.h"
+#include "FileLoader.h"
 
-class onnxloader : public NodeLoader
+class onnxLoader : public FileLoader
 {
 public:
-    onnxloader();
+    onnxLoader();
     virtual void fileToNodes(const std::string& filename, std::deque<Node>& nodes) override;
     virtual void nodesToFile(const std::deque<Node>& nodes, const std::string& filename) override;
     //virtual std::vector<std::string> efftiveKeys(const std::string& type) override;

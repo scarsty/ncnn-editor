@@ -3,10 +3,10 @@
 
 //实现此接口即可支持不同格式
 //还没设计完
-class NodeLoader
+class FileLoader
 {
 public:
-    virtual ~NodeLoader() = default;
+    virtual ~FileLoader() = default;
     virtual void fileToNodes(const std::string& filename, std::deque<Node>& nodes) {}
     virtual void nodesToFile(const std::deque<Node>& nodes, const std::string& filename) {}
     //virtual std::vector<std::string> efftiveKeys(const std::string& type) { return { "" }; }
@@ -21,5 +21,5 @@ public:
     }
 };
 
-NodeLoader* create_loader(const std::string& filename, int filter_index = -1);
+FileLoader* create_loader(const std::string& filename, int filter_index = -1);
 const char* file_filter();

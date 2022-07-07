@@ -18,7 +18,7 @@
 #include "convert.h"
 #include "File.h"
 
-#include "nodeloader.h"
+#include "FileLoader.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -46,7 +46,7 @@ private:
         Link(int f, int t) { from = f; to = t; }
     };
 
-    NodeLoader* loader_ = nullptr;
+    FileLoader* loader_ = nullptr;
     std::deque<Node> nodes_;    //在一次编辑期间,只可增不可减
     std::vector<Link> links_;
     int root_node_id_;
@@ -278,7 +278,7 @@ private:
         }
     }
 
-    std::string openfile(const char* filter, NodeLoader** loader_ptr = nullptr)
+    std::string openfile(const char* filter, FileLoader** loader_ptr = nullptr)
     {
 #ifdef _WIN32
         need_dialog_ = 0;
@@ -963,7 +963,7 @@ void NodeEditorInitialize(int argc, char* argv[])
     {
         ex1::color_editor.setBeginFile(argv[1]);
     }
-    NodeLoader::mainPath() = File::getFilePath(argv[0]);
+    FileLoader::mainPath() = File::getFilePath(argv[0]);
 }
 
 void NodeEditorShow() { ex1::color_editor.show(); }

@@ -1,7 +1,7 @@
 #pragma once
-#include "nodeloader.h"
+#include "FileLoader.h"
 
-class ncnnLoader : public NodeLoader
+class ncnnLoader : public FileLoader
 {
 public:
     ncnnLoader();

@@ -1,7 +1,7 @@
 #pragma once
-#include "nodeloader.h"
+#include "FileLoader.h"
 
-class ccccLoader : public NodeLoader
+class ccccLoader : public FileLoader
 {
 public:
     virtual void fileToNodes(const std::string& filename, std::deque<Node>& nodes) override;

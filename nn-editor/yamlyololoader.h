@@ -1,10 +1,10 @@
 #pragma once
-#include "nodeloader.h"
+#include "FileLoader.h"
 #include "yaml-cpp/yaml.h"
 #include <fstream>
 
 
-class yamlyoloLoader : public NodeLoader
+class yamlyoloLoader : public FileLoader
 {
     //YAML::Node config_;
 public:

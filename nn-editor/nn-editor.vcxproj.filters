@@ -54,7 +54,7 @@
     <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_opengl3.cpp">
       <Filter>imgui</Filter>
     </ClCompile>
-    <ClCompile Include="nodeloader.cpp">
+    <ClCompile Include="FileLoader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ncnnloader.cpp">
@@ -72,15 +72,12 @@
     <ClCompile Include="..\3rdparty\singlefilegraph\sfg.c">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="ptLoader.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="onnxloader.cpp">
+    <ClCompile Include="onnxLoader.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="nodeloader.h">
+    <ClInclude Include="FileLoader.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="yamlyololoader.h">
@@ -98,10 +95,7 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ptLoader.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="onnxloader.h">
+    <ClInclude Include="onnxLoader.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,7 +1,7 @@
 #pragma once
-#include "nodeloader.h"
+#include "FileLoader.h"
 class ptLoader :
-    public NodeLoader
+    public FileLoader
 {
 public:
     ptLoader();

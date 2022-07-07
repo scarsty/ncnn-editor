@@ -1,4 +1,4 @@
-﻿#include "nodeloader.h"
+﻿#include "FileLoader.h"
 
 #include <algorithm>
 
@@ -8,15 +8,14 @@
 #include "ccccloader.h"
 #include "yamlyololoader.h"
 #include "ncnnloader.h"
-#include "onnxloader.h"
-#include "ptLoader.h"
+#include "onnxLoader.h"
 
 #define M_PI 3.14159265358979323846
 extern "C"
 {
 #include "sfg.h"
 }
-NodeLoader* create_loader(const std::string& filename, int index)
+FileLoader* create_loader(const std::string& filename, int index)
 {
     if (index > 0)
     {
@@ -52,13 +51,9 @@ NodeLoader* create_loader(const std::string& filename, int index)
     }
     if (ext == "onnx")
     {
-        return new onnxloader();
+        return new onnxLoader();
     }
-    if (ext == "pt")
-    {
-        return new ptLoader();
-    }
-    return new ccccLoader();
+    return new FileLoader();
 }
 
 const char* file_filter()
@@ -70,7 +65,7 @@ const char* file_filter()
 }
 
 
-void NodeLoader::calPosition(std::deque<Node>& nodes)
+void FileLoader::calPosition(std::deque<Node>& nodes)
 {
     auto status = sfg_init();
 
@@ -204,7 +199,7 @@ void NodeLoader::calPosition(std::deque<Node>& nodes)
 }
 
 //最后一个参数为假，仅计算是否存在连接，为真则是严格计算传导顺序
-void NodeLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& stack, bool turn)
+void FileLoader::push_cal_stack(Node* layer, int direct, std::vector<Node*>& stack, bool turn)
 {
     //lambda函数：层是否已经在向量中
     auto contains = [](std::vector<Node*>& v, Node* l) -> bool

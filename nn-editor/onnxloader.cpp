@@ -1,4 +1,4 @@
-#include "onnxloader.h"
+#include "onnxLoader.h"
 
 
 #include <iostream>
@@ -553,7 +553,7 @@ int getLayerParams(const onnx::NodeProto& node_proto, std::string& params)
 }
 
 
-onnxloader::onnxloader()
+onnxLoader::onnxLoader()
 {
 //    YAML::Node node;
 //#ifdef __APPLE__
@@ -575,7 +575,7 @@ onnxloader::onnxloader()
 //    }
 }
 
-void onnxloader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
+void onnxLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
 
     onnx::ModelProto model_proto;
@@ -745,12 +745,12 @@ void onnxloader::fileToNodes(const std::string& filename, std::deque<Node>& node
     calPosition(nodes);
 }
 
-void onnxloader::nodesToFile(const std::deque<Node>& nodes, const std::string& filename)
+void onnxLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& filename)
 {
 
 }
 
-void onnxloader::refreshNodeValues(Node& node)
+void onnxLoader::refreshNodeValues(Node& node)
 {
 }
 

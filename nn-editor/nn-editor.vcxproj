@@ -33,20 +33,18 @@
     <ClCompile Include="..\imnodes2\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
     <ClCompile Include="nn_editor.cpp" />
-    <ClCompile Include="nodeloader.cpp" />
+    <ClCompile Include="FileLoader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
-    <ClCompile Include="onnxloader.cpp" />
-    <ClCompile Include="ptLoader.cpp" />
+    <ClCompile Include="onnxLoader.cpp" />
     <ClCompile Include="yamlyololoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ccccloader.h" />
-    <ClInclude Include="nodeloader.h" />
+    <ClInclude Include="FileLoader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
-    <ClInclude Include="onnxloader.h" />
-    <ClInclude Include="ptLoader.h" />
+    <ClInclude Include="onnxLoader.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="yamlyololoader.h" />
   </ItemGroup>
@@ -181,7 +179,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\project\microsoft\vcpkg\installed\x64-windows\lib\manual-link;D:\project\nn-editor\3rdparty\libtorch\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sdl2main.lib;OpenGL32.lib;torch.lib;c10.lib;torch_cpu.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sdl2main.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
