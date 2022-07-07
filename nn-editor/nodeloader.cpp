@@ -19,6 +19,8 @@
 
 #include "onnxloader.h"
 
+#include "ptLoader.h"
+
 #define M_PI 3.14159265358979323846
 extern "C"
 {
@@ -62,9 +64,13 @@ NodeLoader* create_loader(const std::string& filename, int index)
         }
     }
 #endif // NETEDIT_LOADER_NCNN
-    if (ext == "onnx")
+    //if (ext == "onnx")
+    //{
+    //    return new onnxloader();
+    //}
+    if (ext == "pt")
     {
-        return new onnxloader();
+        return new ptLoader();
     }
     return new ccccLoader();
 }

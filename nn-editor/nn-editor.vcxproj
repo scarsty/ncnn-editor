@@ -36,7 +36,7 @@
     <ClCompile Include="nodeloader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
-    <ClCompile Include="onnxloader.cpp" />
+    <ClCompile Include="ptLoader.cpp" />
     <ClCompile Include="yamlyololoader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -44,8 +44,7 @@
     <ClInclude Include="nodeloader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
-    <ClInclude Include="onnx.pb.h" />
-    <ClInclude Include="onnxloader.h" />
+    <ClInclude Include="ptLoader.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="yamlyololoader.h" />
   </ItemGroup>
@@ -171,7 +170,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;USE_OPENGL3;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/singlefilegraph</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/singlefilegraph;../3rdparty/libtorch/include</AdditionalIncludeDirectories>
       <LanguageStandard>Default</LanguageStandard>
     </ClCompile>
     <Link>
@@ -179,8 +178,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\project\microsoft\vcpkg\installed\x64-windows\lib\manual-link</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sdl2main.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\project\microsoft\vcpkg\installed\x64-windows\lib\manual-link;D:\project\nn-editor\3rdparty\libtorch\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sdl2main.lib;OpenGL32.lib;torch.lib;c10.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
