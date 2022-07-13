@@ -205,12 +205,12 @@ private:
             if (kv.second > 1)
             {
                 res = true;
-                auto str = fmt1::format(u8"There are {} \"{}\"!", kv.second, kv.first);
-                ImGui::OpenPopup(u8"Note");
-                if (ImGui::BeginPopupModal(u8"Exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+                auto str = fmt1::format("There are {} \"{}\"!", kv.second, kv.first);
+                ImGui::OpenPopup("Note");
+                if (ImGui::BeginPopupModal("Exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
                     ImGui::TextUnformatted(str.c_str());
-                    if (ImGui::Button(u8"OK"))
+                    if (ImGui::Button("OK"))
                     {
                         ImGui::CloseCurrentPopup();
                     }
@@ -250,11 +250,11 @@ private:
         {
             exit(0);
         }
-        ImGui::OpenPopup(u8"Exit");
-        if (ImGui::BeginPopupModal(u8"Exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        ImGui::OpenPopup("Exit");
+        if (ImGui::BeginPopupModal("Exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::TextUnformatted(u8"Do you want to save the change?");
-            if (ImGui::Button(u8"Yes"))
+            ImGui::TextUnformatted("Do you want to save the change?");
+            if (ImGui::Button("Yes"))
             {
                 ImGui::CloseCurrentPopup();
                 try_save();
@@ -262,14 +262,14 @@ private:
                 need_dialog_ = 0;
             }
             ImGui::SameLine();
-            if (ImGui::Button(u8"No"))
+            if (ImGui::Button("No"))
             {
                 ImGui::CloseCurrentPopup();
                 exit(0);
                 need_dialog_ = 0;
             }
             ImGui::SameLine();
-            if (ImGui::Button(u8"Cancel"))
+            if (ImGui::Button("Cancel"))
             {
                 ImGui::CloseCurrentPopup();
                 need_dialog_ = 0;
@@ -358,7 +358,7 @@ public:
         auto flags = ImGuiWindowFlags_MenuBar;
 
         // The node editor window
-        std::string window_title = u8"Neural Net Editor";
+        std::string window_title = "Neural Net Editor";
         ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
 
         ImGui::Begin(window_title.c_str(), NULL, flags);
@@ -368,18 +368,18 @@ public:
         //if (ImGui::)   //close window
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu(u8"File"))
+            if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem(u8"Open..."))
+                if (ImGui::MenuItem("Open..."))
                 {
                     need_dialog_ = 2;
 
                 }
-                if (ImGui::MenuItem(u8"Save"))
+                if (ImGui::MenuItem("Save"))
                 {
                     try_save(true);
                 }
-                if (ImGui::MenuItem(u8"Save as..."))
+                if (ImGui::MenuItem("Save as..."))
                 {
                     refresh_pos_link();
                     auto file = openfile(file_filter(), &loader_);
@@ -394,23 +394,23 @@ public:
                         saved_ = true;
                     }
                 }
-                if (ImGui::MenuItem(u8"Exit"))
+                if (ImGui::MenuItem("Exit"))
                 {
                     //try_exit();
                     need_dialog_ = 1;
-                    //ImGui::OpenPopup(u8"退出");
+                    //ImGui::OpenPopup("退出");
                     //
                 }
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu(u8"MiniMap"))
+            if (ImGui::BeginMenu("MiniMap"))
             {
                 const char* names[] = {
-                    u8"`+ ",
-                    u8" +`",
-                    u8".+ ",
-                    u8" +.",
+                    "`+ ",
+                    " +`",
+                    ".+ ",
+                    " +.",
                 };
                 int locations[] = {
                     ImNodesMiniMapLocation_TopLeft,
@@ -428,19 +428,19 @@ public:
                 ImGui::EndMenu();
             }
 
-            if (ImGui::BeginMenu(u8"Style"))
+            if (ImGui::BeginMenu("Style"))
             {
-                if (ImGui::MenuItem(u8"Classic"))
+                if (ImGui::MenuItem("Classic"))
                 {
                     ImGui::StyleColorsClassic();
                     ImNodes::StyleColorsClassic();
                 }
-                if (ImGui::MenuItem(u8"Dark"))
+                if (ImGui::MenuItem("Dark"))
                 {
                     ImGui::StyleColorsDark();
                     ImNodes::StyleColorsDark();
                 }
-                if (ImGui::MenuItem(u8"Light"))
+                if (ImGui::MenuItem("Light"))
                 {
                     ImGui::StyleColorsLight();
                     ImNodes::StyleColorsLight();
@@ -453,19 +453,19 @@ public:
         {
             //ImGui::Columns(2);
             //ImGui::TextUnformatted("A -- add node");
-            ImGui::TextUnformatted(u8"Delete -- Erase selected ops and links");
+            ImGui::TextUnformatted("Delete -- Erase selected ops and links");
             //ImGui::NextColumn();
-            std::string str = u8"No opened file";
+            std::string str = "No opened file";
             if (!current_file_.empty())
             {
-                str = fmt1::format(u8"Current file: {}, ", current_file_);
+                str = fmt1::format("Current file: {}, ", current_file_);
                 if (saved_)
                 {
-                    str += u8"Saved";
+                    str += "Saved";
                 }
                 else
                 {
-                    str += u8"Unsaved";
+                    str += "Unsaved";
                 }
             }
             ImGui::TextUnformatted(str.c_str());
@@ -536,15 +536,15 @@ public:
                 }
                 if (node)
                 {
-                    if (ImGui::MenuItem(u8"Add input pin"))
+                    if (ImGui::MenuItem("Add input pin"))
                     {
                         node->prev_pin++;
                     }
-                    if (ImGui::MenuItem(u8"Add output pin"))
+                    if (ImGui::MenuItem("Add output pin"))
                     {
                         node->next_pin++;
                     }
-                    if (ImGui::MenuItem(u8"Clear unlinked pins"))
+                    if (ImGui::MenuItem("Clear unlinked pins"))
                     {
                         std::vector<Link*> from_this_node;
                         std::vector<Link*> to_this_node;
@@ -599,7 +599,7 @@ public:
                         remove(node->id, node->next_pin, from_this_node);
                         remove(node->text_id, node->prev_pin, to_this_node);
                     }
-                    if (ImGui::MenuItem(u8"Erase"))
+                    if (ImGui::MenuItem("Erase"))
                     {
                         node->erased = 1;
                         for (auto it = links_.begin(); it != links_.end();)
@@ -617,7 +617,7 @@ public:
                 }
                 else
                 {
-                    if (ImGui::MenuItem(u8"New Op"))
+                    if (ImGui::MenuItem("New Op"))
                     {
                         auto& ui_node = createNode();
                         ui_node.title = fmt1::format("layer_{}", rand());
@@ -625,7 +625,7 @@ public:
                         ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                         saved_ = false;
                     }
-                    if (ImGui::MenuItem(u8"Erase all selected"))
+                    if (ImGui::MenuItem("Erase all selected"))
                     {
                         erase_select_ = 1;
                     }
@@ -865,7 +865,7 @@ public:
 
         if (need_dialog_ == 1)
         {
-            //ImGui::OpenPopup(u8"退出");
+            //ImGui::OpenPopup("退出");
             try_exit();
         }
         if (need_dialog_ == 2 || (!begin_file_.empty() && first_run_))
