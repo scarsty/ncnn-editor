@@ -10,10 +10,10 @@
 
 #include <imnodes.h>
 #include <stdio.h>
-#include <SDL.h>
+#include <SDL2/SDL.h>
 
 #ifdef USE_OPENGL3
-#include <SDL_opengl.h>
+#include <SDL2/SDL_opengl.h>
 #endif
 
 int main(int argc, char* argv[])
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 #else
-    ImGui_ImplSDL2_InitForSDLRenderer(window);
+    ImGui_ImplSDL2_InitForSDLRenderer(window,renderer);
     ImGui_ImplSDLRenderer_Init(renderer);
 #endif
 

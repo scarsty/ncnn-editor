@@ -33,9 +33,10 @@ set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
 
 # collect the source files
 list (APPEND NODE_EDITOR_SRCS nn-editor/nn_editor.cpp)
-list (APPEND NODE_EDITOR_SRCS nn-editor/nodeloader.cpp)
-
+# list (APPEND NODE_EDITOR_SRCS nn-editor/nodeloader.cpp)
+list (APPEND NODE_EDITOR_SRCS nn-editor/Fileloader.cpp)
 # cccc is always loaded. qing zhi chi cccc.
+list (APPEND NODE_EDITOR_SRCS 3rdparty/singlefilegraph/sfg.c)
 list (APPEND NODE_EDITOR_SRCS nn-editor/ccccloader.cpp)
 add_definitions(-DNETEDIT_LOADER_CCCC)
 
@@ -47,7 +48,8 @@ endif()
 if(NETEDIT_LOADER_YAML_YOLO)
     list (APPEND NODE_EDITOR_SRCS nn-editor/yamlyololoader.cpp)
     add_definitions(-DNETEDIT_LOADER_YAML_YOLO)
-
+   
+    set ( CMAKE_PREFIX_PATH  "YAML-CPP-PATH")
     find_package(YAML-CPP)
     target_include_directories(${PROJECT_NAME} PRIVATE ${YAML_CPP_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PRIVATE ${YAML_CPP_LIBRARIES})
@@ -72,8 +74,8 @@ else()
 endif(APPLE)
 
 aux_source_directory(${CMAKE_SOURCE_DIR}/imnodes2    NODE_EDITOR_NODE_SRCS)
-list (APPEND NODE_EDITOR_NB_SRCS 3rdparty/nb/convert.cpp)
-list (APPEND NODE_EDITOR_NB_SRCS 3rdparty/nb/File.cpp)
+list (APPEND NODE_EDITOR_NB_SRCS 3rdparty/mlcc/convert.cpp)
+list (APPEND NODE_EDITOR_NB_SRCS 3rdparty/mlcc/File.cpp)
 list (APPEND NODE_EDITOR_DIALOG_SRCS 3rdparty/ImGuiFileDialog/ImGuiFileDialog.cpp)
 
 target_sources (${PROJECT_NAME} PRIVATE ${NODE_EDITOR_SRCS})
@@ -88,8 +90,9 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
 if(NOT APPLE)
+    set ( CMAKE_PREFIX_PATH  "SDL2-PATH")
     find_package(SDL2 REQUIRED)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_include_directories(${PROJECT_NAME} PRIVATE ${SDL2_INCLUDE_DIRS} "./3rdparty/mlcc" "./3rdparty/singlefilegraph")
     target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL2_LIBRARIES})
 endif(NOT APPLE)
 
