@@ -30,9 +30,6 @@ QQ 群: 822911263
 * yolo的简化格式（YAML）
 * onnx目前只可以查看（这个支持太麻烦了，考虑去掉）
 
-
-请大佬们pr支持新格式！
-
 <div align="center">
 
 <img src="assets/lenet.png">
