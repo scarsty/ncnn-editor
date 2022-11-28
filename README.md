@@ -1,4 +1,4 @@
-# nn-editor
+# ncnn-editor
 
 <div align="right">
 
@@ -6,11 +6,7 @@
 
 </div>
 
-基于 [imnodes](https://github.com/Nelarius/imnodes) 的流程图编辑工具。
-
-目前的主要功能是用于神经网络结构的简单编辑，或者某些特殊流程图的编辑。
-
-目标是老妪能训。
+基于 [imnodes](https://github.com/Nelarius/imnodes) 的ncnn格式编辑工具。
 
 QQ 群: 822911263
 
@@ -32,7 +28,7 @@ QQ 群: 822911263
 * [ncnn](https://github.com/Tencent/ncnn/wiki/param-and-model-file-structure) 完全支持
 * [pnnx](https://github.com/pnnx/pnnx) 该格式与ncnn基本一致，故可以直接支持，增加参数需手动
 * yolo的简化格式（YAML）
-* onnx目前只可以查看
+* onnx目前只可以查看（这个支持太麻烦了，考虑去掉）
 
 
 请大佬们pr支持新格式！
