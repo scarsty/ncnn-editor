@@ -36,7 +36,6 @@
     <ClCompile Include="FileLoader.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
-    <ClCompile Include="onnxLoader.cpp" />
     <ClCompile Include="yamlyololoader.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -44,7 +43,6 @@
     <ClInclude Include="FileLoader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
-    <ClInclude Include="onnxLoader.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="yamlyololoader.h" />
   </ItemGroup>

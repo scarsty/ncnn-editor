@@ -8,7 +8,6 @@
 #include "ccccloader.h"
 #include "yamlyololoader.h"
 #include "ncnnloader.h"
-#include "onnxLoader.h"
 
 #define M_PI 3.14159265358979323846
 extern "C"
@@ -48,10 +47,6 @@ FileLoader* create_loader(const std::string& filename, int index)
         {
             return new ncnnLoader();
         }
-    }
-    if (ext == "onnx")
-    {
-        return new onnxLoader();
     }
     return new FileLoader();
 }
