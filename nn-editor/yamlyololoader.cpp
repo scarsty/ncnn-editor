@@ -1,9 +1,22 @@
 #include "yamlyololoader.h"
 
-#include "fmt1.h"
-#include "convert.h"
+#include "strfunc.h"
 
 #include <iostream>
+
+static std::string join_strings(const std::vector<std::string>& values, const char* separator)
+{
+    std::string result;
+    for (size_t index = 0; index < values.size(); ++index)
+    {
+        if (index > 0)
+        {
+            result += separator;
+        }
+        result += values[index];
+    }
+    return result;
+}
 
 struct Layer
 {
@@ -26,9 +39,7 @@ static Node yaml2l(YAML::Node y)
     }
     n.values["repeat"] = y[1].as<std::string>();
     n.type = y[2].as<std::string>();
-    n.text = fmt1::format("{}", y[3].as<std::vector<std::string>>());
-    n.text = n.text.substr(1);
-    n.text.pop_back();
+    n.text = join_strings(y[3].as<std::vector<std::string>>(), ", ");
     return n;
 }
 
@@ -119,7 +130,7 @@ void yamlyoloLoader::nodesToFile(const std::deque<Node>& nodes, const std::strin
             n1[1] = n->values["repeat"];
             n1[2] = n->type;
             n1[3] = YAML::Load("[]");
-            for (auto str : convert::splitString(n->text, ", "))
+            for (auto str : strfunc::splitString(n->text, ", "))
             {
                 n1[3].push_back(str);
             }

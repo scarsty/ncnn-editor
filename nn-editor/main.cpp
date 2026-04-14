@@ -1,27 +1,27 @@
 #include "node_editor.h"
 #include <imgui.h>
-#include <imgui_impl_sdl.h>
+#include <imgui_impl_sdl3.h>
 
 #ifdef USE_OPENGL3
 #include <imgui_impl_opengl3.h>
 #else
-#include <imgui_impl_sdlrenderer.h>
+#include <imgui_impl_sdlrenderer3.h>
 #endif
 
 #include <imnodes.h>
 #include <stdio.h>
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 #ifdef USE_OPENGL3
-#include <SDL2/SDL_opengl.h>
+#include <SDL3/SDL_opengl.h>
 #endif
 
 int main(int argc, char* argv[])
 {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0)
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD))
     {
-        printf("Error: %s\n", SDL_GetError());
-        return -1;
+        printf("Error: SDL_Init(): %s\n", SDL_GetError());
+        return 1;
     }
 
 #ifdef USE_OPENGL3
@@ -46,29 +46,32 @@ int main(int argc, char* argv[])
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-    SDL_DisplayMode current;
-    SDL_GetCurrentDisplayMode(0, &current);
 #endif
-    int flag = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+    SDL_WindowFlags flag = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
 #ifdef USE_OPENGL3
     flag |= SDL_WINDOW_OPENGL;
 #endif
 
-    SDL_Window* window = SDL_CreateWindow(
-        "Neural Net Editor",
-        SDL_WINDOWPOS_CENTERED,
-        SDL_WINDOWPOS_CENTERED,
-        1280,
-        720,
-        flag);
+    SDL_Window* window = SDL_CreateWindow("Neural Net Editor", 1280, 720, flag);
+    if (window == nullptr)
+    {
+        printf("Error: SDL_CreateWindow(): %s\n", SDL_GetError());
+        return 1;
+    }
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
 #ifdef USE_OPENGL3
     SDL_GLContext gl_context = SDL_GL_CreateContext(window);
+    if (gl_context == nullptr)
+    {
+        printf("Error: SDL_GL_CreateContext(): %s\n", SDL_GetError());
+        return 1;
+    }
     SDL_GL_MakeCurrent(window, gl_context);
     SDL_GL_SetSwapInterval(1); // Enable vsync
 #else
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_PRESENTVSYNC | SDL_RENDERER_ACCELERATED);
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, nullptr);
     if (renderer == NULL)
     {
         SDL_Log("Error creating SDL_Renderer!");
@@ -80,11 +83,11 @@ int main(int argc, char* argv[])
     ImGui::CreateContext();
 
 #ifdef USE_OPENGL3
-    ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
+    ImGui_ImplSDL3_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 #else
-    ImGui_ImplSDL2_InitForSDLRenderer(window,renderer);
-    ImGui_ImplSDLRenderer_Init(renderer);
+    ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
+    ImGui_ImplSDLRenderer3_Init(renderer);
 #endif
 
     ImNodes::CreateContext();
@@ -118,10 +121,10 @@ int main(int argc, char* argv[])
         SDL_Event event;
         while (SDL_PollEvent(&event))
         {
-            ImGui_ImplSDL2_ProcessEvent(&event);
-            if (event.type == SDL_QUIT)
+            ImGui_ImplSDL3_ProcessEvent(&event);
+            if (event.type == SDL_EVENT_QUIT)
                 example::NodeEditorSetExit(1);;
-            if (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE &&
+            if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED &&
                 event.window.windowID == SDL_GetWindowID(window))
                 example::NodeEditorSetExit(1);;
         }
@@ -130,9 +133,9 @@ int main(int argc, char* argv[])
 #ifdef USE_OPENGL3
         ImGui_ImplOpenGL3_NewFrame();
 #else
-        ImGui_ImplSDLRenderer_NewFrame();
+        ImGui_ImplSDLRenderer3_NewFrame();
 #endif
-        ImGui_ImplSDL2_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
         if (!initialized)
@@ -148,7 +151,7 @@ int main(int argc, char* argv[])
 
 #ifdef USE_OPENGL3
         int fb_width, fb_height;
-        SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
+    SDL_GetWindowSizeInPixels(window, &fb_width, &fb_height);
         glViewport(0, 0, fb_width, fb_height);
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -167,12 +170,12 @@ int main(int argc, char* argv[])
 #ifdef USE_OPENGL3
     ImGui_ImplOpenGL3_Shutdown();
 #else
-    ImGui_ImplSDLRenderer_Shutdown();
+    ImGui_ImplSDLRenderer3_Shutdown();
 #endif
-    ImGui_ImplSDL2_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
 #ifdef USE_OPENGL3
-    SDL_GL_DeleteContext(gl_context);
+    SDL_GL_DestroyContext(gl_context);
 #else
     SDL_DestroyRenderer(renderer);
 #endif

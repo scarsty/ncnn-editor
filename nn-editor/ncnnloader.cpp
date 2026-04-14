@@ -1,7 +1,7 @@
 #include "ncnnloader.h"
-#include "convert.h"
-#include "fmt1.h"
-#include "File.h"
+#include "filefunc.h"
+#include "strfunc.h"
+#include <format>
 #include <functional>
 #include "yaml-cpp/yaml.h"
 #include <iostream>
@@ -32,24 +32,24 @@ void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
 {
     nodes.clear();
     is_pnnx_ = false;
-    auto str = convert::readStringFromFile(filename);
+    auto str = filefunc::readFileToString(filename);
     if (str.find("pnnx") != std::string::npos)
     {
         is_pnnx_ = true;
     }
-    str = convert::replaceAllSubString(str, "\r", "");
-    auto lines = convert::splitString(str, "\n");
+    str = strfunc::replaceAllSubString(str, "\r", "");
+    auto lines = strfunc::splitString(str, "\n");
     int layer_count = 0, blob_count = 0;
     if (lines.size() >= 2)
     {
-        auto v = convert::findNumbers<int>(lines[1]);
+        auto v = strfunc::findNumbers<int>(lines[1]);
         layer_count = v[0];
         blob_count = v[1];
     }
 
     for (int i = 2; i < lines.size(); i++)
     {
-        auto v = convert::splitString(lines[i], " ");
+        auto v = strfunc::splitString(lines[i], " ");
         if (v.size() >= 2)
         {
             Node node;
@@ -138,7 +138,7 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
     for (auto& n : nodes_turn)
     {
         blob_count += n->nexts.size();
-        auto l = fmt1::format("{:-16} {:-16} {} {} ", n->type, n->title, n->prevs.size(), n->nexts.size());
+        auto l = std::format("{:<16} {:<16} {} {} ", n->type, n->title, n->prevs.size(), n->nexts.size());
         for (auto& n1 : n->prevs)
         {
             if (n1->nexts.size() == 1)
@@ -182,22 +182,22 @@ void ncnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& f
             l += kv;
         }
         l.pop_back();
-        //l += convert::replaceAllSubString(n->text, "\n", " ");
+        //l += strfunc::replaceAllSubString(n->text, "\n", " ");
         lines.push_back(std::move(l));
     }
-    lines[1] = fmt1::format("{} {}", nodes_turn.size(), blob_count);
+    lines[1] = std::format("{} {}", nodes_turn.size(), blob_count);
     std::string str;
     for (auto& l : lines)
     {
         str += l + "\n";
     }
-    fmt1::print("{}", str);
-    convert::writeStringToFile(str, filename);
+    std::cout << str;
+    filefunc::writeStringToFile(str, filename);
 }
 
 void ncnnLoader::refreshNodeValues(Node& n)
 {
-    auto strs = convert::splitString(n.text, " ");
+    auto strs = strfunc::splitString(n.text, " ");
     if (!is_pnnx_)
     {
         for (auto& kv : int_to_string_[n.type])
@@ -207,7 +207,7 @@ void ncnnLoader::refreshNodeValues(Node& n)
                 n.values[kv.second] = "";
                 for (auto& str : strs)
                 {
-                    auto kv1 = convert::splitString(str, "=");
+                    auto kv1 = strfunc::splitString(str, "=");
                     if (kv1.size() >= 2)
                     {
                         auto i = atoi(kv1[0].c_str());
@@ -222,7 +222,7 @@ void ncnnLoader::refreshNodeValues(Node& n)
         }
         for (auto& str : strs)
         {
-            auto kv = convert::splitString(str, "=");
+            auto kv = strfunc::splitString(str, "=");
             if (kv.size() >= 2 && int_to_string_[n.type].count(atoi(kv[0].c_str())) == 0)
             {
                 n.values[kv[0]] = kv[1];
@@ -233,7 +233,7 @@ void ncnnLoader::refreshNodeValues(Node& n)
     {
         for (auto& str : strs)
         {
-            auto kv = convert::splitString(str, "=");
+            auto kv = strfunc::splitString(str, "=");
             if (kv.size() >= 2)
             {
                 n.values[kv[0]] = kv[1];

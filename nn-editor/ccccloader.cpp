@@ -1,6 +1,6 @@
 #include "ccccloader.h"
 #include "INIReader.h"
-#include "convert.h"
+#include "strfunc.h"
 
 void ccccLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
@@ -28,7 +28,7 @@ void ccccLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
                     node.values[key] = ini.getString(s, key);
                 }
             }
-            std::vector<int> v = convert::findNumbers<int>(ini.getString(s, "editor_position"));
+            std::vector<int> v = strfunc::findNumbers<int>(ini.getString(s, "editor_position"));
             if (v.size() >= 2)
             {
                 x = v[0];
@@ -43,7 +43,7 @@ void ccccLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
     //create next
     for (auto& n : nodes)
     {
-        std::vector<std::string> v = convert::splitString(ini.getString(n.title, "next"), ",");
+        std::vector<std::string> v = strfunc::splitString(ini.getString(n.title, "next"), ",");
         for (auto& s : v)
         {
             for (auto& n1 : nodes)

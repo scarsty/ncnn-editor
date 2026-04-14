@@ -10,13 +10,13 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <format>
 #include <vector>
 #include <string>
 #include <imgui_stdlib.h>
 
-#include "fmt1.h"
-#include "convert.h"
-#include "File.h"
+#include "filefunc.h"
+#include "strfunc.h"
 
 #include "FileLoader.h"
 
@@ -205,7 +205,7 @@ private:
             if (kv.second > 1)
             {
                 res = true;
-                auto str = fmt1::format("There are {} \"{}\"!", kv.second, kv.first);
+                auto str = std::format("There are {} \"{}\"!", kv.second, kv.first);
                 ImGui::OpenPopup("Note");
                 if (ImGui::BeginPopupModal("Exit", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 {
@@ -385,9 +385,9 @@ public:
                     auto file = openfile(file_filter(), &loader_);
                     if (!file.empty())
                     {
-                        if (File::getFileExt(file) != "ini")
+                        if (filefunc::getFileExt(file) != "ini")
                         {
-                            file = File::changeFileExt(file, "ini");
+                            file = filefunc::changeFileExt(file, "ini");
                         }
                         current_file_ = file;
                         loader_->nodesToFile(nodes_, current_file_);
@@ -458,7 +458,7 @@ public:
             std::string str = "No opened file";
             if (!current_file_.empty())
             {
-                str = fmt1::format("Current file: {}, ", current_file_);
+                str = std::format("Current file: {}, ", current_file_);
                 if (saved_)
                 {
                     str += "Saved";
@@ -620,7 +620,7 @@ public:
                     if (ImGui::MenuItem("New Op"))
                     {
                         auto& ui_node = createNode();
-                        ui_node.title = fmt1::format("layer_{}", rand());
+                        ui_node.title = std::format("layer_{}", rand());
                         ui_node.type = "data";
                         ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
                         saved_ = false;
@@ -644,7 +644,7 @@ public:
                     continue;
                 }
 
-                auto type = convert::toLowerCase(node.type);
+                auto type = strfunc::toLowerCase(node.type);
                 if (type.find("data") != std::string::npos || type.find("input") != std::string::npos)
                 {
                     ImNodes::PushColorStyle(ImNodesCol_TitleBar, IM_COL32(0xcc, 0x33, 0x33, 0xff));
@@ -963,7 +963,7 @@ void NodeEditorInitialize(int argc, char* argv[])
     {
         ex1::color_editor.setBeginFile(argv[1]);
     }
-    FileLoader::mainPath() = File::getFilePath(argv[0]);
+    FileLoader::mainPath() = filefunc::getFilePath(argv[0]);
 }
 
 void NodeEditorShow() { ex1::color_editor.show(); }

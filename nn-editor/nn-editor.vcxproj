@@ -19,17 +19,16 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\3rdparty\mlcc\convert.cpp" />
-    <ClCompile Include="..\3rdparty\mlcc\File.cpp" />
+    <ClCompile Include="..\3rdparty\mlcc\filefunc.cpp" />
+    <ClCompile Include="..\3rdparty\mlcc\strfunc.cpp" />
     <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_opengl3.cpp" />
-    <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="..\3rdparty\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="..\3rdparty\imgui\imgui.cpp" />
     <ClCompile Include="..\3rdparty\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\3rdparty\imgui\imgui_draw.cpp" />
     <ClCompile Include="..\3rdparty\imgui\imgui_tables.cpp" />
     <ClCompile Include="..\3rdparty\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\3rdparty\imgui\misc\cpp\imgui_stdlib.cpp" />
-    <ClCompile Include="..\3rdparty\singlefilegraph\sfg.c" />
     <ClCompile Include="..\imnodes2\imnodes.cpp" />
     <ClCompile Include="ccccloader.cpp" />
     <ClCompile Include="nn_editor.cpp" />
@@ -112,6 +111,9 @@
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgAutoLink>true</VcpkgAutoLink>
+    <VcpkgTriplet Condition="'$(VcpkgTriplet)'==''">x64-windows</VcpkgTriplet>
+    <NnEditorVcpkgRoot Condition="'$(VcpkgRoot)'!=''">$(VcpkgRoot)</NnEditorVcpkgRoot>
+    <NnEditorVcpkgRoot Condition="'$(NnEditorVcpkgRoot)'=='' and Exists('D:\project\vcpkg')">D:\project\vcpkg\</NnEditorVcpkgRoot>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -149,14 +151,14 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;USE_OPENGL3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/singlefilegraph;../3rdparty/demekgraph/original/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/demekgraph/original/include/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\project\microsoft\vcpkg\installed\x64-windows\lib\manual-link;D:\project\microsoft\vcpkg\installed\x64-windows\debug\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sdl2main.lib;opengl32.lib;yaml-cppd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\lib\manual-link;$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\debug\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL3.lib;opengl32.lib;yaml-cppd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
@@ -168,7 +170,7 @@
       <SDLCheck>false</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;USE_OPENGL3;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..;../..;D:\project\microsoft\vcpkg\installed\x64-windows\include\SDL2;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/singlefilegraph;D:\project\microsoft\vcpkg\installed\x64-windows\include;../3rdparty/libtorch/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/libtorch/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
@@ -176,8 +178,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>D:\project\microsoft\vcpkg\installed\x64-windows\lib\manual-link;D:\project\nn-editor\3rdparty\libtorch\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sdl2main.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\lib\manual-link;$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\lib;D:\project\nn-editor\3rdparty\libtorch\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL3.lib;yaml-cpp.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>

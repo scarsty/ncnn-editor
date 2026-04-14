@@ -1,6 +1,6 @@
 #include "ptLoader.h"
 #include <torch/script.h>
-#include "fmt1.h"
+#include <iostream>
 
 ptLoader::ptLoader()
 {
@@ -8,7 +8,7 @@ ptLoader::ptLoader()
 
 void ptLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
 {
-    fmt1::print("{}\n", filename);
+    std::cout << filename << '\n';
     torch::jit::Module mod = torch::jit::load(filename);
     mod.eval();
     auto g = mod.get_method("forward").graph();
@@ -22,10 +22,10 @@ void ptLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
         //    if (!tensor_type)
         //        continue;
 
-        //   fmt1::print("{}\n", v->debugName().c_str());
+        //   std::cout << v->debugName().c_str() << '\n';
 
         //}
-        //fmt1::print("{}{}\n",i++, );
+        //std::cout << i++ << '\n';
     }
 }
 

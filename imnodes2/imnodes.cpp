@@ -6,11 +6,7 @@
 // [SECTION] render helpers
 // [SECTION] API implementation
 
-#include "imnodes.h"
 #include "imnodes_internal.h"
-
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui_internal.h>
 
 // Check minimum ImGui version
 #define MINIMUM_COMPATIBLE_IMGUI_VERSION 17400
@@ -354,7 +350,11 @@ void ImDrawListGrowChannels(ImDrawList* draw_list, const int num_channels)
         {
             ImDrawCmd draw_cmd;
             draw_cmd.ClipRect = draw_list->_ClipRectStack.back();
+#if IMGUI_VERSION_NUM < 19200
             draw_cmd.TextureId = draw_list->_TextureIdStack.back();
+#else
+            draw_cmd.TexRef = draw_list->_TextureStack.back();
+#endif
             channel._CmdBuffer.push_back(draw_cmd);
         }
     }
@@ -1743,7 +1743,7 @@ static inline void CalcMiniMapLayout()
         const ImVec2 grid_content_size = editor.GridContentBounds.IsInverted()
                                              ? max_size
                                              : ImFloor(editor.GridContentBounds.GetSize());
-        const float grid_content_aspect_ratio = grid_content_size.x / grid_content_size.y;
+        const float  grid_content_aspect_ratio = grid_content_size.x / grid_content_size.y;
         mini_map_size = ImFloor(
             grid_content_aspect_ratio > max_size_aspect_ratio
                 ? ImVec2(max_size.x, max_size.x / grid_content_aspect_ratio)
@@ -1995,7 +1995,7 @@ ImNodesIO::MultipleSelectModifier::MultipleSelectModifier() : Modifier(NULL) {}
 
 ImNodesIO::ImNodesIO()
     : EmulateThreeButtonMouse(), LinkDetachWithModifierClick(),
-      AltMouseButton(ImGuiMouseButton_Right), AutoPanningSpeed(1000.0f)
+    AltMouseButton(ImGuiMouseButton_Right), AutoPanningSpeed(1000.0f)
 {
 }
 
@@ -2095,11 +2095,9 @@ void StyleColorsDark(ImNodesStyle* dest)
     dest->Colors[ImNodesCol_Link] = IM_COL32(61, 133, 224, 200);
     dest->Colors[ImNodesCol_LinkHovered] = IM_COL32(66, 150, 250, 255);
     dest->Colors[ImNodesCol_LinkSelected] = IM_COL32(66, 150, 250, 255);
-
     dest->Colors[ImNodesCol_Link] = IM_COL32(66, 150, 250, 100);
     dest->Colors[ImNodesCol_LinkHovered] = IM_COL32(99, 200, 250, 224);
     dest->Colors[ImNodesCol_LinkSelected] = IM_COL32(255, 69, 91, 224);
-
     // pin colors match ImGui's button colors
     dest->Colors[ImNodesCol_Pin] = IM_COL32(53, 150, 250, 180);
     dest->Colors[ImNodesCol_PinHovered] = IM_COL32(53, 150, 250, 255);
@@ -2661,35 +2659,35 @@ struct ImNodesStyleVarInfo
 
 static const ImNodesStyleVarInfo GStyleVarInfo[] = {
     // ImNodesStyleVar_GridSpacing
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, GridSpacing)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, GridSpacing)},
     // ImNodesStyleVar_NodeCornerRounding
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, NodeCornerRounding)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, NodeCornerRounding)},
     // ImNodesStyleVar_NodePadding
-    {ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImNodesStyle, NodePadding)},
+    {ImGuiDataType_Float, 2, (ImU32)offsetof(ImNodesStyle, NodePadding)},
     // ImNodesStyleVar_NodeBorderThickness
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, NodeBorderThickness)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, NodeBorderThickness)},
     // ImNodesStyleVar_LinkThickness
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, LinkThickness)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, LinkThickness)},
     // ImNodesStyleVar_LinkLineSegmentsPerLength
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, LinkLineSegmentsPerLength)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, LinkLineSegmentsPerLength)},
     // ImNodesStyleVar_LinkHoverDistance
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, LinkHoverDistance)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, LinkHoverDistance)},
     // ImNodesStyleVar_PinCircleRadius
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, PinCircleRadius)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, PinCircleRadius)},
     // ImNodesStyleVar_PinQuadSideLength
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, PinQuadSideLength)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, PinQuadSideLength)},
     // ImNodesStyleVar_PinTriangleSideLength
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, PinTriangleSideLength)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, PinTriangleSideLength)},
     // ImNodesStyleVar_PinLineThickness
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, PinLineThickness)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, PinLineThickness)},
     // ImNodesStyleVar_PinHoverRadius
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, PinHoverRadius)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, PinHoverRadius)},
     // ImNodesStyleVar_PinOffset
-    {ImGuiDataType_Float, 1, (ImU32)IM_OFFSETOF(ImNodesStyle, PinOffset)},
+    {ImGuiDataType_Float, 1, (ImU32)offsetof(ImNodesStyle, PinOffset)},
     // ImNodesStyleVar_MiniMapPadding
-    {ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImNodesStyle, MiniMapPadding)},
+    {ImGuiDataType_Float, 2, (ImU32)offsetof(ImNodesStyle, MiniMapPadding)},
     // ImNodesStyleVar_MiniMapOffset
-    {ImGuiDataType_Float, 2, (ImU32)IM_OFFSETOF(ImNodesStyle, MiniMapOffset)},
+    {ImGuiDataType_Float, 2, (ImU32)offsetof(ImNodesStyle, MiniMapOffset)},
 };
 
 static const ImNodesStyleVarInfo* GetStyleVarInfo(ImNodesStyleVar idx)

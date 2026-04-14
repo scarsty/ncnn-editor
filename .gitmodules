@@ -9,11 +9,8 @@
 [submodule "3rdparty/ImGuiFileDialog"]
 	path = 3rdparty/ImGuiFileDialog
 	url = https://github.com/aiekick/ImGuiFileDialog
-	branch = Lib_Only
+	branch = master
 [submodule "3rdparty/mlcc"]
 	path = 3rdparty/mlcc
 	url = https://github.com/scarsty/mlcc
 	branch = master
-[submodule "3rdparty/singlefilegraph"]
-	path = 3rdparty/singlefilegraph
-	url = https://github.com/gml4gtk/singlefilegraph
