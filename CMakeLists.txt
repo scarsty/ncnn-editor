@@ -117,6 +117,20 @@ target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
 if(EMSCRIPTEN OR NETEDIT_WEB)
+    set(NETEDIT_WEB_PRELOAD_OPTIONS)
+    if(EXISTS "${CMAKE_SOURCE_DIR}/models/squeezenet_v1.1.param")
+        list(APPEND NETEDIT_WEB_PRELOAD_OPTIONS
+            "--preload-file=${CMAKE_SOURCE_DIR}/models/squeezenet_v1.1.param@/models/squeezenet_v1.1.param")
+    else()
+        message(STATUS "Skipping preload: models/squeezenet_v1.1.param not found")
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/nn-editor/ncnn-metadata.json")
+        list(APPEND NETEDIT_WEB_PRELOAD_OPTIONS
+            "--preload-file=${CMAKE_SOURCE_DIR}/nn-editor/ncnn-metadata.json@/ncnn-metadata.json")
+    else()
+        message(STATUS "Skipping preload: nn-editor/ncnn-metadata.json not found")
+    endif()
+
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_OPENGL_ES3 USE_OPENGL3)
     target_compile_options(${PROJECT_NAME} PRIVATE
         "-sUSE_SDL=3"
@@ -133,8 +147,7 @@ if(EMSCRIPTEN OR NETEDIT_WEB)
         "-sMIN_WEBGL_VERSION=2"
         "-sMAX_WEBGL_VERSION=2"
         "--shell-file=${CMAKE_SOURCE_DIR}/nn-editor/web-shell.html"
-        "--preload-file=${CMAKE_SOURCE_DIR}/models/squeezenet_v1.1.param@/models/squeezenet_v1.1.param"
-        "--preload-file=${CMAKE_SOURCE_DIR}/nn-editor/ncnn-metadata.json@/ncnn-metadata.json"
+        ${NETEDIT_WEB_PRELOAD_OPTIONS}
         "-sEXPORTED_RUNTIME_METHODS=['ccall','FS']"
         "-sEXPORTED_FUNCTIONS=['_main','_NodeEditorSetPendingFile']")
 elseif(NOT APPLE)
