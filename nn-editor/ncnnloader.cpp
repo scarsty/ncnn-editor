@@ -1,21 +1,27 @@
 #include "ncnnloader.h"
 #include "filefunc.h"
 #include "strfunc.h"
+
+#include <algorithm>
 #include <format>
 #include <functional>
-#ifndef __EMSCRIPTEN__
+#ifdef NETEDIT_HAS_YAML_CPP
 #include "yaml-cpp/yaml.h"
 #endif
 #include <iostream>
 
 ncnnLoader::ncnnLoader()
 {
-#ifndef __EMSCRIPTEN__
+#ifdef NETEDIT_HAS_YAML_CPP
     YAML::Node node;
+#ifdef __EMSCRIPTEN__
+    node = YAML::LoadFile("/ncnn-metadata.json");
+#else
 #ifdef __APPLE__
     node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
 #else
     node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
+#endif
 #endif
     for (auto n : node)
     {

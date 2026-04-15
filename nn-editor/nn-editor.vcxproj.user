@@ -8,5 +8,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerCommandArguments>../models/FastestDet-XL.pt</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    <LocalDebuggerCommandArgumentsHistory>../models/FastestDet-XL.pt|</LocalDebuggerCommandArgumentsHistory>
   </PropertyGroup>
 </Project>

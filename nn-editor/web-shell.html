@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>NN Editor</title>
+    <style>
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #171a1f;
+      }
+
+      #canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        border: 0;
+        background: #171a1f;
+        outline: none;
+      }
+
+      #loading {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font: 14px/1.4 "Segoe UI", "PingFang SC", sans-serif;
+        color: #d7dde8;
+        background: linear-gradient(180deg, rgba(23, 26, 31, 0.96), rgba(23, 26, 31, 0.82));
+        letter-spacing: 0.02em;
+        z-index: 10;
+        transition: opacity 180ms ease;
+      }
+
+      #loading.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      #errorbox {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        max-height: 35vh;
+        overflow: auto;
+        padding: 10px 12px;
+        border: 1px solid #5e2525;
+        background: rgba(32, 8, 8, 0.92);
+        color: #ffd7d7;
+        font: 12px/1.4 Consolas, "Courier New", monospace;
+        white-space: pre-wrap;
+        z-index: 20;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading">正在加载编辑器…</div>
+    <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="-1"></canvas>
+    <div id="errorbox"></div>
+    <script>
+      const loadingElement = document.getElementById('loading');
+      const canvasElement = document.getElementById('canvas');
+      const errorElement = document.getElementById('errorbox');
+
+      var Module = {
+        canvas: canvasElement,
+        print: (...args) => console.log(...args),
+        printErr: (...args) => console.error(...args),
+        setStatus(text) {
+          if (!text || text === 'All downloads complete.') {
+            loadingElement.classList.add('hidden');
+            return;
+          }
+          loadingElement.textContent = text;
+        },
+        monitorRunDependencies(left) {
+          if (left === 0) {
+            loadingElement.classList.add('hidden');
+          }
+        }
+      };
+
+      canvasElement.addEventListener('webglcontextlost', (event) => {
+        event.preventDefault();
+        loadingElement.textContent = 'WebGL 上下文丢失，请刷新页面';
+        loadingElement.classList.remove('hidden');
+      }, false);
+
+      function isBenignEmscriptenMessage(message, error) {
+        const msg = String(message || '');
+        const errMsg = String((error && error.message) || '');
+        const merged = `${msg} ${errMsg}`;
+        return merged.includes('unwind') || merged.includes('simulating infinite loop');
+      }
+
+      function isLikelyAppSource(source) {
+        if (!source) {
+          return false;
+        }
+        return source.includes('index.js') || source.includes('index.html') || source.includes('.wasm');
+      }
+
+      function isLikelyAppReason(reason) {
+        const text = String(reason || '');
+        const stack = String((reason && reason.stack) || '');
+        const merged = `${text}\n${stack}`;
+        return merged.includes('index.js') || merged.includes('.wasm') || merged.includes('Module.');
+      }
+
+      function showFatal(text, detail) {
+        loadingElement.textContent = text;
+        loadingElement.classList.remove('hidden');
+        if (errorElement) {
+          errorElement.style.display = 'block';
+          const detailText = typeof detail === 'string' ? detail : JSON.stringify(detail, null, 2);
+          errorElement.textContent = `${text}\n${detailText || ''}`;
+        }
+        if (detail) {
+          console.error(detail);
+        }
+      }
+
+      // Treat only app-related runtime errors as fatal.
+      window.onerror = (message, source, lineno, colno, error) => {
+        if (isBenignEmscriptenMessage(message, error)) {
+          return false;
+        }
+        if (!isLikelyAppSource(source)) {
+          return false;
+        }
+        showFatal('加载失败，请查看浏览器控制台', { message, source, lineno, colno, error });
+        return false;
+      };
+
+      window.addEventListener('unhandledrejection', (event) => {
+        const reason = event && event.reason;
+        if (isBenignEmscriptenMessage(reason, reason)) {
+          return;
+        }
+        if (!isLikelyAppReason(reason)) {
+          return;
+        }
+        showFatal('加载失败，请查看浏览器控制台', reason);
+      });
+
+      const bootWatchdog = setInterval(() => {
+        if (Module && Module.calledRun) {
+          loadingElement.classList.add('hidden');
+          clearInterval(bootWatchdog);
+        }
+      }, 120);
+
+      setTimeout(async () => {
+        if (Module && Module.calledRun) {
+          return;
+        }
+        const targets = ['index.js', 'index.wasm', 'index.data'];
+        const lines = [];
+        for (const path of targets) {
+          try {
+            const resp = await fetch(path, { method: 'GET', cache: 'no-store' });
+            lines.push(`${path}: HTTP ${resp.status}`);
+          } catch (err) {
+            lines.push(`${path}: FETCH FAILED (${err})`);
+          }
+        }
+        showFatal('加载超时，资源探测如下：', lines.join('\n'));
+      }, 12000);
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

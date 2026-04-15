@@ -24,9 +24,9 @@ constexpr int kDefaultNodeWidth = 220;
 constexpr int kMinNodeWidth = 200;
 constexpr int kMaxNodeWidth = 420;
 constexpr int kNodeSpacing = 96;
-constexpr int kLayerSpacing = 84;
+constexpr int kLayerSpacing = 20;
 constexpr int kComponentSpacing = 240;
-constexpr int kTopMargin = 180;
+constexpr int kTopMargin = 20;
 constexpr int kLeftMargin = 220;
 
 using NodeSet = std::unordered_set<Node*>;
@@ -102,14 +102,11 @@ NodeMetrics estimate_node_metrics(const Node& node)
     width += static_cast<double>((std::max)(node.prev_pin, node.next_pin)) * 6.0;
     width = clamp_double(width, kMinNodeWidth, kMaxNodeWidth);
 
+    // Match normal (collapsed) node size. Expanded inspector content is transient and
+    // should not drive global layer spacing.
     double height = 72.0;
     height += static_cast<double>((std::max)(node.prev_pin, node.next_pin)) * 18.0;
-    if (!node.values.empty())
-    {
-        height += static_cast<double>(node.values.size()) * 24.0;
-    }
-    height += static_cast<double>(estimate_line_count(node.text)) * 22.0;
-    height = (std::max)(height, 110.0);
+    height = (std::max)(height, 96.0);
 
     return { width, height };
 }
@@ -528,7 +525,7 @@ std::vector<double> build_layer_tops(const std::vector<std::vector<Node*>>& laye
     for (size_t rank = 0; rank < layers.size(); ++rank)
     {
         tops[rank] = cursor;
-        double layer_height = 110.0;
+        double layer_height = 96.0;
         for (Node* node : layers[rank])
         {
             layer_height = (std::max)(layer_height, metrics.at(node).height);

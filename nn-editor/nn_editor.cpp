@@ -44,7 +44,13 @@ EM_JS(void, WebOpenFileDialog, (), {
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = '.ini,.param,.yaml';
-        input.style.display = 'none';
+        // Some browsers reject synthetic click on display:none file inputs.
+        input.style.position = 'fixed';
+        input.style.left = '-10000px';
+        input.style.top = '-10000px';
+        input.style.width = '1px';
+        input.style.height = '1px';
+        input.style.opacity = '0';
         input.addEventListener('change', async (event) => {
             const file = event.target.files && event.target.files[0];
             if (!file) {
@@ -65,7 +71,40 @@ EM_JS(void, WebOpenFileDialog, (), {
         document.body.appendChild(input);
         Module.__ncnnEditorFileInput = input;
     }
-    Module.__ncnnEditorFileInput.click();
+
+    if (!Module.__ncnnEditorTryOpenPicker) {
+        Module.__ncnnEditorTryOpenPicker = () => {
+            const input = Module.__ncnnEditorFileInput;
+            if (!input) {
+                return;
+            }
+            if (typeof input.showPicker === 'function') {
+                input.showPicker();
+            } else {
+                input.click();
+            }
+        };
+    }
+
+    if (!Module.__ncnnEditorOpenHookInstalled) {
+        Module.__ncnnEditorOpenHookInstalled = true;
+        Module.__ncnnEditorPendingOpen = false;
+        // Fallback: if immediate open loses user activation, next click re-triggers picker.
+        document.addEventListener('pointerdown', () => {
+            if (!Module.__ncnnEditorPendingOpen) {
+                return;
+            }
+            Module.__ncnnEditorPendingOpen = false;
+            Module.__ncnnEditorTryOpenPicker();
+        }, true);
+    }
+
+    Module.__ncnnEditorPendingOpen = true;
+    try {
+        Module.__ncnnEditorTryOpenPicker();
+        Module.__ncnnEditorPendingOpen = false;
+    } catch (error) {
+    }
 });
 
 EM_JS(void, WebDownloadFile, (const char* path_ptr), {
@@ -105,6 +144,9 @@ private:
     std::string begin_file_;
     int first_run_ = 1;
     int select_id_ = -1;
+    int pending_focus_node_id_ = -1;
+    int pending_focus_frames_ = 0;
+    bool pending_focus_top_anchor_ = false;
 
     int erase_select_ = 0;
 
@@ -529,6 +571,13 @@ public:
             //ImGui::Columns(2);
             //ImGui::TextUnformatted("A -- add node");
             ImGui::TextUnformatted("Delete -- Erase selected ops and links");
+            ImGui::SameLine();
+            if (ImGui::Button("Focus Graph") && !nodes_.empty())
+            {
+                pending_focus_node_id_ = nodes_.front().id;
+                pending_focus_frames_ = 2;
+                pending_focus_top_anchor_ = false;
+            }
             //ImGui::NextColumn();
             std::string str = "No opened file";
             if (!current_file_.empty())
@@ -544,6 +593,21 @@ public:
                 }
             }
             ImGui::TextUnformatted(str.c_str());
+
+            if (!nodes_.empty())
+            {
+                const ImVec2 pan = ImNodes::EditorContextGetPanning();
+                const ImVec2 first_pos = ImNodes::GetNodeGridSpacePos(nodes_.front().id);
+                const std::string graph_debug = std::format(
+                    "Graph: nodes={} links={} pan=({}, {}) first=({}, {})",
+                    nodes_.size(),
+                    links_.size(),
+                    static_cast<int>(std::lround(pan.x)),
+                    static_cast<int>(std::lround(pan.y)),
+                    static_cast<int>(std::lround(first_pos.x)),
+                    static_cast<int>(std::lround(first_pos.y)));
+                ImGui::TextUnformatted(graph_debug.c_str());
+            }
         }
 
         //if (ImGui::Checkbox("emulate_three_button_mouse", &emulate_three_button_mouse))
@@ -563,6 +627,7 @@ public:
             erase_select_ = 0;
         }
 
+        const ImVec2 editor_canvas_size = ImGui::GetContentRegionAvail();
         ImNodes::BeginNodeEditor();
         // Handle new nodes
         // These are driven by the user, so we place this code before rendering the nodes
@@ -843,6 +908,27 @@ public:
         ImNodes::MiniMap(0.5f, minimap_location_);
 
         ImNodes::EndNodeEditor();
+
+        if (pending_focus_frames_ > 0 && pending_focus_node_id_ >= 0)
+        {
+            if (pending_focus_top_anchor_)
+            {
+                const ImVec2 node_pos = ImNodes::GetNodeGridSpacePos(pending_focus_node_id_);
+                const ImVec2 node_size = ImNodes::GetNodeDimensions(pending_focus_node_id_);
+                const float target_x = (editor_canvas_size.x - node_size.x) * 0.5f;
+                const float target_y = 20.0f;
+                ImNodes::EditorContextResetPanning(ImVec2(target_x - node_pos.x, target_y - node_pos.y));
+            }
+            else
+            {
+                ImNodes::EditorContextMoveToNode(pending_focus_node_id_);
+            }
+            pending_focus_frames_--;
+            if (pending_focus_frames_ <= 0)
+            {
+                pending_focus_top_anchor_ = false;
+            }
+        }
         // Handle new links
         // These are driven by Imnodes, so we place the code after EndNodeEditor().
 
@@ -946,7 +1032,8 @@ public:
         if (need_dialog_ == 2 || (!begin_file_.empty() && first_run_))
         {
             std::string file;
-            if (!begin_file_.empty() && first_run_)
+            const bool queued_file = !begin_file_.empty();
+            if (queued_file)
             {
                 file = begin_file_;
             }
@@ -998,6 +1085,18 @@ public:
                         i_next++;
                     }
                 }
+
+                if (!nodes_.empty())
+                {
+                    pending_focus_node_id_ = nodes_.front().id;
+                    pending_focus_frames_ = 3;
+                    pending_focus_top_anchor_ = true;
+                }
+            }
+            if (queued_file)
+            {
+                begin_file_.clear();
+                need_dialog_ = 0;
             }
             saved_ = true;
         }
@@ -1044,6 +1143,12 @@ void NodeEditorInitialize(int argc, char* argv[])
     {
         ex1::color_editor.setBeginFile(argv[1]);
     }
+#ifdef __EMSCRIPTEN__
+    else
+    {
+        ex1::color_editor.setBeginFile("/models/squeezenet_v1.1.param");
+    }
+#endif
     FileLoader::mainPath() = filefunc::getFilePath(argv[0]);
 }
 

@@ -34,6 +34,7 @@ set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 20 CXX_STANDARD_R
 
 if (EMSCRIPTEN OR NETEDIT_WEB)
     set(CMAKE_EXECUTABLE_SUFFIX ".html")
+    set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "index")
 endif()
 
 
@@ -68,6 +69,7 @@ if(NETEDIT_LOADER_YAML_YOLO)
     if(NETEDIT_HAS_YAML_CPP)
         list (APPEND NODE_EDITOR_SRCS nn-editor/yamlyololoader.cpp)
         add_definitions(-DNETEDIT_LOADER_YAML_YOLO)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE NETEDIT_HAS_YAML_CPP)
 
         if(TARGET yaml-cpp::yaml-cpp)
             target_link_libraries(${PROJECT_NAME} PRIVATE yaml-cpp::yaml-cpp)
@@ -130,6 +132,9 @@ if(EMSCRIPTEN OR NETEDIT_WEB)
         "-sFORCE_FILESYSTEM=1"
         "-sMIN_WEBGL_VERSION=2"
         "-sMAX_WEBGL_VERSION=2"
+        "--shell-file=${CMAKE_SOURCE_DIR}/nn-editor/web-shell.html"
+        "--preload-file=${CMAKE_SOURCE_DIR}/models/squeezenet_v1.1.param@/models/squeezenet_v1.1.param"
+        "--preload-file=${CMAKE_SOURCE_DIR}/nn-editor/ncnn-metadata.json@/ncnn-metadata.json"
         "-sEXPORTED_RUNTIME_METHODS=['ccall','FS']"
         "-sEXPORTED_FUNCTIONS=['_main','_NodeEditorSetPendingFile']")
 elseif(NOT APPLE)
