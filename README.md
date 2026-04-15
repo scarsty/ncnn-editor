@@ -30,7 +30,7 @@
 
 ### 浏览器构建
 
-在线体验：<https://tiexuedanxin.net/nneditor/>
+GitHub Pages：<https://scarsty.github.io/ncnn-editor/>
 
 项目现在可以通过 Emscripten 构建为浏览器版本，渲染后端仍然是 SDL3 + ImGui + WebGL2。
 
@@ -45,6 +45,8 @@ cmake --build build-web
 
 * Open 会打开浏览器文件选择框，并把文件写入虚拟文件系统后加载。
 * Save / Save as 会将当前编辑结果下载回浏览器。
+
+仓库已提供自动发布工作流 [deploy-pages.yml](.github/workflows/deploy-pages.yml)，推送到 main 后会自动部署到 GitHub Pages。
 
 <div align="center">
 
