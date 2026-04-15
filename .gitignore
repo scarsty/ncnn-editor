@@ -12,3 +12,4 @@ cmake-build-release
 models/
 nn-editor/onnx.pb.cc
 nn-editor/onnx.pb.h
+build-web/

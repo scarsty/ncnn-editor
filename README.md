@@ -30,6 +30,22 @@ QQ 群: 822911263
 * yolo的简化格式（YAML）
 * 查看onnx（已删除此功能）
 
+### 浏览器构建
+
+项目现在可以通过 Emscripten 构建为浏览器版本，渲染后端仍然是 SDL3 + ImGui + WebGL2。
+
+示例命令：
+
+```bash
+emcmake cmake -S . -B build-web -DNETEDIT_WEB=ON
+cmake --build build-web
+```
+
+构建结果会生成 html 启动页。浏览器版本中：
+
+* Open 会打开浏览器文件选择框，并把文件写入虚拟文件系统后加载。
+* Save / Save as 会将当前编辑结果下载回浏览器。
+
 <div align="center">
 
 <img src="assets/lenet.png">

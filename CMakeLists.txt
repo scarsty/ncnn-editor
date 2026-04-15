@@ -14,6 +14,8 @@ endif()
 # project name
 project(nn-editor)
 
+option(NETEDIT_WEB "build browser version with Emscripten" OFF)
+
 option(NETEDIT_LOADER_CCCC "support cccc model loader" ON)
 option(NETEDIT_LOADER_NCNN "support ncnn model loader" ON)
 option(NETEDIT_LOADER_YAML_YOLO "support yaml yolo model loader" ON)
@@ -28,7 +30,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/imgui.cmake)
 add_executable(${PROJECT_NAME})
 
 set_target_properties (${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS NDEBUG)
-set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 17)
+set_target_properties (${PROJECT_NAME} PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON)
+
+if (EMSCRIPTEN OR NETEDIT_WEB)
+    set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()
 
 
 # collect the source files
@@ -45,13 +51,17 @@ if(NETEDIT_LOADER_NCNN)
 endif()
 
 if(NETEDIT_LOADER_YAML_YOLO)
-    list (APPEND NODE_EDITOR_SRCS nn-editor/yamlyololoader.cpp)
-    add_definitions(-DNETEDIT_LOADER_YAML_YOLO)
-   
-    set ( CMAKE_PREFIX_PATH  "YAML-CPP-PATH")
-    find_package(YAML-CPP)
-    target_include_directories(${PROJECT_NAME} PRIVATE ${YAML_CPP_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PRIVATE ${YAML_CPP_LIBRARIES})
+    if(EMSCRIPTEN OR NETEDIT_WEB)
+        message(STATUS "Disabling YAML YOLO loader for web build because yaml-cpp is unavailable in the current Emscripten setup")
+    else()
+        list (APPEND NODE_EDITOR_SRCS nn-editor/yamlyololoader.cpp)
+        add_definitions(-DNETEDIT_LOADER_YAML_YOLO)
+
+        set ( CMAKE_PREFIX_PATH  "YAML-CPP-PATH")
+        find_package(YAML-CPP)
+        target_include_directories(${PROJECT_NAME} PRIVATE ${YAML_CPP_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${YAML_CPP_LIBRARIES})
+    endif()
 endif()
 
 if(APPLE)
@@ -83,24 +93,48 @@ target_sources (${PROJECT_NAME} PRIVATE ${NODE_EDITOR_NB_SRCS})
 target_sources (${PROJECT_NAME} PRIVATE ${NODE_EDITOR_DIALOG_SRCS})
 
 target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/example)
-target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/nb)
+target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/mlcc)
 target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/imnodes)
 target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/3rdparty/ImGuiFileDialog)
 
 target_link_libraries (${PROJECT_NAME} PRIVATE IMGUI)
-if(NOT APPLE)
+if(EMSCRIPTEN OR NETEDIT_WEB)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_OPENGL_ES3 USE_OPENGL3)
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        "-sUSE_SDL=3"
+        "-sWASM=1"
+        "-sALLOW_MEMORY_GROWTH=1"
+        "-sFORCE_FILESYSTEM=1"
+        "-sMIN_WEBGL_VERSION=2"
+        "-sMAX_WEBGL_VERSION=2")
+    target_link_options(${PROJECT_NAME} PRIVATE
+        "-sUSE_SDL=3"
+        "-sWASM=1"
+        "-sALLOW_MEMORY_GROWTH=1"
+        "-sFORCE_FILESYSTEM=1"
+        "-sMIN_WEBGL_VERSION=2"
+        "-sMAX_WEBGL_VERSION=2"
+        "-sEXPORTED_RUNTIME_METHODS=['ccall','FS']"
+        "-sEXPORTED_FUNCTIONS=['_main','_NodeEditorSetPendingFile']")
+elseif(NOT APPLE)
+    if(IMGUI_RENDERER MATCHES OPENGL3)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE USE_OPENGL3)
+    endif()
     set ( CMAKE_PREFIX_PATH  "SDL3-PATH")
     find_package(SDL3 REQUIRED)
     target_include_directories(${PROJECT_NAME} PRIVATE ${SDL3_INCLUDE_DIRS} "./3rdparty/mlcc")
     target_link_libraries(${PROJECT_NAME} PRIVATE ${SDL3_LIBRARIES})
-endif(NOT APPLE)
+endif()
 
 
 if (UNIX)
     target_link_directories (${PROJECT_NAME} PRIVATE /usr/local/lib)
     target_link_libraries (${PROJECT_NAME} PRIVATE dl)
 endif ()
-target_link_libraries (${PROJECT_NAME} PRIVATE yaml-cpp)
+
+if(NOT (EMSCRIPTEN OR NETEDIT_WEB))
+    target_link_libraries (${PROJECT_NAME} PRIVATE yaml-cpp)
+endif()
 if(APPLE)
     install(TARGETS ${PROJECT_NAME} BUNDLE DESTINATION bin)
 else()

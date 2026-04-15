@@ -20,6 +20,10 @@
 
 #include "FileLoader.h"
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #ifdef _WIN32
 #include <windows.h>
 #include <commdlg.h>
@@ -33,6 +37,50 @@ namespace example
 {
 namespace ex1
 {
+
+#ifdef __EMSCRIPTEN__
+EM_JS(void, WebOpenFileDialog, (), {
+    if (!Module.__ncnnEditorFileInput) {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.ini,.param,.yaml';
+        input.style.display = 'none';
+        input.addEventListener('change', async (event) => {
+            const file = event.target.files && event.target.files[0];
+            if (!file) {
+                return;
+            }
+            const safeName = file.name.replace(/[^A-Za-z0-9_.-]/g, '_');
+            const mountPath = '/uploads';
+            try {
+                FS.mkdirTree(mountPath);
+            } catch (error) {
+            }
+            const targetPath = mountPath + '/' + safeName;
+            const bytes = new Uint8Array(await file.arrayBuffer());
+            FS.writeFile(targetPath, bytes);
+            Module.ccall('NodeEditorSetPendingFile', null, ['string'], [targetPath]);
+            event.target.value = "";
+        });
+        document.body.appendChild(input);
+        Module.__ncnnEditorFileInput = input;
+    }
+    Module.__ncnnEditorFileInput.click();
+});
+
+EM_JS(void, WebDownloadFile, (const char* path_ptr), {
+    const path = UTF8ToString(path_ptr);
+    const data = FS.readFile(path);
+    const blob = new Blob([data], { type: 'application/octet-stream' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = path.split('/').pop() || 'nn-editor-output.ini';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+});
+#endif
 
 static float current_time_seconds = 0.f;
 static bool emulate_three_button_mouse = false;
@@ -233,12 +281,18 @@ private:
                 {
                     current_file_ = file;
                     loader_->nodesToFile(nodes_, current_file_);
+#ifdef __EMSCRIPTEN__
+                    WebDownloadFile(current_file_.c_str());
+#endif
                     saved_ = true;
                 }
             }
             else
             {
                 loader_->nodesToFile(nodes_, current_file_);
+#ifdef __EMSCRIPTEN__
+                WebDownloadFile(current_file_.c_str());
+#endif
                 saved_ = true;
             }
         }
@@ -246,6 +300,10 @@ private:
 
     void try_exit()
     {
+#ifdef __EMSCRIPTEN__
+        need_dialog_ = 0;
+        return;
+#else
         if (saved_)
         {
             exit(0);
@@ -276,10 +334,18 @@ private:
             }
             ImGui::EndPopup();
         }
+#endif
     }
 
     std::string openfile(const char* filter, FileLoader** loader_ptr = nullptr)
     {
+    #ifdef __EMSCRIPTEN__
+        (void)filter;
+        (void)loader_ptr;
+        need_dialog_ = 0;
+        WebOpenFileDialog();
+        return "";
+    #else
 #ifdef _WIN32
         need_dialog_ = 0;
         OPENFILENAMEA ofn;
@@ -339,6 +405,7 @@ private:
         return filePathName;
 #endif
 #endif
+    #endif
     }
 
 public:
@@ -381,6 +448,13 @@ public:
                 }
                 if (ImGui::MenuItem("Save as..."))
                 {
+#ifdef __EMSCRIPTEN__
+                    if (current_file_.empty())
+                    {
+                        current_file_ = "/downloads/nn-editor.ini";
+                    }
+                    try_save(true);
+#else
                     refresh_pos_link();
                     auto file = openfile(file_filter(), &loader_);
                     if (!file.empty())
@@ -393,6 +467,7 @@ public:
                         loader_->nodesToFile(nodes_, current_file_);
                         saved_ = true;
                     }
+#endif
                 }
                 if (ImGui::MenuItem("Exit"))
                 {
@@ -936,6 +1011,12 @@ public:
     {
         begin_file_ = file;
     }
+
+    void queueOpenFile(const std::string& file)
+    {
+        begin_file_ = file;
+        need_dialog_ = 2;
+    }
 };
 
 static ColorNodeEditor color_editor;
@@ -970,5 +1051,20 @@ void NodeEditorShow() { ex1::color_editor.show(); }
 
 void NodeEditorSetExit(int e) { ex1::color_editor.is_exiting_ = e; }
 
+void NodeEditorQueueOpenFile(const char* path)
+{
+    ex1::color_editor.queueOpenFile(path ? path : "");
+}
+
 void NodeEditorShutdown() {}
 } // namespace example
+
+#ifdef __EMSCRIPTEN__
+extern "C"
+{
+EMSCRIPTEN_KEEPALIVE void NodeEditorSetPendingFile(const char* path)
+{
+    example::NodeEditorQueueOpenFile(path);
+}
+}
+#endif

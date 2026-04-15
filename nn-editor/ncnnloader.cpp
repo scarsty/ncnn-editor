@@ -3,11 +3,14 @@
 #include "strfunc.h"
 #include <format>
 #include <functional>
+#ifndef __EMSCRIPTEN__
 #include "yaml-cpp/yaml.h"
+#endif
 #include <iostream>
 
 ncnnLoader::ncnnLoader()
 {
+#ifndef __EMSCRIPTEN__
     YAML::Node node;
 #ifdef __APPLE__
     node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
@@ -26,6 +29,7 @@ ncnnLoader::ncnnLoader()
             }
         }
     }
+#endif
 }
 
 void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)

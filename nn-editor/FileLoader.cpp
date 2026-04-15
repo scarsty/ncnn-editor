@@ -13,7 +13,9 @@
 #include "strfunc.h"
 
 #include "ccccloader.h"
+#ifdef NETEDIT_LOADER_YAML_YOLO
 #include "yamlyololoader.h"
+#endif
 #include "ncnnloader.h"
 
 namespace
@@ -545,8 +547,10 @@ FileLoader* create_loader(const std::string& filename, int index)
         {
         case 1:
             return new ccccLoader();
+#ifdef NETEDIT_LOADER_YAML_YOLO
         case 2:
             return new yamlyoloLoader();
+#endif
         case 3:
             return new ncnnLoader();
         default:
@@ -560,7 +564,11 @@ FileLoader* create_loader(const std::string& filename, int index)
     }
     if (ext == "yaml")
     {
+#ifdef NETEDIT_LOADER_YAML_YOLO
         return new yamlyoloLoader();
+#else
+        return new FileLoader();
+#endif
     }
     if (ext == "param")
     {
