@@ -8,8 +8,6 @@
 
 基于 [imnodes](https://github.com/Nelarius/imnodes) 的ncnn格式编辑工具。
 
-QQ 群: 822911263
-
 ### 操作
 
 * 按住中键，或者Alt+左键可以拖动整个图。

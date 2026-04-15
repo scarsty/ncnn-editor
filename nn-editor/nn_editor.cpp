@@ -927,6 +927,34 @@ public:
 
         const ImVec2 editor_canvas_size = ImGui::GetContentRegionAvail();
         ImNodes::BeginNodeEditor();
+
+        // Wheel/trackpad panning for the node canvas.
+        // MouseWheel: vertical; MouseWheelH: horizontal (touchpad two-finger).
+        // Shift + vertical wheel is treated as horizontal for wider compatibility.
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            if (ImNodes::IsEditorHovered() && !ImGui::IsAnyItemActive())
+            {
+                float wheel_x = io.MouseWheelH;
+                float wheel_y = io.MouseWheel;
+
+                if (wheel_x == 0.0f && io.KeyShift && wheel_y != 0.0f)
+                {
+                    wheel_x = wheel_y;
+                    wheel_y = 0.0f;
+                }
+
+                if (wheel_x != 0.0f || wheel_y != 0.0f)
+                {
+                    constexpr float kWheelPanStep = 56.0f;
+                    ImVec2 pan = ImNodes::EditorContextGetPanning();
+                    pan.x += wheel_x * kWheelPanStep;
+                    pan.y += wheel_y * kWheelPanStep;
+                    ImNodes::EditorContextResetPanning(pan);
+                }
+            }
+        }
+
         // Handle new nodes
         // These are driven by the user, so we place this code before rendering the nodes
         {
