@@ -48,6 +48,7 @@ add_definitions(-DNETEDIT_LOADER_CCCC)
 
 if(NETEDIT_LOADER_NCNN)
     list (APPEND NODE_EDITOR_SRCS nn-editor/ncnnloader.cpp)
+    list (APPEND NODE_EDITOR_SRCS nn-editor/ncnn_metadata_parser.cpp)
     add_definitions(-DNETEDIT_LOADER_NCNN)
 endif()
 
