@@ -115,6 +115,9 @@
     <NnEditorVcpkgRoot Condition="'$(VcpkgRoot)'!=''">$(VcpkgRoot)</NnEditorVcpkgRoot>
     <NnEditorVcpkgRoot Condition="'$(NnEditorVcpkgRoot)'=='' and Exists('D:\project\vcpkg')">D:\project\vcpkg\</NnEditorVcpkgRoot>
   </PropertyGroup>
+  <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>

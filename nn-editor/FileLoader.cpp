@@ -285,6 +285,46 @@ RankMap assign_ranks(const std::vector<Node*>& component, const std::vector<Node
         node->turn = rank;
     }
 
+    // Push source nodes (no in-component predecessors) down to sit right above
+    // their earliest consumer instead of all piling up at rank 0.
+    // This prevents weight/constant nodes (e.g. MemoryData) from creating an
+    // excessively wide top layer that distorts the whole layout.
+    for (Node* node : order)
+    {
+        bool is_source = true;
+        for (Node* prev : node->prevs)
+        {
+            if (prev != nullptr && component_nodes.count(prev) > 0)
+            {
+                is_source = false;
+                break;
+            }
+        }
+        if (!is_source)
+        {
+            continue;
+        }
+
+        int min_succ_rank = std::numeric_limits<int>::max();
+        for (Node* next : node->nexts)
+        {
+            if (next != nullptr && component_nodes.count(next) > 0)
+            {
+                auto it = ranks.find(next);
+                if (it != ranks.end())
+                {
+                    min_succ_rank = (std::min)(min_succ_rank, it->second);
+                }
+            }
+        }
+
+        if (min_succ_rank != std::numeric_limits<int>::max() && min_succ_rank - 1 > ranks[node])
+        {
+            ranks[node] = min_succ_rank - 1;
+            node->turn = min_succ_rank - 1;
+        }
+    }
+
     return ranks;
 }
 
@@ -432,10 +472,17 @@ void relax_layer(const std::vector<Node*>& layer, PositionMap& positions, const 
         desired[index] = preferred_x(layer[index], positions, use_prevs);
     }
 
+    // Left-to-right compaction: prevent nodes from overlapping
     std::vector<double> compacted = desired;
     for (size_t index = 1; index < compacted.size(); ++index)
     {
         compacted[index] = (std::max)(compacted[index], compacted[index - 1] + pair_spacing(layer[index - 1], layer[index], metrics));
+    }
+    // Right-to-left compaction: allow nodes pushed right to come back left
+    // when space allows, so clusters stay centered on their desired positions.
+    for (size_t index = compacted.size() - 1; index > 0; --index)
+    {
+        compacted[index - 1] = (std::min)(compacted[index - 1], compacted[index] - pair_spacing(layer[index - 1], layer[index], metrics));
     }
 
     double desired_mean = std::accumulate(desired.begin(), desired.end(), 0.0) / static_cast<double>(desired.size());
@@ -478,7 +525,7 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
         }
     }
 
-    for (int iteration = 0; iteration < 6; ++iteration)
+    for (int iteration = 0; iteration < 12; ++iteration)
     {
         for (size_t rank = 1; rank < layers.size(); ++rank)
         {

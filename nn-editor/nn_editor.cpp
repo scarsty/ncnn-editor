@@ -10,6 +10,7 @@
 #include <cassert>
 #include <chrono>
 #include <cmath>
+#include <cstddef>
 #include <format>
 #include <vector>
 #include <string>
@@ -131,6 +132,32 @@ private:
     {
         int from, to;
         Link(int f, int t) { from = f; to = t; }
+        bool operator==(const Link& other) const { return from == other.from && to == other.to; }
+    };
+
+    struct NodeSnapshot
+    {
+        std::string title;
+        std::string type;
+        std::string text;
+        OrderMap<std::string, std::string> values;
+        int id = 0;
+        int text_id = 0;
+        int prev_pin = 0;
+        int next_pin = 0;
+        int position_x = -1;
+        int position_y = -1;
+        int erased = 0;
+        std::vector<std::string> in;
+        std::vector<std::string> out;
+        int turn = 0;
+    };
+
+    struct EditorSnapshot
+    {
+        std::vector<NodeSnapshot> nodes;
+        std::vector<Link> links;
+        bool saved = true;
     };
 
     FileLoader* loader_ = nullptr;
@@ -147,8 +174,260 @@ private:
     int pending_focus_node_id_ = -1;
     int pending_focus_frames_ = 0;
     bool pending_focus_top_anchor_ = false;
+    bool dirty_this_frame_ = false;
+    std::vector<EditorSnapshot> history_;
+    size_t history_cursor_ = 0;
 
     int erase_select_ = 0;
+
+    static bool snapshot_equals(const EditorSnapshot& lhs, const EditorSnapshot& rhs)
+    {
+        if (lhs.saved != rhs.saved || lhs.nodes.size() != rhs.nodes.size() || lhs.links.size() != rhs.links.size())
+        {
+            return false;
+        }
+
+        for (size_t i = 0; i < lhs.nodes.size(); ++i)
+        {
+            const NodeSnapshot& a = lhs.nodes[i];
+            const NodeSnapshot& b = rhs.nodes[i];
+            if (a.title != b.title || a.type != b.type || a.text != b.text || a.values != b.values ||
+                a.id != b.id || a.text_id != b.text_id || a.prev_pin != b.prev_pin || a.next_pin != b.next_pin ||
+                a.position_x != b.position_x || a.position_y != b.position_y || a.erased != b.erased ||
+                a.in != b.in || a.out != b.out || a.turn != b.turn)
+            {
+                return false;
+            }
+        }
+
+        for (size_t i = 0; i < lhs.links.size(); ++i)
+        {
+            if (!(lhs.links[i] == rhs.links[i]))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void mark_dirty()
+    {
+        dirty_this_frame_ = true;
+        saved_ = false;
+    }
+
+    void rebuild_connectivity_from_links()
+    {
+        std::map<int, Node*> by_id;
+        for (auto& node : nodes_)
+        {
+            node.prevs.clear();
+            node.nexts.clear();
+            by_id[node.id] = &node;
+        }
+
+        for (const auto& link : links_)
+        {
+            const int from_node_id = (link.from / Node::MAX_PIN) * Node::MAX_PIN;
+            const int to_node_id = (link.to / Node::MAX_PIN) * Node::MAX_PIN;
+            auto from_it = by_id.find(from_node_id);
+            auto to_it = by_id.find(to_node_id);
+            if (from_it == by_id.end() || to_it == by_id.end())
+            {
+                continue;
+            }
+            from_it->second->nexts.push_back(to_it->second);
+            to_it->second->prevs.push_back(from_it->second);
+        }
+    }
+
+    void sync_node_positions_from_editor()
+    {
+        for (auto& node : nodes_)
+        {
+            const ImVec2 pos = ImNodes::GetNodeGridSpacePos(node.id);
+            const int x = static_cast<int>(std::lround(pos.x));
+            const int y = static_cast<int>(std::lround(pos.y));
+            if (x != node.position_x || y != node.position_y)
+            {
+                node.position_x = x;
+                node.position_y = y;
+                mark_dirty();
+            }
+        }
+    }
+
+    EditorSnapshot capture_snapshot() const
+    {
+        EditorSnapshot snapshot;
+        snapshot.saved = saved_;
+        snapshot.links = links_;
+        snapshot.nodes.reserve(nodes_.size());
+
+        for (const auto& node : nodes_)
+        {
+            NodeSnapshot ns;
+            ns.title = node.title;
+            ns.type = node.type;
+            ns.text = node.text;
+            ns.values = node.values;
+            ns.id = node.id;
+            ns.text_id = node.text_id;
+            ns.prev_pin = node.prev_pin;
+            ns.next_pin = node.next_pin;
+            ns.position_x = node.position_x;
+            ns.position_y = node.position_y;
+            ns.erased = node.erased;
+            ns.in = node.in;
+            ns.out = node.out;
+            ns.turn = node.turn;
+            snapshot.nodes.push_back(std::move(ns));
+        }
+
+        return snapshot;
+    }
+
+    void apply_snapshot(const EditorSnapshot& snapshot)
+    {
+        nodes_.clear();
+        links_ = snapshot.links;
+        for (const auto& ns : snapshot.nodes)
+        {
+            nodes_.emplace_back();
+            Node& node = nodes_.back();
+            node.title = ns.title;
+            node.type = ns.type;
+            node.text = ns.text;
+            node.values = ns.values;
+            node.id = ns.id;
+            node.text_id = ns.text_id;
+            node.prev_pin = ns.prev_pin;
+            node.next_pin = ns.next_pin;
+            node.position_x = ns.position_x;
+            node.position_y = ns.position_y;
+            node.erased = ns.erased;
+            node.in = ns.in;
+            node.out = ns.out;
+            node.turn = ns.turn;
+        }
+
+        rebuild_connectivity_from_links();
+        for (auto& node : nodes_)
+        {
+            ImVec2 pos(100.0f, 100.0f);
+            if (node.position_x != -1)
+            {
+                pos = ImVec2(static_cast<float>(node.position_x), static_cast<float>(node.position_y));
+            }
+            ImNodes::SetNodeGridSpacePos(node.id, pos);
+        }
+        saved_ = snapshot.saved;
+        dirty_this_frame_ = false;
+    }
+
+    void reset_history_with_current()
+    {
+        history_.clear();
+        history_.push_back(capture_snapshot());
+        history_cursor_ = 0;
+        dirty_this_frame_ = false;
+    }
+
+    void commit_history_if_dirty()
+    {
+        if (!dirty_this_frame_)
+        {
+            return;
+        }
+
+        EditorSnapshot current = capture_snapshot();
+        if (history_.empty())
+        {
+            history_.push_back(std::move(current));
+            history_cursor_ = 0;
+            dirty_this_frame_ = false;
+            return;
+        }
+
+        if (history_cursor_ + 1 < history_.size())
+        {
+            history_.erase(history_.begin() + static_cast<std::ptrdiff_t>(history_cursor_ + 1), history_.end());
+        }
+
+        if (!snapshot_equals(history_.back(), current))
+        {
+            history_.push_back(std::move(current));
+            history_cursor_ = history_.size() - 1;
+        }
+        dirty_this_frame_ = false;
+    }
+
+    bool can_undo() const { return !history_.empty() && history_cursor_ > 0; }
+    bool can_redo() const { return !history_.empty() && history_cursor_ + 1 < history_.size(); }
+
+    void undo()
+    {
+        if (!can_undo())
+        {
+            return;
+        }
+        history_cursor_--;
+        apply_snapshot(history_[history_cursor_]);
+    }
+
+    void redo()
+    {
+        if (!can_redo())
+        {
+            return;
+        }
+        history_cursor_++;
+        apply_snapshot(history_[history_cursor_]);
+    }
+
+    void draw_pin_row(bool is_input, int start_id, int pin_count, float node_width)
+    {
+        if (pin_count <= 0)
+        {
+            return;
+        }
+
+        const float pin_pitch = 18.0f;
+        const float total_width = static_cast<float>(pin_count - 1) * pin_pitch;
+        const float lead_space = (std::max)(0.0f, (node_width - total_width) * 0.5f - 6.0f);
+
+        ImGui::Dummy(ImVec2(lead_space, 1.0f));
+        ImGui::SameLine(0.0f, 0.0f);
+
+        for (int i = 0; i < pin_count; ++i)
+        {
+            if (is_input)
+            {
+                ImNodes::BeginInputAttribute(start_id + i);
+            }
+            else
+            {
+                ImNodes::BeginOutputAttribute(start_id + i);
+            }
+
+            ImGui::Dummy(ImVec2(1.0f, 8.0f));
+
+            if (is_input)
+            {
+                ImNodes::EndInputAttribute();
+            }
+            else
+            {
+                ImNodes::EndOutputAttribute();
+            }
+
+            if (i + 1 < pin_count)
+            {
+                ImGui::SameLine(0.0f, pin_pitch);
+            }
+        }
+    }
 
     Node& createNode()
     {
@@ -457,6 +736,7 @@ public:
         minimap_location_(ImNodesMiniMapLocation_BottomRight)
     {
         loader_ = create_loader("");
+        reset_history_with_current();
     }
 
     void show()
@@ -517,6 +797,19 @@ public:
                     need_dialog_ = 1;
                     //ImGui::OpenPopup("退出");
                     //
+                }
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Edit"))
+            {
+                if (ImGui::MenuItem("Undo", "Ctrl+Z", false, can_undo()))
+                {
+                    undo();
+                }
+                if (ImGui::MenuItem("Redo", "Ctrl+Shift+Z", false, can_redo()))
+                {
+                    redo();
                 }
                 ImGui::EndMenu();
             }
@@ -679,10 +972,12 @@ public:
                     if (ImGui::MenuItem("Add input pin"))
                     {
                         node->prev_pin++;
+                        mark_dirty();
                     }
                     if (ImGui::MenuItem("Add output pin"))
                     {
                         node->next_pin++;
+                        mark_dirty();
                     }
                     if (ImGui::MenuItem("Clear unlinked pins"))
                     {
@@ -738,6 +1033,7 @@ public:
                         };
                         remove(node->id, node->next_pin, from_this_node);
                         remove(node->text_id, node->prev_pin, to_this_node);
+                        mark_dirty();
                     }
                     if (ImGui::MenuItem("Erase"))
                     {
@@ -753,6 +1049,7 @@ public:
                                 it++;
                             }
                         }
+                        mark_dirty();
                     }
                 }
                 else
@@ -763,7 +1060,7 @@ public:
                         ui_node.title = std::format("layer_{}", rand());
                         ui_node.type = "data";
                         ImNodes::SetNodeScreenSpacePos(ui_node.id, click_pos);
-                        saved_ = false;
+                        mark_dirty();
                     }
                     if (ImGui::MenuItem("Erase all selected"))
                     {
@@ -824,22 +1121,7 @@ public:
                 int table_width = node_width - 24;
 
                 {
-                    int pin = node.prev_pin;
-                    if (ImGui::BeginTable("inb", pin + 9, 0, ImVec2(node_width - 10, 1), 0))
-                    {
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        for (int i = 0; i < pin; i++)
-                        {
-                            ImGui::TableNextColumn();
-                            ImNodes::BeginInputAttribute(node.text_id + i);
-                            ImNodes::EndInputAttribute();
-                        }
-                        ImGui::EndTable();
-                    }
+                    draw_pin_row(true, node.text_id, node.prev_pin, node_width);
                 }
 
                 //if (graph_.num_edges_from_node(node.text_id) == 0ull)
@@ -873,22 +1155,7 @@ public:
                 }
 
                 {
-                    int pin = node.next_pin;
-                    if (ImGui::BeginTable("out", pin + 9, 0, ImVec2(node_width - 10, 1), 0))
-                    {
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        ImGui::TableNextColumn();
-                        for (int i = 0; i < pin; i++)
-                        {
-                            ImGui::TableNextColumn();
-                            ImNodes::BeginOutputAttribute(node.id + i);
-                            ImNodes::EndOutputAttribute();
-                        }
-                        ImGui::EndTable();
-                    }
+                    draw_pin_row(false, node.id, node.next_pin, node_width);
                 }
 
                 ImNodes::EndNode();
@@ -945,8 +1212,8 @@ public:
                 if (check_can_link(start_attr, end_attr, true))
                 {
                     add_link(start_attr, end_attr, true);
+                    mark_dirty();
                 }
-                saved_ = false;
             }
         }
 
@@ -957,7 +1224,7 @@ public:
             if (ImNodes::IsLinkDestroyed(&link_id))
             {
                 links_.erase(links_.begin() + link_id);
-                saved_ = false;
+                mark_dirty();
             }
         }
 
@@ -974,7 +1241,7 @@ public:
                     links_.erase(links_.begin() + link_id);
                 }
                 ImNodes::ClearLinkSelection();
-                saved_ = false;
+                mark_dirty();
             }
         }
 
@@ -1004,13 +1271,27 @@ public:
                         }
                     }
                 }
-                saved_ = false;
+                mark_dirty();
             }
         }
 
         if (ImGui::IsItemEdited())
         {
-            saved_ = false;
+            mark_dirty();
+        }
+
+        sync_node_positions_from_editor();
+
+        if (ImGui::IsKeyReleased(ImGuiKey_Z) && ImGui::GetIO().KeyCtrl)
+        {
+            if (ImGui::GetIO().KeyShift)
+            {
+                redo();
+            }
+            else
+            {
+                undo();
+            }
         }
 
         if (ImGui::IsKeyReleased(ImGuiKey_S) && ImGui::GetIO().KeyCtrl)
@@ -1092,14 +1373,18 @@ public:
                     pending_focus_frames_ = 3;
                     pending_focus_top_anchor_ = true;
                 }
+
+                saved_ = true;
+                reset_history_with_current();
             }
             if (queued_file)
             {
                 begin_file_.clear();
                 need_dialog_ = 0;
             }
-            saved_ = true;
         }
+
+        commit_history_if_dirty();
 
         //refresh_pos_link();
         
