@@ -3,39 +3,322 @@
 #include "strfunc.h"
 
 #include <algorithm>
+#include <cctype>
 #include <format>
 #include <functional>
+#include <vector>
 #ifdef NETEDIT_HAS_YAML_CPP
 #include "yaml-cpp/yaml.h"
 #endif
 #include <iostream>
 
-ncnnLoader::ncnnLoader()
+namespace
 {
-#ifdef NETEDIT_HAS_YAML_CPP
-    YAML::Node node;
-#ifdef __EMSCRIPTEN__
-    node = YAML::LoadFile("/ncnn-metadata.json");
-#else
-#ifdef __APPLE__
-    node = YAML::LoadFile(mainPath() + "/../Resources/ncnn-metadata.json");
-#else
-    node = YAML::LoadFile(mainPath() + "/ncnn-metadata.json");
-#endif
-#endif
-    for (auto n : node)
+size_t skip_ws(const std::string& s, size_t i)
+{
+    while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i])))
     {
-        //std::cout << n;
-        if (n["attributes"].IsSequence())
+        ++i;
+    }
+    return i;
+}
+
+bool parse_quoted_string(const std::string& s, size_t& i, std::string& out)
+{
+    if (i >= s.size() || s[i] != '"')
+    {
+        return false;
+    }
+    ++i;
+    out.clear();
+
+    while (i < s.size())
+    {
+        char ch = s[i++];
+        if (ch == '\\')
         {
-            for (int i = 0; i < n["attributes"].size(); i++)
+            if (i < s.size())
             {
-                int_to_string_[n["name"].as<std::string>()][i] = n["attributes"][i]["name"].as<std::string>();
-                string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = i;
+                out.push_back(s[i++]);
+            }
+            continue;
+        }
+        if (ch == '"')
+        {
+            return true;
+        }
+        out.push_back(ch);
+    }
+    return false;
+}
+
+size_t find_matching(const std::string& s, size_t open_pos, char open_ch, char close_ch)
+{
+    if (open_pos >= s.size() || s[open_pos] != open_ch)
+    {
+        return std::string::npos;
+    }
+
+    int depth = 0;
+    bool in_string = false;
+    for (size_t i = open_pos; i < s.size(); ++i)
+    {
+        char ch = s[i];
+        if (in_string)
+        {
+            if (ch == '\\')
+            {
+                ++i;
+                continue;
+            }
+            if (ch == '"')
+            {
+                in_string = false;
+            }
+            continue;
+        }
+
+        if (ch == '"')
+        {
+            in_string = true;
+            continue;
+        }
+        if (ch == open_ch)
+        {
+            ++depth;
+            continue;
+        }
+        if (ch == close_ch)
+        {
+            --depth;
+            if (depth == 0)
+            {
+                return i;
             }
         }
     }
+    return std::string::npos;
+}
+
+bool extract_top_level_name(const std::string& object_text, std::string& layer_name)
+{
+    bool in_string = false;
+    int brace_depth = 0;
+    int bracket_depth = 0;
+
+    for (size_t i = 0; i < object_text.size(); ++i)
+    {
+        char ch = object_text[i];
+        if (in_string)
+        {
+            if (ch == '\\')
+            {
+                ++i;
+                continue;
+            }
+            if (ch == '"')
+            {
+                in_string = false;
+            }
+            continue;
+        }
+
+        if (ch == '"')
+        {
+            in_string = true;
+            std::string key;
+            size_t p = i;
+            if (!parse_quoted_string(object_text, p, key))
+            {
+                continue;
+            }
+            p = skip_ws(object_text, p);
+            if (brace_depth == 1 && bracket_depth == 0 && key == "name" && p < object_text.size() && object_text[p] == ':')
+            {
+                ++p;
+                p = skip_ws(object_text, p);
+                std::string value;
+                if (parse_quoted_string(object_text, p, value))
+                {
+                    layer_name = value;
+                    return true;
+                }
+            }
+            i = p > 0 ? p - 1 : i;
+            continue;
+        }
+        if (ch == '{')
+        {
+            ++brace_depth;
+            continue;
+        }
+        if (ch == '}')
+        {
+            --brace_depth;
+            continue;
+        }
+        if (ch == '[')
+        {
+            ++bracket_depth;
+            continue;
+        }
+        if (ch == ']')
+        {
+            --bracket_depth;
+            continue;
+        }
+    }
+
+    return false;
+}
+
+void parse_attribute_names(const std::string& attrs_text, const std::string& layer_name,
+    std::map<std::string, std::map<int, std::string>>& int_to_string,
+    std::map<std::string, std::map<std::string, int>>& string_to_int)
+{
+    size_t i = 0;
+    int attr_index = 0;
+    while (i < attrs_text.size())
+    {
+        i = attrs_text.find('{', i);
+        if (i == std::string::npos)
+        {
+            break;
+        }
+
+        size_t end = find_matching(attrs_text, i, '{', '}');
+        if (end == std::string::npos)
+        {
+            break;
+        }
+
+        std::string attr_obj = attrs_text.substr(i, end - i + 1);
+        std::string attr_name;
+        if (extract_top_level_name(attr_obj, attr_name))
+        {
+            int_to_string[layer_name][attr_index] = attr_name;
+            string_to_int[layer_name][attr_name] = attr_index;
+        }
+        ++attr_index;
+        i = end + 1;
+    }
+}
+
+bool parse_metadata_fallback(const std::string& content,
+    std::map<std::string, std::map<int, std::string>>& int_to_string,
+    std::map<std::string, std::map<std::string, int>>& string_to_int)
+{
+    bool any_layer = false;
+    size_t i = 0;
+
+    while (true)
+    {
+        i = content.find('{', i);
+        if (i == std::string::npos)
+        {
+            break;
+        }
+
+        size_t end = find_matching(content, i, '{', '}');
+        if (end == std::string::npos)
+        {
+            break;
+        }
+
+        std::string obj = content.substr(i, end - i + 1);
+        std::string layer_name;
+        if (extract_top_level_name(obj, layer_name) && !layer_name.empty())
+        {
+            any_layer = true;
+            size_t attrs_pos = obj.find("\"attributes\"");
+            if (attrs_pos != std::string::npos)
+            {
+                size_t lb = obj.find('[', attrs_pos);
+                if (lb != std::string::npos)
+                {
+                    size_t rb = find_matching(obj, lb, '[', ']');
+                    if (rb != std::string::npos)
+                    {
+                        parse_attribute_names(obj.substr(lb, rb - lb + 1), layer_name, int_to_string, string_to_int);
+                    }
+                }
+            }
+        }
+
+        i = end + 1;
+    }
+
+    return any_layer;
+}
+
+std::vector<std::string> metadata_candidates()
+{
+#ifdef __EMSCRIPTEN__
+    return { "/ncnn-metadata.json", "ncnn-metadata.json", "./ncnn-metadata.json" };
+#else
+#ifdef __APPLE__
+    return { mainPath() + "/../Resources/ncnn-metadata.json", mainPath() + "/ncnn-metadata.json", "ncnn-metadata.json" };
+#else
+    return { mainPath() + "/ncnn-metadata.json", "ncnn-metadata.json", "./ncnn-metadata.json" };
 #endif
+#endif
+}
+}
+
+ncnnLoader::ncnnLoader()
+{
+    bool loaded = false;
+
+#ifdef NETEDIT_HAS_YAML_CPP
+    for (const auto& candidate : metadata_candidates())
+    {
+        try
+        {
+            YAML::Node node = YAML::LoadFile(candidate);
+            for (auto n : node)
+            {
+                if (n["attributes"].IsSequence())
+                {
+                    for (int i = 0; i < n["attributes"].size(); i++)
+                    {
+                        int_to_string_[n["name"].as<std::string>()][i] = n["attributes"][i]["name"].as<std::string>();
+                        string_to_int_[n["name"].as<std::string>()][n["attributes"][i]["name"].as<std::string>()] = i;
+                    }
+                }
+            }
+            loaded = !int_to_string_.empty() || !string_to_int_.empty();
+            if (loaded)
+            {
+                break;
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+#endif
+
+    if (!loaded)
+    {
+        for (const auto& candidate : metadata_candidates())
+        {
+            const std::string content = filefunc::readFileToString(candidate);
+            if (content.empty())
+            {
+                continue;
+            }
+            if (parse_metadata_fallback(content, int_to_string_, string_to_int_))
+            {
+                loaded = true;
+                break;
+            }
+        }
+    }
+
+    if (!loaded)
+    {
+        std::cerr << "[ncnnLoader] Warning: failed to load ncnn-metadata.json; attribute names will be limited." << std::endl;
+    }
 }
 
 void ncnnLoader::fileToNodes(const std::string& filename, std::deque<Node>& nodes)
