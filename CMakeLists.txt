@@ -41,7 +41,7 @@ endif()
 # collect the source files
 list (APPEND NODE_EDITOR_SRCS nn-editor/nn_editor.cpp)
 # list (APPEND NODE_EDITOR_SRCS nn-editor/nodeloader.cpp)
-list (APPEND NODE_EDITOR_SRCS nn-editor/Fileloader.cpp)
+list (APPEND NODE_EDITOR_SRCS nn-editor/FileLoader.cpp)
 # cccc is always loaded. qing zhi chi cccc.
 list (APPEND NODE_EDITOR_SRCS nn-editor/ccccloader.cpp)
 add_definitions(-DNETEDIT_LOADER_CCCC)
