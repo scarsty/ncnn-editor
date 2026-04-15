@@ -13,3 +13,4 @@ models/
 nn-editor/onnx.pb.cc
 nn-editor/onnx.pb.h
 build-web/
+build-web-vcpkg/
