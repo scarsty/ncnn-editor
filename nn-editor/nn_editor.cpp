@@ -744,11 +744,16 @@ public:
         // Update timer context
         current_time_seconds ++;
 
-        auto flags = ImGuiWindowFlags_MenuBar;
+        auto flags = ImGuiWindowFlags_MenuBar
+                    | ImGuiWindowFlags_NoMove
+                    | ImGuiWindowFlags_NoCollapse
+                    | ImGuiWindowFlags_NoResize
+                    | ImGuiWindowFlags_NoTitleBar;
 
-        // The node editor window
+        // The node editor window fills the whole display
         std::string window_title = "Neural Net Editor";
-        ImGui::SetWindowSize(window_title.c_str(), ImGui::GetIO().DisplaySize);
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
 
         ImGui::Begin(window_title.c_str(), NULL, flags);
         

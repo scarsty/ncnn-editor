@@ -32,6 +32,8 @@ QQ 群: 822911263
 
 ### 浏览器构建
 
+在线体验：<https://tiexuedanxin.net/nneditor/>
+
 项目现在可以通过 Emscripten 构建为浏览器版本，渲染后端仍然是 SDL3 + ImGui + WebGL2。
 
 示例命令：

@@ -20,9 +20,7 @@
 
 namespace
 {
-constexpr int kDefaultNodeWidth = 220;
-constexpr int kMinNodeWidth = 200;
-constexpr int kMaxNodeWidth = 420;
+constexpr int kDefaultNodeWidth = 200;
 constexpr int kNodeSpacing = 96;
 constexpr int kLayerSpacing = 20;
 constexpr int kComponentSpacing = 240;
@@ -89,18 +87,10 @@ double estimate_text_width(const std::string& text)
 
 NodeMetrics estimate_node_metrics(const Node& node)
 {
+    // Keep layout geometry consistent with runtime rendering width.
+    // nn_editor.cpp draws nodes with a fixed width (200), so using variable
+    // estimated widths here causes apparent x misalignment in the UI.
     double width = static_cast<double>(kDefaultNodeWidth);
-    width = (std::max)(width, estimate_text_width(node.title) + 48.0);
-    width = (std::max)(width, estimate_text_width(node.type) + 92.0);
-    width = (std::max)(width, estimate_text_width(node.text) + 36.0);
-
-    for (const auto& kv : node.values)
-    {
-        width = (std::max)(width, estimate_text_width(kv.first) + estimate_text_width(kv.second) + 80.0);
-    }
-
-    width += static_cast<double>((std::max)(node.prev_pin, node.next_pin)) * 6.0;
-    width = clamp_double(width, kMinNodeWidth, kMaxNodeWidth);
 
     // Match normal (collapsed) node size. Expanded inspector content is transient and
     // should not drive global layer spacing.
@@ -534,6 +524,166 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
         for (size_t rank = layers.size(); rank-- > 1;)
         {
             relax_layer(layers[rank - 1], positions, metrics, false);
+        }
+    }
+
+    // Chain straightening: nodes that are directly connected with a single
+    // in-edge and single out-edge form a "chain" and should share the same x.
+    // This keeps sequential paths visually straight (a vertical column).
+    {
+        auto in_component = [&](Node* n) -> bool
+        {
+            return n != nullptr && positions.count(n) > 0;
+        };
+        auto count_adj = [&](Node* n, bool use_prev) -> int
+        {
+            int cnt = 0;
+            const auto& adj = use_prev ? n->prevs : n->nexts;
+            for (Node* nb : adj)
+            {
+                if (in_component(nb))
+                {
+                    ++cnt;
+                }
+            }
+            return cnt;
+        };
+
+        std::unordered_map<Node*, int> chain_id;
+        std::vector<std::vector<Node*>> chains;
+
+        for (const auto& layer : layers)
+        {
+            for (Node* node : layer)
+            {
+                if (chain_id.count(node))
+                {
+                    continue;
+                }
+                std::vector<Node*> chain = { node };
+                chain_id[node] = static_cast<int>(chains.size());
+
+                Node* cur = node;
+                while (true)
+                {
+                    if (count_adj(cur, false) != 1)
+                    {
+                        break;
+                    }
+                    Node* next = nullptr;
+                    for (Node* nb : cur->nexts)
+                    {
+                        if (in_component(nb))
+                        {
+                            next = nb;
+                            break;
+                        }
+                    }
+                    if (next == nullptr || chain_id.count(next))
+                    {
+                        break;
+                    }
+                    if (count_adj(next, true) != 1)
+                    {
+                        break;
+                    }
+                    chain.push_back(next);
+                    chain_id[next] = static_cast<int>(chains.size());
+                    cur = next;
+                }
+                chains.push_back(std::move(chain));
+            }
+        }
+
+        for (const auto& chain : chains)
+        {
+            if (chain.size() < 2)
+            {
+                continue;
+            }
+            std::vector<double> xs;
+            xs.reserve(chain.size());
+            for (Node* n : chain)
+            {
+                xs.push_back(positions.at(n));
+            }
+            std::sort(xs.begin(), xs.end());
+            double target_x = xs[xs.size() / 2];
+
+            for (Node* n : chain)
+            {
+                positions[n] = target_x;
+            }
+        }
+    }
+
+    // Edge-snap pass: for edges whose endpoints are nearly aligned, pull them
+    // to exactly the same x.  This handles fork/join nodes that the chain pass
+    // cannot reach (they have >1 in or out edge and therefore no chain entry).
+    // We iterate a few times so the alignment propagates through multi-hop paths.
+    auto resolve_layer_overlaps = [&](const std::vector<Node*>& layer)
+    {
+        if (layer.size() < 2)
+        {
+            return;
+        }
+        std::vector<Node*> sorted = layer;
+        std::sort(sorted.begin(), sorted.end(), [&](Node* a, Node* b)
+        {
+            return positions.at(a) < positions.at(b);
+        });
+        for (size_t i = 1; i < sorted.size(); ++i)
+        {
+            double min_x = positions[sorted[i - 1]] + pair_spacing(sorted[i - 1], sorted[i], metrics);
+            if (positions[sorted[i]] < min_x)
+            {
+                positions[sorted[i]] = min_x;
+            }
+        }
+        for (size_t i = sorted.size() - 1; i > 0; --i)
+        {
+            double max_x = positions[sorted[i]] - pair_spacing(sorted[i - 1], sorted[i], metrics);
+            if (positions[sorted[i - 1]] > max_x)
+            {
+                positions[sorted[i - 1]] = max_x;
+            }
+        }
+    };
+
+    // Snap threshold: snap edges shorter than 40% of default node width
+    const double kSnapThreshold = 0.40 * static_cast<double>(kDefaultNodeWidth);
+    for (int snap_iter = 0; snap_iter < 4; ++snap_iter)
+    {
+        bool snapped = false;
+        for (const auto& layer : layers)
+        {
+            for (Node* node : layer)
+            {
+                for (Node* next : node->nexts)
+                {
+                    if (next == nullptr || positions.count(next) == 0)
+                    {
+                        continue;
+                    }
+                    double dx = std::abs(positions.at(node) - positions.at(next));
+                    if (dx > 0.0 && dx < kSnapThreshold)
+                    {
+                        double avg = 0.5 * (positions.at(node) + positions.at(next));
+                        positions[node] = avg;
+                        positions[next] = avg;
+                        snapped = true;
+                    }
+                }
+            }
+        }
+        // Resolve any new overlaps created by snapping
+        for (const auto& layer : layers)
+        {
+            resolve_layer_overlaps(layer);
+        }
+        if (!snapped)
+        {
+            break;
         }
     }
 
