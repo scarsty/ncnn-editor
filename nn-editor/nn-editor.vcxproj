@@ -34,15 +34,21 @@
     <ClCompile Include="nn_editor.cpp" />
     <ClCompile Include="FileLoader.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mnnloader.cpp" />
     <ClCompile Include="ncnnloader.cpp" />
+    <ClCompile Include="onnxloader.cpp" />
+    <ClCompile Include="tnnloader.cpp" />
     <ClCompile Include="yamlyololoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ccccloader.h" />
     <ClInclude Include="FileLoader.h" />
+    <ClInclude Include="mnnloader.h" />
     <ClInclude Include="ncnnloader.h" />
     <ClInclude Include="node.h" />
+    <ClInclude Include="onnxloader.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="tnnloader.h" />
     <ClInclude Include="yamlyololoader.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -116,7 +122,7 @@
     <NnEditorVcpkgRoot Condition="'$(NnEditorVcpkgRoot)'=='' and Exists('D:\project\vcpkg')">D:\project\vcpkg\</NnEditorVcpkgRoot>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgUseStatic>false</VcpkgUseStatic>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -152,7 +158,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;USE_OPENGL3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;NETEDIT_LOADER_ONNX;NETEDIT_LOADER_TNN;NETEDIT_LOADER_MNN;USE_OPENGL3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
       <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/demekgraph/original/include/</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -171,7 +177,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;USE_OPENGL3;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;USE_OPENGL3;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;NETEDIT_LOADER_ONNX;NETEDIT_LOADER_TNN;NETEDIT_LOADER_MNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/libtorch/include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>

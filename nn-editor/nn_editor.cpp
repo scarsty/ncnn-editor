@@ -667,6 +667,7 @@ private:
         WebOpenFileDialog();
         return "";
     #else
+        (void)loader_ptr;
 #ifdef _WIN32
         need_dialog_ = 0;
         OPENFILENAMEA ofn;
@@ -683,10 +684,6 @@ private:
         ofn.nMaxFileTitle = 0;
         ofn.lpstrInitialDir = NULL;
         ofn.Flags = OFN_PATHMUSTEXIST;
-        if (loader_ptr)
-        {
-            *loader_ptr = create_loader("", ofn.nFilterIndex);
-        }
         if (GetOpenFileNameA(&ofn))
         {
             return szFile;
@@ -708,7 +705,7 @@ private:
         return filePathName;
 #else
         std::string filePathName;
-        ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose File", "{.ini,.param}", ".");
+        ImGuiFileDialog::Instance()->OpenModal("ChooseFileDlgKey", "Choose File", "{.ini,.yaml,.param,.onnx,.tnnproto,.tnnmodel,.mnn,.mnn.json}", ".");
         if (ImGuiFileDialog::Instance()->Display("ChooseFileDlgKey"))
         {
             // action if OK
@@ -786,9 +783,15 @@ public:
                     auto file = openfile(file_filter(), &loader_);
                     if (!file.empty())
                     {
-                        if (filefunc::getFileExt(file) != "ini")
+                        std::string ext = filefunc::getFileExt(file);
+                        if (ext.empty())
                         {
-                            file = filefunc::changeFileExt(file, "ini");
+                            std::string default_ext = filefunc::getFileExt(current_file_);
+                            if (default_ext.empty())
+                            {
+                                default_ext = "ini";
+                            }
+                            file = filefunc::changeFileExt(file, default_ext);
                         }
                         current_file_ = file;
                         loader_->nodesToFile(nodes_, current_file_);

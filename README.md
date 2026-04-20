@@ -26,7 +26,21 @@
 * [ncnn](https://github.com/Tencent/ncnn/wiki/param-and-model-file-structure) 完全支持
 * [pnnx](https://github.com/pnnx/pnnx) 该格式与ncnn基本一致，故可以直接支持，增加参数需手动
 * yolo的简化格式（YAML）
-* 查看onnx（已删除此功能）
+* ONNX（可选，需安装 onnx C++ 库；支持读取与基础写出）
+* TNN（支持读取 `.tnnproto/.tnnmodel` 图结构，并支持基础 `.tnnproto` 写出）
+* MNN（支持读取 MNN JSON 图结构与基础 JSON 写出；二进制 `.mnn` 需配合转换）
+
+ONNX 依赖可通过 vcpkg 安装，例如：
+
+```bash
+vcpkg install onnx
+```
+
+桌面版构建需要 SDL3，可通过 vcpkg 安装：
+
+```bash
+vcpkg install sdl3
+```
 
 ### 浏览器构建
 

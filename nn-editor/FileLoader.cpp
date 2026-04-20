@@ -17,6 +17,15 @@
 #include "yamlyololoader.h"
 #endif
 #include "ncnnloader.h"
+#ifdef NETEDIT_LOADER_ONNX
+#include "onnxloader.h"
+#endif
+#ifdef NETEDIT_LOADER_TNN
+#include "tnnloader.h"
+#endif
+#ifdef NETEDIT_LOADER_MNN
+#include "mnnloader.h"
+#endif
 
 namespace
 {
@@ -735,22 +744,7 @@ std::vector<double> build_layer_tops(const std::vector<std::vector<Node*>>& laye
 
 FileLoader* create_loader(const std::string& filename, int index)
 {
-    if (index > 0)
-    {
-        switch (index)
-        {
-        case 1:
-            return new ccccLoader();
-#ifdef NETEDIT_LOADER_YAML_YOLO
-        case 2:
-            return new yamlyoloLoader();
-#endif
-        case 3:
-            return new ncnnLoader();
-        default:
-            break;
-        }
-    }
+    (void)index;
     auto ext = strfunc::toLowerCase(filefunc::getFileExt(filename));
     if (ext == "ini")
     {
@@ -773,13 +767,43 @@ FileLoader* create_loader(const std::string& filename, int index)
             return new ncnnLoader();
         }
     }
+
+#ifdef NETEDIT_LOADER_ONNX
+    if (ext == "onnx")
+    {
+        return new onnxLoader();
+    }
+#endif
+
+#ifdef NETEDIT_LOADER_TNN
+    if (ext == "tnnproto" || ext == "tnnmodel")
+    {
+        return new tnnLoader();
+    }
+#endif
+
+#ifdef NETEDIT_LOADER_MNN
+    const std::string lower_name = strfunc::toLowerCase(filename);
+    if (ext == "mnn" || (lower_name.size() >= 9 && lower_name.substr(lower_name.size() - 9) == ".mnn.json"))
+    {
+        return new mnnLoader();
+    }
+#endif
+
     return new FileLoader();
 }
 
 const char* file_filter()
 {
 #ifdef _WIN32
-    return "CCCC Example\0*.ini\0yolort\0*.yaml\0ncnn & pnnx\0*.param\0";
+        return "Supported files\0*.ini;*.yaml;*.param;*.onnx;*.tnnproto;*.tnnmodel;*.mnn;*.mnn.json\0"
+           "CCCC Example\0*.ini\0"
+           "yolort\0*.yaml\0"
+           "ncnn & pnnx\0*.param\0"
+           "ONNX\0*.onnx\0"
+           "TNN\0*.tnnproto;*.tnnmodel\0"
+            "MNN\0*.mnn;*.mnn.json\0"
+           "All files\0*.*\0";
 #endif
     return nullptr;
 }
