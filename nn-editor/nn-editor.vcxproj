@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -158,16 +158,17 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;NETEDIT_LOADER_ONNX;NETEDIT_LOADER_TNN;NETEDIT_LOADER_MNN;USE_OPENGL3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;NETEDIT_LOADER_ONNX;NETEDIT_HAS_ONNX;ONNX_ML;NETEDIT_LOADER_TNN;NETEDIT_LOADER_MNN;USE_OPENGL3;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>Default</ConformanceMode>
-      <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/demekgraph/original/include/</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/demekgraph/original/include/;$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\lib\manual-link;$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\debug\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL3.lib;opengl32.lib;yaml-cppd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL3.lib;opengl32.lib;yaml-cppd.lib;onnx.lib;onnx_proto.lib;libprotobufd.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
@@ -177,10 +178,11 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>false</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;USE_OPENGL3;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;NETEDIT_LOADER_ONNX;NETEDIT_LOADER_TNN;NETEDIT_LOADER_MNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;_CONSOLE;USE_OPENGL3;NETEDIT_LOADER_YAML_YOLO;NETEDIT_LOADER_NCNN;NETEDIT_LOADER_ONNX;NETEDIT_HAS_ONNX;ONNX_ML;NETEDIT_LOADER_TNN;NETEDIT_LOADER_MNN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/libtorch/include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..;../..;../3rdparty/mlcc;../3rdparty/imgui/backends;../3rdparty/imgui;../3rdparty/imgui/misc/cpp;../3rdparty/imnodes;../3rdparty/ImGuiFileDialog;../3rdparty/libtorch/include;$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\include</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -188,7 +190,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\lib\manual-link;$(NnEditorVcpkgRoot)\installed\$(VcpkgTriplet)\lib;D:\project\nn-editor\3rdparty\libtorch\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL3.lib;yaml-cpp.lib;OpenGL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL3.lib;yaml-cpp.lib;OpenGL32.lib;onnx.lib;onnx_proto.lib;libprotobuf.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <Profile>true</Profile>
     </Link>
   </ItemDefinitionGroup>
@@ -196,3 +198,4 @@
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
+

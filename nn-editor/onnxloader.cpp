@@ -11,6 +11,9 @@
 
 #ifdef NETEDIT_HAS_ONNX
 #include <onnx/onnx_pb.h>
+#ifndef ONNX_NAMESPACE
+#define ONNX_NAMESPACE onnx
+#endif
 #endif
 
 namespace

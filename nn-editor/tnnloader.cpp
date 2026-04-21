@@ -9,8 +9,7 @@
 #include "filefunc.h"
 #include "strfunc.h"
 
-namespace
-{
+namespace {
 size_t skip_ws(const std::string& s, size_t i)
 {
     while (i < s.size() && std::isspace(static_cast<unsigned char>(s[i])))
@@ -170,8 +169,8 @@ bool extract_top_level_name(const std::string& object_text, std::string& layer_n
 }
 
 void parse_attribute_names(const std::string& attrs_text, const std::string& layer_name,
-    std::map<std::string, std::map<int, std::string>>& int_to_string,
-    std::map<std::string, std::map<std::string, int>>& string_to_int)
+                           std::map<std::string, std::map<int, std::string> >& int_to_string,
+                           std::map<std::string, std::map<std::string, int> >& string_to_int)
 {
     size_t i = 0;
     int attr_index = 0;
@@ -202,8 +201,8 @@ void parse_attribute_names(const std::string& attrs_text, const std::string& lay
 }
 
 bool parse_metadata_fallback(const std::string& content,
-    std::map<std::string, std::map<int, std::string>>& int_to_string,
-    std::map<std::string, std::map<std::string, int>>& string_to_int)
+                             std::map<std::string, std::map<int, std::string> >& int_to_string,
+                             std::map<std::string, std::map<std::string, int> >& string_to_int)
 {
     bool any_layer = false;
     size_t i = 0;
@@ -321,7 +320,7 @@ std::string companion_tnnproto(const std::string& filename)
 }
 
 const std::map<int, std::string>* find_attr_index_to_name_map(
-    const std::map<std::string, std::map<int, std::string>>& int_to_string,
+    const std::map<std::string, std::map<int, std::string> >& int_to_string,
     const std::string& type)
 {
     auto it = int_to_string.find(type);
@@ -342,7 +341,7 @@ const std::map<int, std::string>* find_attr_index_to_name_map(
 }
 
 const std::map<std::string, int>* find_attr_name_to_index_map(
-    const std::map<std::string, std::map<std::string, int>>& string_to_int,
+    const std::map<std::string, std::map<std::string, int> >& string_to_int,
     const std::string& type)
 {
     auto it = string_to_int.find(type);
@@ -361,7 +360,7 @@ const std::map<std::string, int>* find_attr_name_to_index_map(
     }
     return nullptr;
 }
-}
+} // namespace
 
 tnnLoader::tnnLoader()
 {

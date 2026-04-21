@@ -165,6 +165,24 @@ if(EMSCRIPTEN OR NETEDIT_WEB)
     else()
         message(STATUS "Skipping preload: nn-editor/ncnn-metadata.json not found")
     endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/nn-editor/tnn-metadata.json")
+        list(APPEND NETEDIT_WEB_PRELOAD_OPTIONS
+            "--preload-file=${CMAKE_SOURCE_DIR}/nn-editor/tnn-metadata.json@/tnn-metadata.json")
+    else()
+        message(STATUS "Skipping preload: nn-editor/tnn-metadata.json not found")
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/nn-editor/onnx-metadata.json")
+        list(APPEND NETEDIT_WEB_PRELOAD_OPTIONS
+            "--preload-file=${CMAKE_SOURCE_DIR}/nn-editor/onnx-metadata.json@/onnx-metadata.json")
+    else()
+        message(STATUS "Skipping preload: nn-editor/onnx-metadata.json not found")
+    endif()
+    if(EXISTS "${CMAKE_SOURCE_DIR}/nn-editor/mnn-metadata.json")
+        list(APPEND NETEDIT_WEB_PRELOAD_OPTIONS
+            "--preload-file=${CMAKE_SOURCE_DIR}/nn-editor/mnn-metadata.json@/mnn-metadata.json")
+    else()
+        message(STATUS "Skipping preload: nn-editor/mnn-metadata.json not found")
+    endif()
 
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_OPENGL_ES3 USE_OPENGL3)
     target_compile_options(${PROJECT_NAME} PRIVATE
