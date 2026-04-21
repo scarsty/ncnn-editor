@@ -48,6 +48,46 @@ struct NodeMetrics
 
 using NodeMetricsMap = std::unordered_map<Node*, NodeMetrics>;
 
+// -----------------------------------------------------------------------
+// Virtual-node infrastructure for long-edge normalisation
+//
+// Dagre (used by Netron) inserts dummy nodes at every intermediate rank
+// for edges that span more than one layer.  This "normalise" step:
+//   1. Lets the crossing-minimisation (order_layers) treat skip-connections
+//      correctly, because each layer now only has rank-adjacent edges.
+//   2. Lets the x-relaxation route skip connections as smooth paths instead
+//      of jumps across many layers.
+//
+// We apply the same idea in C++: temporary Node objects are spliced into
+// the graph before layout and removed afterwards.
+// -----------------------------------------------------------------------
+
+struct NormalizeRecord
+{
+    Node* from;      // original edge source
+    Node* to;        // original edge target
+    Node* first_vn;  // first virtual node in the inserted chain
+};
+
+struct VirtualNodePool
+{
+    std::vector<std::unique_ptr<Node>> storage;
+    std::unordered_set<Node*>          set;
+
+    Node* alloc(int rank)
+    {
+        auto p   = std::make_unique<Node>();
+        Node* ptr = p.get();
+        ptr->turn = rank;
+        ptr->id   = -1;   // sentinel – identifies virtual nodes
+        storage.push_back(std::move(p));
+        set.insert(ptr);
+        return ptr;
+    }
+
+    bool is_virtual(Node* n) const { return set.count(n) > 0; }
+};
+
 double clamp_double(double value, double min_value, double max_value)
 {
     return (std::max)(min_value, (std::min)(value, max_value));
@@ -494,7 +534,8 @@ void relax_layer(const std::vector<Node*>& layer, PositionMap& positions, const 
     }
 }
 
-PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& layers, const NodeMetricsMap& metrics)
+PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& layers, const NodeMetricsMap& metrics,
+                                        const std::unordered_set<Node*>& virtual_nodes = {})
 {
     PositionMap positions;
 
@@ -560,14 +601,22 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
         return n != nullptr && positions.count(n) > 0;
     };
 
-    // Count in-component adjacents (prevs or nexts).
+    // Helper: is this node a virtual routing node?
+    auto is_vn = [&](Node* n) -> bool
+    {
+        return virtual_nodes.count(n) > 0;
+    };
+
+    // Count in-component REAL adjacents (prevs or nexts).
+    // Virtual nodes are excluded so they don't create spurious fan-out branches
+    // or break chains that pass through skip-connection routing.
     auto count_ic = [&](Node* n, bool use_prev) -> int
     {
         int cnt = 0;
         const auto& adj = use_prev ? n->prevs : n->nexts;
         for (Node* nb : adj)
         {
-            if (in_positions(nb))
+            if (in_positions(nb) && !is_vn(nb))
             {
                 ++cnt;
             }
@@ -586,16 +635,19 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
     }
 
     // Identify fan-out children so chain straightening can skip them.
+    // Only real (non-virtual) children are counted; virtual routing nodes are
+    // skip-connection waypoints and must not trigger spurious fan-out logic.
     std::unordered_set<Node*> fanout_children;
     for (const auto& layer : layers)
     {
         for (Node* node : layer)
         {
+            if (is_vn(node)) continue;          // virtual nodes cannot be fan-out parents
             if (count_ic(node, false) >= 2)
             {
                 for (Node* next : node->nexts)
                 {
-                    if (in_positions(next))
+                    if (in_positions(next) && !is_vn(next))
                     {
                         fanout_children.insert(next);
                     }
@@ -621,6 +673,15 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
                     continue;
                 }
 
+                // Virtual nodes are registered as singleton chains so they get
+                // a chain_id but are never straightened with real nodes.
+                if (is_vn(node))
+                {
+                    chain_id[node] = static_cast<int>(chains.size());
+                    chains.push_back({ node });
+                    continue;
+                }
+
                 // Fan-out children are registered as singleton "chains" so they
                 // get a chain_id but are never straightened.
                 if (fanout_children.count(node))
@@ -636,6 +697,7 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
                 Node* cur = node;
                 while (true)
                 {
+                    // Only follow REAL nexts when building chains.
                     if (count_ic(cur, false) != 1)
                     {
                         break;
@@ -643,7 +705,7 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
                     Node* next = nullptr;
                     for (Node* nb : cur->nexts)
                     {
-                        if (in_positions(nb))
+                        if (in_positions(nb) && !is_vn(nb))
                         {
                             next = nb;
                             break;
@@ -672,21 +734,38 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
 
         for (const auto& chain : chains)
         {
-            if (chain.size() < 2)
+            // Skip singleton or virtual-node-only chains.
+            if (chain.size() < 2 || is_vn(chain[0]))
             {
                 continue;
             }
-            std::vector<double> xs;
-            xs.reserve(chain.size());
+            // Compute the "preferred X" for this chain as the average X of
+            // all EXTERNAL neighbours (nodes connected to the chain from outside).
+            // Shift the whole chain as a rigid group toward that preferred X.
+            // This keeps relative node spacing intact (no intra-layer overlap is
+            // introduced) while still pulling sequential paths into alignment.
+            double ext_sum = 0.0;
+            int    ext_cnt = 0;
             for (Node* n : chain)
             {
-                xs.push_back(positions.at(n));
+                for (Node* nb : n->prevs)
+                {
+                    if (in_positions(nb) && !chain_id.count(nb))
+                    { ext_sum += positions.at(nb); ++ext_cnt; }
+                }
+                for (Node* nb : n->nexts)
+                {
+                    if (in_positions(nb) && !chain_id.count(nb))
+                    { ext_sum += positions.at(nb); ++ext_cnt; }
+                }
             }
-            std::sort(xs.begin(), xs.end());
-            double target_x = xs[xs.size() / 2];
-            for (Node* n : chain)
+            if (ext_cnt > 0)
             {
-                positions[n] = target_x;
+                double chain_cx = 0.0;
+                for (Node* n : chain) chain_cx += positions.at(n);
+                chain_cx /= static_cast<double>(chain.size());
+                double shift = (ext_sum / static_cast<double>(ext_cnt)) - chain_cx;
+                for (Node* n : chain) positions[n] += shift;
             }
         }
     }
@@ -722,19 +801,21 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
     };
 
     // --- Pass 2: Fan-out centering ---
-    // For each parent with >=2 direct children in the next rank, place the
+    // For each parent with >=2 direct REAL children in the next rank, place the
     // children with exact node spacing, symmetrically around the parent's x.
-    // Because we use exact spacing there are no intra-group overlaps; we only
-    // need resolve_layer_overlaps for inter-group (other nodes in same layer).
+    // Virtual routing nodes are excluded: they are waypoints for skip connections,
+    // not real fan-out branches, so they must not shift real node positions.
     for (size_t rank = 0; rank + 1 < layers.size(); ++rank)
     {
         for (Node* parent : layers[rank])
         {
-            // Collect deduplicated direct children in the immediate next rank.
+            if (is_vn(parent)) continue;   // virtual nodes are never fan-out parents
+
+            // Collect deduplicated direct REAL children in the immediate next rank.
             std::vector<Node*> children;
             for (Node* next : parent->nexts)
             {
-                if (!in_positions(next))
+                if (!in_positions(next) || is_vn(next))
                 {
                     continue;
                 }
@@ -789,6 +870,23 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
         resolve_layer_overlaps(layers[rank + 1]);
     }
 
+    // --- Final pass: global overlap resolution ---
+    // Chain-straightening (Pass 1) may have introduced new overlaps in layers
+    // that are not direct children of any fan-out parent.  This final sweep
+    // guarantees no real-node overlaps remain after all post-processing.
+    for (const auto& layer : layers)
+    {
+        // Build a real-nodes-only sub-layer for overlap resolution.
+        // Virtual nodes have zero width and should not block real nodes.
+        std::vector<Node*> real_layer;
+        real_layer.reserve(layer.size());
+        for (Node* n : layer)
+        {
+            if (!is_vn(n)) real_layer.push_back(n);
+        }
+        resolve_layer_overlaps(real_layer);
+    }
+
     return positions;
 }
 
@@ -833,7 +931,170 @@ std::vector<double> build_layer_tops(const std::vector<std::vector<Node*>>& laye
     }
     return tops;
 }
+
+// -----------------------------------------------------------------------
+// normalize_long_edges
+//
+// For every edge (from → to) whose rank span is > 1, insert a chain of
+// virtual nodes at the intermediate ranks and replace the long edge with
+// a sequence of unit-length edges.  The real graph is temporarily mutated;
+// call denormalize_long_edges to restore it after layout.
+// -----------------------------------------------------------------------
+void normalize_long_edges(
+    std::vector<Node*>&              component,
+    RankMap&                         ranks,
+    std::vector<std::vector<Node*>>& layers,
+    NodeMetricsMap&                  metrics,
+    VirtualNodePool&                 pool,
+    std::vector<NormalizeRecord>&    records)
+{
+    // Snapshot current long edges (iterate a copy to avoid invalidation).
+    std::vector<std::pair<Node*, Node*>> long_edges;
+    {
+        std::unordered_set<Node*> comp_set(component.begin(), component.end());
+        for (Node* n : component)
+        {
+            for (Node* nx : n->nexts)
+            {
+                if (nx == nullptr || !comp_set.count(nx))
+                {
+                    continue;
+                }
+                if (ranks.count(nx) && ranks.at(nx) - ranks.at(n) > 1)
+                {
+                    long_edges.emplace_back(n, nx);
+                }
+            }
+        }
+    }
+
+    for (auto& [from, to] : long_edges)
+    {
+        int r_from = ranks.at(from);
+        int r_to   = ranks.at(to);
+
+        // Sever the original long edge.
+        {
+            auto& fn = from->nexts;
+            auto  it = std::find(fn.begin(), fn.end(), to);
+            if (it != fn.end()) fn.erase(it);
+        }
+        {
+            auto& tp = to->prevs;
+            auto  it = std::find(tp.begin(), tp.end(), from);
+            if (it != tp.end()) tp.erase(it);
+        }
+
+        // Insert a chain: from → vn(r_from+1) → … → vn(r_to-1) → to
+        Node* prev     = from;
+        Node* first_vn = nullptr;
+        for (int r = r_from + 1; r < r_to; ++r)
+        {
+            Node* vn = pool.alloc(r);
+            ranks[vn]  = r;
+
+            prev->nexts.push_back(vn);
+            vn->prevs.push_back(prev);
+
+            component.push_back(vn);
+            if (r < static_cast<int>(layers.size()))
+            {
+                layers[static_cast<size_t>(r)].push_back(vn);
+            }
+
+            // Virtual nodes occupy zero width / height so they act as
+            // routing guides without displacing real nodes.
+            metrics[vn] = { 0.0, 0.0 };
+
+            if (!first_vn) first_vn = vn;
+            prev = vn;
+        }
+
+        // Connect the last virtual node (or from) to the target.
+        prev->nexts.push_back(to);
+        to->prevs.push_back(prev);
+
+        records.push_back({ from, to, first_vn });
+    }
 }
+
+// -----------------------------------------------------------------------
+// denormalize_long_edges
+//
+// Remove all virtual nodes and restore the original long edges.
+// Must be called after the position assignment is complete.
+// -----------------------------------------------------------------------
+void denormalize_long_edges(
+    std::vector<Node*>&              component,
+    std::vector<std::vector<Node*>>& layers,
+    RankMap&                         ranks,
+    NodeMetricsMap&                  metrics,
+    const VirtualNodePool&           pool,
+    const std::vector<NormalizeRecord>& records)
+{
+    for (const auto& rec : records)
+    {
+        Node* from     = rec.from;
+        Node* to       = rec.to;
+        Node* first_vn = rec.first_vn;
+        if (!first_vn) continue;
+
+        // Disconnect from → first_vn.
+        {
+            auto& fn = from->nexts;
+            auto  it = std::find(fn.begin(), fn.end(), first_vn);
+            if (it != fn.end()) fn.erase(it);
+        }
+
+        // Walk the virtual chain to find the last vn (its next is 'to').
+        Node* last_vn = first_vn;
+        while (true)
+        {
+            Node* candidate = nullptr;
+            for (Node* nx : last_vn->nexts)
+            {
+                if (pool.is_virtual(nx)) { candidate = nx; break; }
+            }
+            if (!candidate) break;
+            last_vn = candidate;
+        }
+
+        // Disconnect last_vn → to.
+        {
+            auto& ln = last_vn->nexts;
+            auto  it = std::find(ln.begin(), ln.end(), to);
+            if (it != ln.end()) ln.erase(it);
+        }
+        {
+            auto& tp = to->prevs;
+            // Remove whichever virtual node points to 'to'.
+            auto it = std::find_if(tp.begin(), tp.end(),
+                [&](Node* n){ return pool.is_virtual(n); });
+            if (it != tp.end()) tp.erase(it);
+        }
+
+        // Restore the original edge.
+        from->nexts.push_back(to);
+        to->prevs.push_back(from);
+    }
+
+    // Strip virtual nodes from every container.
+    auto is_vn = [&](Node* n){ return pool.is_virtual(n); };
+    component.erase(std::remove_if(component.begin(), component.end(), is_vn),
+                    component.end());
+    for (auto& layer : layers)
+    {
+        layer.erase(std::remove_if(layer.begin(), layer.end(), is_vn),
+                    layer.end());
+    }
+    for (Node* vn : pool.set)
+    {
+        ranks.erase(vn);
+        metrics.erase(vn);
+    }
+}
+
+} // anonymous namespace
 
 FileLoader* create_loader(const std::string& filename, int index)
 {
@@ -935,18 +1196,115 @@ void FileLoader::calPosition(std::deque<Node>& nodes)
         return;
     }
 
+    // ------------------------------------------------------------------
+    // Rebuild nexts from prevs.
+    //
+    // Some loaders (e.g. the lightweight ONNX web loader) populate
+    // nexts via index-based assignment:  src.nexts[i_out] = &dst
+    // When one output blob is consumed by multiple downstream nodes, only
+    // the LAST assignment survives — earlier consumers are silently lost.
+    //
+    // prevs are always fully populated (dst.prevs[i_in] = &src never
+    // overwrites a different predecessor).  Rebuilding nexts from prevs
+    // gives the layout algorithm the complete fan-out graph, fixing:
+    //   1. build_topological_order – correct indegrees → correct order
+    //   2. assign_ranks            – correct predecessor ranks
+    //   3. order_layers / relax    – correct neighbour references
+    // ------------------------------------------------------------------
+    for (auto& n : nodes)
+    {
+        n.nexts.clear();
+    }
+    for (auto& n : nodes)
+    {
+        for (Node* prev : n.prevs)
+        {
+            if (prev == nullptr)
+            {
+                continue;
+            }
+            auto& pn = prev->nexts;
+            if (std::find(pn.begin(), pn.end(), &n) == pn.end())
+            {
+                pn.push_back(&n);
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Isolate "parameter" source nodes (ONNX Initializers: weights, biases,
+    // BatchNorm statistics, etc.) from the main layout graph.
+    //
+    // These nodes have NO predecessors and their sole role is to feed
+    // parameters into computation nodes.  A typical medium network has
+    // 100–300 such nodes.  Including them in rank assignment causes layers
+    // to contain dozens of Initializers alongside a single Conv/BN node;
+    // the overlap resolver then spreads that layer to tens-of-thousands of
+    // pixels, producing the characteristic "long line to the right" artefact.
+    //
+    // Instead we detach them before layout, run layout on computation nodes
+    // only, then re-attach and snap each Initializer to its first consumer.
+    // ------------------------------------------------------------------
+    std::unordered_map<Node*, std::vector<Node*>> param_consumers;
+    for (auto& n : nodes)
+    {
+        if (n.type == "Initializer" && n.prevs.empty())
+        {
+            param_consumers[&n] = n.nexts;
+        }
+    }
+    for (auto& [p, consumers] : param_consumers)
+    {
+        for (Node* c : consumers)
+        {
+            auto& pv = c->prevs;
+            pv.erase(std::remove(pv.begin(), pv.end(), p), pv.end());
+        }
+        p->nexts.clear();
+    }
+
     double component_offset = static_cast<double>(kLeftMargin);
     for (auto& component : collect_components(nodes))
     {
-        std::vector<Node*> order = build_topological_order(component);
-        NodeMetricsMap metrics = build_metrics(component);
-        RankMap ranks = assign_ranks(component, order);
+        // ------------------------------------------------------------------
+        // Skip isolated parameter (Initializer) singleton components.
+        // After detachment they have no edges, so they form trivial
+        // size-1 components.  Processing them here would advance
+        // component_offset by hundreds of pixels per initializer, placing
+        // the main computation graph thousands of pixels to the right.
+        // We position them manually after the computation layout.
+        // ------------------------------------------------------------------
+        if (component.size() == 1 && param_consumers.count(component[0]) > 0)
+        {
+            continue;
+        }
+
+        std::vector<Node*> order  = build_topological_order(component);
+        NodeMetricsMap     metrics = build_metrics(component);
+        RankMap            ranks  = assign_ranks(component, order);
         std::vector<std::vector<Node*>> layers = build_layers(order, ranks);
+
+        // ------------------------------------------------------------------
+        // Normalise long-span edges by inserting virtual routing nodes.
+        // This mirrors Netron/dagre's "normalize" step: every edge that skips
+        // more than one rank is broken into a chain of unit-length edges
+        // through zero-width virtual nodes.  The virtual nodes participate in
+        // crossing minimisation and x-relaxation, then are removed before
+        // positions are written back to real Node objects.
+        // ------------------------------------------------------------------
+        VirtualNodePool             vn_pool;
+        std::vector<NormalizeRecord> vn_records;
+        normalize_long_edges(component, ranks, layers, metrics, vn_pool, vn_records);
+
         order_layers(layers);
-        PositionMap positions = assign_horizontal_positions(layers, metrics);
+        PositionMap positions = assign_horizontal_positions(layers, metrics, vn_pool.set);
+
+        // Remove virtual nodes; restore original prevs/nexts.
+        denormalize_long_edges(component, layers, ranks, metrics, vn_pool, vn_records);
+
         std::vector<double> layer_tops = build_layer_tops(layers, metrics);
 
-        double min_x = component_min_x(component, positions, metrics);
+        double min_x    = component_min_x(component, positions, metrics);
         double offset_x = component_offset - min_x;
         for (Node* node : component)
         {
@@ -956,6 +1314,63 @@ void FileLoader::calPosition(std::deque<Node>& nodes)
         }
 
         component_offset += component_width(component, positions, metrics) + static_cast<double>(kComponentSpacing);
+    }
+
+    // ------------------------------------------------------------------
+    // Re-attach param nodes and place them above their consumers.
+    //
+    // Each computation node (Conv, BN, etc.) may have 1-3 Initializer
+    // inputs (weight, bias, running_mean, …).  Instead of stacking them
+    // on top of the computation node (which causes garbled overlap), we
+    // spread them in a horizontal row 200 px ABOVE the consumer.
+    // That keeps the computation graph clean and the parameter nodes
+    // visible above it.
+    // ------------------------------------------------------------------
+
+    // Restore the graph edges (needed for correct link drawing).
+    for (auto& [p, consumers] : param_consumers)
+    {
+        p->nexts = consumers;
+        for (Node* c : consumers)
+        {
+            c->prevs.push_back(p);
+        }
+    }
+
+    // Group initializers by their primary consumer.
+    std::unordered_map<Node*, std::vector<Node*>> consumer_to_inits;
+    for (auto& [p, consumers] : param_consumers)
+    {
+        if (!consumers.empty() && consumers[0]->position_x != -1)
+        {
+            consumer_to_inits[consumers[0]].push_back(p);
+        }
+    }
+
+    // Place each group horizontally centred above the consumer.
+    constexpr int kInitYOffset = 200;   // pixels above consumer
+    constexpr int kInitXStep   = kDefaultNodeWidth + kNodeSpacing / 2;
+    for (auto& [consumer, inits] : consumer_to_inits)
+    {
+        int N = static_cast<int>(inits.size());
+        double group_half = (N - 1) * 0.5 * kInitXStep;
+        for (int k = 0; k < N; ++k)
+        {
+            inits[k]->position_x = static_cast<int>(std::lround(
+                consumer->position_x - group_half + k * kInitXStep));
+            inits[k]->position_y = consumer->position_y - kInitYOffset;
+        }
+    }
+
+    // Orphaned initializers (no valid consumer): place far above the canvas.
+    for (auto& [p, consumers] : param_consumers)
+    {
+        if (p->position_x == -1)
+        {
+            p->position_x = static_cast<int>(component_offset);
+            p->position_y = kTopMargin;
+            component_offset += kDefaultNodeWidth + kComponentSpacing;
+        }
     }
 }
 
