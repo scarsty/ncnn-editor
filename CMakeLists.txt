@@ -76,13 +76,15 @@ if(NETEDIT_LOADER_ONNX)
         set(NETEDIT_ONNX_TARGET ONNX::onnx)
     endif()
 
+    # Always compile onnxloader.cpp — the #else branch contains a built-in
+    # minimal protobuf reader so ONNX files work even without the onnx library.
+    list (APPEND NODE_EDITOR_SRCS nn-editor/onnxloader.cpp)
+    add_definitions(-DNETEDIT_LOADER_ONNX)
     if(NETEDIT_HAS_ONNX)
-        list (APPEND NODE_EDITOR_SRCS nn-editor/onnxloader.cpp)
-        add_definitions(-DNETEDIT_LOADER_ONNX)
         target_compile_definitions(${PROJECT_NAME} PRIVATE NETEDIT_HAS_ONNX)
         target_link_libraries(${PROJECT_NAME} PRIVATE ${NETEDIT_ONNX_TARGET})
     else()
-        message(STATUS "Disabling ONNX loader: onnx package not found for current toolchain")
+        message(STATUS "ONNX library not found — using built-in protobuf reader for ONNX support")
     endif()
 endif()
 
