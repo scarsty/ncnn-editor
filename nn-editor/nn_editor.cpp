@@ -44,7 +44,7 @@ EM_JS(void, WebOpenFileDialog, (), {
     if (!Module.__ncnnEditorFileInput) {
         const input = document.createElement('input');
         input.type = 'file';
-        input.accept = '.ini,.param,.yaml';
+        input.accept = '.ini,.param,.yaml,.onnx,.tnnproto,.tnnmodel,.mnn,.mnn.json';
         // Some browsers reject synthetic click on display:none file inputs.
         input.style.position = 'fixed';
         input.style.left = '-10000px';
