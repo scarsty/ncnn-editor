@@ -447,7 +447,14 @@ private:
         {
             for (auto& link : links_)
             {
-                if (link.from == from || link.to == to)
+                // Each input pin may only receive one edge.
+                // Each output pin may fan-out to multiple inputs.
+                // Reject exact duplicate (from, to) pairs.
+                if (link.to == to)
+                {
+                    return false;
+                }
+                if (link.from == from && link.to == to)
                 {
                     return false;
                 }
@@ -483,7 +490,13 @@ private:
         {
             for (auto& l : links_)
             {
-                if (l.from == from || l.to == to)
+                // Block if this input pin is already occupied.
+                if (l.to == to)
+                {
+                    return;
+                }
+                // Block exact duplicate edge.
+                if (l.from == from && l.to == to)
                 {
                     return;
                 }
@@ -525,16 +538,6 @@ private:
     {
         if (check_same_name()) { return; }
 
-        std::map<int, std::pair<Node*, Node*>> n1;//pin->link(node*->node*)
-        for (const auto& link : links_)
-        {
-            int from = link.from / Node::MAX_PIN;
-            int to = link.to / Node::MAX_PIN;
-
-            n1[link.from] = { &nodes_[from],&nodes_[to] };
-            n1[link.to] = { &nodes_[from],&nodes_[to] };
-        }
-
         for (auto& node : nodes_)
         {
             auto pos = ImNodes::GetNodeGridSpacePos(node.id);
@@ -542,21 +545,22 @@ private:
             node.position_y = pos.y;
             node.prevs.clear();
             node.nexts.clear();
+        }
 
-            for (int i = node.id; i < node.id + node.next_pin; i++)
+        // Rebuild connectivity directly from links so one output pin can fan out.
+        for (const auto& link : links_)
+        {
+            const int from_node_idx = link.from / Node::MAX_PIN;
+            const int to_node_idx = link.to / Node::MAX_PIN;
+            if (from_node_idx < 0 || from_node_idx >= static_cast<int>(nodes_.size()) ||
+                to_node_idx < 0 || to_node_idx >= static_cast<int>(nodes_.size()))
             {
-                if (n1.count(i))
-                {
-                    node.nexts.push_back(n1[i].second);
-                }
+                continue;
             }
-            for (int i = node.text_id; i < node.text_id + node.prev_pin; i++)
-            {
-                if (n1.count(i))
-                {
-                    node.prevs.push_back(n1[i].first);
-                }
-            }
+            Node* from_node = &nodes_[from_node_idx];
+            Node* to_node = &nodes_[to_node_idx];
+            from_node->nexts.push_back(to_node);
+            to_node->prevs.push_back(from_node);
         }
 
     }
@@ -1374,8 +1378,11 @@ public:
                 {
                     node.id = count * Node::MAX_PIN;
                     node.text_id = count * Node::MAX_PIN + Node::HALF_MAX_PIN;
-                    node.prev_pin = node.prevs.size();
-                    node.next_pin = node.nexts.size();
+                    // Use declared blob counts (in/out) as pin counts so that
+                    // pin indices in restore-link always match actual slot indices.
+                    // Fall back to connectivity size for loaders that don't populate in/out.
+                    node.prev_pin = node.in.empty()  ? (int)node.prevs.size() : (int)node.in.size();
+                    node.next_pin = node.out.empty() ? (int)node.nexts.size() : (int)node.out.size();
                     count++;
                     if (node.position_x != -1)
                     {
@@ -1387,19 +1394,33 @@ public:
                 }
                 // restore link
                 links_.clear();
-                for (auto& node : nodes_)
+                for (size_t src_idx = 0; src_idx < nodes_.size(); ++src_idx)
                 {
-                    int i_next = 0;
-                    for (auto node1 : node.nexts)
+                    Node& src = nodes_[src_idx];
+                    for (size_t i_out = 0; i_out < src.out.size(); ++i_out)
                     {
-                        for (int i_prev = 0; i_prev < node1->prevs.size(); i_prev++)
+                        const std::string& out_blob = src.out[i_out];
+                        if (out_blob.empty())
                         {
-                            if (node1->prevs[i_prev] == &node)
+                            continue;
+                        }
+
+                        for (size_t dst_idx = 0; dst_idx < nodes_.size(); ++dst_idx)
+                        {
+                            if (src_idx == dst_idx)
                             {
-                                add_link(node.id + i_next, node1->text_id + i_prev, true);
+                                continue;
+                            }
+
+                            Node& dst = nodes_[dst_idx];
+                            for (size_t i_in = 0; i_in < dst.in.size(); ++i_in)
+                            {
+                                if (dst.in[i_in] == out_blob)
+                                {
+                                    add_link(src.id + static_cast<int>(i_out), dst.text_id + static_cast<int>(i_in), true);
+                                }
                             }
                         }
-                        i_next++;
                     }
                 }
 

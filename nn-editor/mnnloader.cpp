@@ -200,19 +200,6 @@ bool get_object_int_value(const std::string& obj, const std::string& key, int& o
     return true;
 }
 
-std::vector<std::string> metadata_candidates()
-{
-#ifdef __EMSCRIPTEN__
-    return { "/mnn-metadata.json", "mnn-metadata.json", "./mnn-metadata.json" };
-#else
-#ifdef __APPLE__
-    return { FileLoader::mainPath() + "/../Resources/mnn-metadata.json", FileLoader::mainPath() + "/mnn-metadata.json", "mnn-metadata.json" };
-#else
-    return { FileLoader::mainPath() + "/mnn-metadata.json", "mnn-metadata.json", "./mnn-metadata.json" };
-#endif
-#endif
-}
-
 void parse_mnn_operator_metadata(const std::string& content, std::map<int, std::string>& operator_to_name)
 {
     size_t i = 0;
@@ -288,7 +275,7 @@ std::string choose_output_name(const Node& node, int idx)
 
 mnnLoader::mnnLoader()
 {
-    for (const auto& candidate : metadata_candidates())
+    for (const auto& candidate : ::FileLoader::metadataCandidates("mnn-metadata.json"))
     {
         const std::string content = filefunc::readFileToString(candidate);
         if (content.empty())

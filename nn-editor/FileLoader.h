@@ -1,5 +1,6 @@
 #pragma once
 #include "node.h"
+#include <vector>
 
 //实现此接口即可支持不同格式
 //还没设计完
@@ -19,6 +20,8 @@ public:
         static std::string path;
         return path;
     }
+
+    static std::vector<std::string> metadataCandidates(const std::string& metadata_filename);
 };
 
 FileLoader* create_loader(const std::string& filename, int filter_index = -1);

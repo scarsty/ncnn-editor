@@ -1,5 +1,7 @@
 #include "tnnloader.h"
 
+#include "FileLoader.h"
+
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -246,19 +248,6 @@ bool parse_metadata_fallback(const std::string& content,
     return any_layer;
 }
 
-std::vector<std::string> metadata_candidates()
-{
-#ifdef __EMSCRIPTEN__
-    return { "/tnn-metadata.json", "tnn-metadata.json", "./tnn-metadata.json" };
-#else
-#ifdef __APPLE__
-    return { FileLoader::mainPath() + "/../Resources/tnn-metadata.json", FileLoader::mainPath() + "/tnn-metadata.json", "tnn-metadata.json" };
-#else
-    return { FileLoader::mainPath() + "/tnn-metadata.json", "tnn-metadata.json", "./tnn-metadata.json" };
-#endif
-#endif
-}
-
 std::string trim_copy(std::string s)
 {
     while (!s.empty() && (s.back() == ' ' || s.back() == '\t' || s.back() == '\r' || s.back() == '\n'))
@@ -330,11 +319,53 @@ std::string companion_tnnproto(const std::string& filename)
     }
     return filename;
 }
+
+const std::map<int, std::string>* find_attr_index_to_name_map(
+    const std::map<std::string, std::map<int, std::string>>& int_to_string,
+    const std::string& type)
+{
+    auto it = int_to_string.find(type);
+    if (it != int_to_string.end())
+    {
+        return &it->second;
+    }
+
+    const std::string lower = strfunc::toLowerCase(type);
+    for (const auto& kv : int_to_string)
+    {
+        if (strfunc::toLowerCase(kv.first) == lower)
+        {
+            return &kv.second;
+        }
+    }
+    return nullptr;
+}
+
+const std::map<std::string, int>* find_attr_name_to_index_map(
+    const std::map<std::string, std::map<std::string, int>>& string_to_int,
+    const std::string& type)
+{
+    auto it = string_to_int.find(type);
+    if (it != string_to_int.end())
+    {
+        return &it->second;
+    }
+
+    const std::string lower = strfunc::toLowerCase(type);
+    for (const auto& kv : string_to_int)
+    {
+        if (strfunc::toLowerCase(kv.first) == lower)
+        {
+            return &kv.second;
+        }
+    }
+    return nullptr;
+}
 }
 
 tnnLoader::tnnLoader()
 {
-    for (const auto& candidate : metadata_candidates())
+    for (const auto& candidate : metadataCandidates("tnn-metadata.json"))
     {
         const std::string content = filefunc::readFileToString(candidate);
         if (content.empty())
@@ -500,9 +531,44 @@ void tnnLoader::nodesToFile(const std::deque<Node>& nodes, const std::string& fi
             out += " " + o;
         }
 
-        if (!node.text.empty())
+        std::vector<std::string> params;
+        const auto* name_to_index = find_attr_name_to_index_map(string_to_int_, node.type);
+        for (const auto& kv : node.values)
         {
-            out += " " + node.text;
+            if (kv.second.empty())
+            {
+                continue;
+            }
+
+            if (name_to_index != nullptr)
+            {
+                auto it = name_to_index->find(kv.first);
+                if (it != name_to_index->end())
+                {
+                    params.push_back(std::to_string(it->second) + "=" + kv.second);
+                    continue;
+                }
+            }
+
+            int numeric_key = 0;
+            if (parse_int(kv.first, numeric_key))
+            {
+                params.push_back(std::to_string(numeric_key) + "=" + kv.second);
+            }
+            else
+            {
+                params.push_back(kv.first + "=" + kv.second);
+            }
+        }
+
+        if (params.empty() && !node.text.empty())
+        {
+            params.push_back(node.text);
+        }
+
+        for (const auto& p : params)
+        {
+            out += " " + p;
         }
         out += "\n";
     }
@@ -519,6 +585,7 @@ void tnnLoader::refreshNodeValues(Node& n)
     }
 
     const std::vector<std::string> tokens = strfunc::splitString(n.text, " ");
+    const auto* index_to_name = find_attr_index_to_name_map(int_to_string_, n.type);
     int positional_index = 0;
     for (const auto& token : tokens)
     {
@@ -531,9 +598,9 @@ void tnnLoader::refreshNodeValues(Node& n)
         if (kv.size() >= 2)
         {
             int key_index = 0;
-            if (parse_int(kv[0], key_index) && int_to_string_[n.type].count(key_index) > 0)
+            if (parse_int(kv[0], key_index) && index_to_name != nullptr && index_to_name->count(key_index) > 0)
             {
-                n.values[int_to_string_[n.type][key_index]] = kv[1];
+                n.values[index_to_name->at(key_index)] = kv[1];
             }
             else
             {
@@ -542,10 +609,9 @@ void tnnLoader::refreshNodeValues(Node& n)
             continue;
         }
 
-        const auto& m = int_to_string_[n.type];
-        if (m.count(positional_index) > 0)
+        if (index_to_name != nullptr && index_to_name->count(positional_index) > 0)
         {
-            n.values[m.at(positional_index)] = token;
+            n.values[index_to_name->at(positional_index)] = token;
         }
         else
         {

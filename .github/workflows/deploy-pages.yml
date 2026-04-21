@@ -29,7 +29,12 @@ jobs:
           version: latest
 
       - name: Configure
-        run: emcmake cmake -S . -B build-web -DNETEDIT_WEB=ON -DCMAKE_BUILD_TYPE=Release
+        run: |
+          emcmake cmake -S . -B build-web \
+            -DNETEDIT_WEB=ON \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DNETEDIT_LOADER_TNN=ON \
+            -DNETEDIT_LOADER_MNN=ON
 
       - name: Build
         run: cmake --build build-web -j 4

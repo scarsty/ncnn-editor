@@ -536,28 +536,79 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
         }
     }
 
-    // Chain straightening: nodes that are directly connected with a single
-    // in-edge and single out-edge form a "chain" and should share the same x.
-    // This keeps sequential paths visually straight (a vertical column).
+    // -----------------------------------------------------------------------
+    // Post-relaxation cleanup.
+    //
+    // Design rules (to prevent the three passes from fighting each other):
+    //
+    //  1. Fan-out children (direct children of a node with >=2 in-component
+    //     nexts) must NOT be repositioned by chain straightening.  Their x is
+    //     owned exclusively by the fan-out centering pass below.
+    //
+    //  2. The snap pass is intentionally omitted: it aligns the nearest child
+    //     to the parent while leaving the other child(ren) in place, creating
+    //     asymmetry that the centering pass then cannot fix cleanly.
+    //
+    //  3. Fan-out centering places children with EXACT node spacing (not a
+    //     group shift), so no intra-group overlaps are introduced and
+    //     resolve_layer_overlaps only needs to handle inter-group collisions.
+    // -----------------------------------------------------------------------
+
+    // Helper: is a node reachable inside this position map?
+    auto in_positions = [&](Node* n) -> bool
     {
-        auto in_component = [&](Node* n) -> bool
+        return n != nullptr && positions.count(n) > 0;
+    };
+
+    // Count in-component adjacents (prevs or nexts).
+    auto count_ic = [&](Node* n, bool use_prev) -> int
+    {
+        int cnt = 0;
+        const auto& adj = use_prev ? n->prevs : n->nexts;
+        for (Node* nb : adj)
         {
-            return n != nullptr && positions.count(n) > 0;
-        };
-        auto count_adj = [&](Node* n, bool use_prev) -> int
-        {
-            int cnt = 0;
-            const auto& adj = use_prev ? n->prevs : n->nexts;
-            for (Node* nb : adj)
+            if (in_positions(nb))
             {
-                if (in_component(nb))
+                ++cnt;
+            }
+        }
+        return cnt;
+    };
+
+    // Build rank index for direct-child lookup.
+    std::unordered_map<Node*, size_t> rank_index;
+    for (size_t rank = 0; rank < layers.size(); ++rank)
+    {
+        for (Node* node : layers[rank])
+        {
+            rank_index[node] = rank;
+        }
+    }
+
+    // Identify fan-out children so chain straightening can skip them.
+    std::unordered_set<Node*> fanout_children;
+    for (const auto& layer : layers)
+    {
+        for (Node* node : layer)
+        {
+            if (count_ic(node, false) >= 2)
+            {
+                for (Node* next : node->nexts)
                 {
-                    ++cnt;
+                    if (in_positions(next))
+                    {
+                        fanout_children.insert(next);
+                    }
                 }
             }
-            return cnt;
-        };
+        }
+    }
 
+    // --- Pass 1: Chain straightening ---
+    // Only applies to pure-chain nodes (1 in-component prev, 1 in-component
+    // next) that are NOT fan-out children.  This keeps sequential paths
+    // visually straight without disturbing fan-out groups.
+    {
         std::unordered_map<Node*, int> chain_id;
         std::vector<std::vector<Node*>> chains;
 
@@ -569,20 +620,30 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
                 {
                     continue;
                 }
+
+                // Fan-out children are registered as singleton "chains" so they
+                // get a chain_id but are never straightened.
+                if (fanout_children.count(node))
+                {
+                    chain_id[node] = static_cast<int>(chains.size());
+                    chains.push_back({ node });
+                    continue;
+                }
+
                 std::vector<Node*> chain = { node };
                 chain_id[node] = static_cast<int>(chains.size());
 
                 Node* cur = node;
                 while (true)
                 {
-                    if (count_adj(cur, false) != 1)
+                    if (count_ic(cur, false) != 1)
                     {
                         break;
                     }
                     Node* next = nullptr;
                     for (Node* nb : cur->nexts)
                     {
-                        if (in_component(nb))
+                        if (in_positions(nb))
                         {
                             next = nb;
                             break;
@@ -592,7 +653,12 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
                     {
                         break;
                     }
-                    if (count_adj(next, true) != 1)
+                    if (count_ic(next, true) != 1)
+                    {
+                        break;
+                    }
+                    // Don't pull fan-out children into a chain.
+                    if (fanout_children.count(next))
                     {
                         break;
                     }
@@ -618,7 +684,6 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
             }
             std::sort(xs.begin(), xs.end());
             double target_x = xs[xs.size() / 2];
-
             for (Node* n : chain)
             {
                 positions[n] = target_x;
@@ -626,10 +691,7 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
         }
     }
 
-    // Edge-snap pass: for edges whose endpoints are nearly aligned, pull them
-    // to exactly the same x.  This handles fork/join nodes that the chain pass
-    // cannot reach (they have >1 in or out edge and therefore no chain entry).
-    // We iterate a few times so the alignment propagates through multi-hop paths.
+    // --- Overlap resolver (used after centering) ---
     auto resolve_layer_overlaps = [&](const std::vector<Node*>& layer)
     {
         if (layer.size() < 2)
@@ -659,41 +721,72 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
         }
     };
 
-    // Snap threshold: snap edges shorter than 40% of default node width
-    const double kSnapThreshold = 0.40 * static_cast<double>(kDefaultNodeWidth);
-    for (int snap_iter = 0; snap_iter < 4; ++snap_iter)
+    // --- Pass 2: Fan-out centering ---
+    // For each parent with >=2 direct children in the next rank, place the
+    // children with exact node spacing, symmetrically around the parent's x.
+    // Because we use exact spacing there are no intra-group overlaps; we only
+    // need resolve_layer_overlaps for inter-group (other nodes in same layer).
+    for (size_t rank = 0; rank + 1 < layers.size(); ++rank)
     {
-        bool snapped = false;
-        for (const auto& layer : layers)
+        for (Node* parent : layers[rank])
         {
-            for (Node* node : layer)
+            // Collect deduplicated direct children in the immediate next rank.
+            std::vector<Node*> children;
+            for (Node* next : parent->nexts)
             {
-                for (Node* next : node->nexts)
+                if (!in_positions(next))
                 {
-                    if (next == nullptr || positions.count(next) == 0)
-                    {
-                        continue;
-                    }
-                    double dx = std::abs(positions.at(node) - positions.at(next));
-                    if (dx > 0.0 && dx < kSnapThreshold)
-                    {
-                        double avg = 0.5 * (positions.at(node) + positions.at(next));
-                        positions[node] = avg;
-                        positions[next] = avg;
-                        snapped = true;
-                    }
+                    continue;
+                }
+                auto it = rank_index.find(next);
+                if (it == rank_index.end() || it->second != rank + 1)
+                {
+                    continue;
+                }
+                if (std::find(children.begin(), children.end(), next) == children.end())
+                {
+                    children.push_back(next);
+                }
+            }
+
+            if (children.size() < 2)
+            {
+                continue;
+            }
+
+            // Keep children in a stable left-to-right order.
+            std::sort(children.begin(), children.end(), [&](Node* a, Node* b)
+            {
+                return positions.at(a) < positions.at(b);
+            });
+
+            // Compute total group width (node widths + spacing between them).
+            double total = 0.0;
+            for (size_t i = 0; i < children.size(); ++i)
+            {
+                total += 2.0 * half_width(children[i], metrics);
+                if (i + 1 < children.size())
+                {
+                    total += static_cast<double>(kNodeSpacing);
+                }
+            }
+
+            // Place children symmetrically centered at the parent's x.
+            double cursor = positions.at(parent) - total * 0.5 + half_width(children[0], metrics);
+            for (size_t i = 0; i < children.size(); ++i)
+            {
+                positions[children[i]] = cursor;
+                if (i + 1 < children.size())
+                {
+                    cursor += half_width(children[i], metrics)
+                              + half_width(children[i + 1], metrics)
+                              + static_cast<double>(kNodeSpacing);
                 }
             }
         }
-        // Resolve any new overlaps created by snapping
-        for (const auto& layer : layers)
-        {
-            resolve_layer_overlaps(layer);
-        }
-        if (!snapped)
-        {
-            break;
-        }
+
+        // Fix any inter-group overlaps in the child layer.
+        resolve_layer_overlaps(layers[rank + 1]);
     }
 
     return positions;
@@ -806,6 +899,33 @@ const char* file_filter()
            "All files\0*.*\0";
 #endif
     return nullptr;
+}
+
+std::vector<std::string> FileLoader::metadataCandidates(const std::string& metadata_filename)
+{
+#ifdef __EMSCRIPTEN__
+    return { "/" + metadata_filename, metadata_filename, "./" + metadata_filename };
+#else
+#ifdef __APPLE__
+    return {
+        FileLoader::mainPath() + "/../Resources/" + metadata_filename,
+        FileLoader::mainPath() + "/" + metadata_filename,
+        metadata_filename
+    };
+#else
+    return {
+        FileLoader::mainPath() + "/" + metadata_filename,
+        FileLoader::mainPath() + "/../" + metadata_filename,
+        FileLoader::mainPath() + "/../../" + metadata_filename,
+        FileLoader::mainPath() + "/../nn-editor/" + metadata_filename,
+        FileLoader::mainPath() + "/../../nn-editor/" + metadata_filename,
+        metadata_filename,
+        "./" + metadata_filename,
+        "nn-editor/" + metadata_filename,
+        "./nn-editor/" + metadata_filename
+    };
+#endif
+#endif
 }
 
 void FileLoader::calPosition(std::deque<Node>& nodes)

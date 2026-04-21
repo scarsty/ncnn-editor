@@ -251,18 +251,6 @@ bool parse_metadata_fallback(const std::string& content,
     return any_layer;
 }
 
-std::vector<std::string> metadata_candidates()
-{
-#ifdef __EMSCRIPTEN__
-    return { "/ncnn-metadata.json", "ncnn-metadata.json", "./ncnn-metadata.json" };
-#else
-#ifdef __APPLE__
-    return { FileLoader::mainPath() + "/../Resources/ncnn-metadata.json", FileLoader::mainPath() + "/ncnn-metadata.json", "ncnn-metadata.json" };
-#else
-    return { FileLoader::mainPath() + "/ncnn-metadata.json", "ncnn-metadata.json", "./ncnn-metadata.json" };
-#endif
-#endif
-}
 }
 
 ncnnLoader::ncnnLoader()
@@ -270,7 +258,7 @@ ncnnLoader::ncnnLoader()
     bool loaded = false;
 
 #ifdef NETEDIT_HAS_YAML_CPP
-    for (const auto& candidate : metadata_candidates())
+    for (const auto& candidate : ::FileLoader::metadataCandidates("ncnn-metadata.json"))
     {
         try
         {
@@ -300,7 +288,7 @@ ncnnLoader::ncnnLoader()
 
     if (!loaded)
     {
-        for (const auto& candidate : metadata_candidates())
+        for (const auto& candidate : ::FileLoader::metadataCandidates("ncnn-metadata.json"))
         {
             const std::string content = filefunc::readFileToString(candidate);
             if (content.empty())

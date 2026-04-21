@@ -1,0 +1,8 @@
+{
+  "name": "nn-editor",
+  "version-string": "0.1",
+  "dependencies": [
+    "sdl3",
+    "onnx"
+  ]
+}
