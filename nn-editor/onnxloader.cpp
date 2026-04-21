@@ -5,6 +5,11 @@
 #include <fstream>
 #include <set>
 #include <unordered_set>
+#ifndef NETEDIT_HAS_ONNX
+#include <cstdint>
+#include <cstring>
+#include <vector>
+#endif
 
 #include "filefunc.h"
 #include "strfunc.h"
@@ -297,6 +302,133 @@ std::string onnx_attr_value_to_text(const ONNX_NAMESPACE::AttributeProto& attr)
     }
 }
 #endif
+
+#ifndef NETEDIT_HAS_ONNX
+// Minimal protobuf binary reader for ONNX parsing (no onnx library needed).
+// Field numbers from onnx-ml.proto:
+//   ModelProto:     graph=7
+//   GraphProto:     node=1, initializer=5, input=11, output=12
+//   NodeProto:      input=1, output=2, name=3, op_type=4, attribute=5
+//   TensorProto:    dims=1, name=8
+//   ValueInfoProto: name=1
+//   AttributeProto: name=1, f=2(I32), i=3(VARINT), s=4(LEN),
+//                   floats=7, ints=8, strings=9, type=20(VARINT)
+//   AttributeType:  FLOAT=1,INT=2,STRING=3,TENSOR=4,GRAPH=5,FLOATS=6,INTS=7,STRINGS=8
+namespace pb
+{
+    enum : int { VARINT = 0, I64 = 1, LEN = 2, I32 = 5 };
+
+    struct Reader
+    {
+        const uint8_t* p;
+        const uint8_t* end;
+
+        bool good() const { return p < end; }
+
+        uint64_t read_varint()
+        {
+            uint64_t r = 0;
+            int shift = 0;
+            while (p < end)
+            {
+                uint8_t b = *p++;
+                r |= static_cast<uint64_t>(b & 0x7Fu) << shift;
+                if (!(b & 0x80u)) { break; }
+                shift += 7;
+            }
+            return r;
+        }
+
+        void read_tag(int& fn, int& wt)
+        {
+            uint64_t tag = read_varint();
+            fn = static_cast<int>(tag >> 3);
+            wt = static_cast<int>(tag & 7u);
+        }
+
+        void skip(int wt)
+        {
+            switch (wt)
+            {
+            case VARINT: read_varint(); break;
+            case I64:    if (p + 8 <= end) p += 8; else p = end; break;
+            case LEN:    { size_t n = static_cast<size_t>(read_varint()); if (p + n <= end) p += n; else p = end; break; }
+            case I32:    if (p + 4 <= end) p += 4; else p = end; break;
+            default:     p = end; break;
+            }
+        }
+
+        std::string read_str()
+        {
+            size_t n = static_cast<size_t>(read_varint());
+            if (p + n > end) { p = end; return {}; }
+            std::string s(reinterpret_cast<const char*>(p), n);
+            p += n;
+            return s;
+        }
+
+        Reader sub()
+        {
+            size_t n = static_cast<size_t>(read_varint());
+            if (p + n > end) { p = end; return { end, end }; }
+            Reader r{ p, p + n };
+            p += n;
+            return r;
+        }
+
+        float read_f32()
+        {
+            if (p + 4 > end) { p = end; return 0.0f; }
+            float v;
+            std::memcpy(&v, p, 4);
+            p += 4;
+            return v;
+        }
+    };
+
+    std::pair<std::string, std::string> parse_attr(Reader r)
+    {
+        std::string name;
+        int type = 0;
+        float f = 0.0f;
+        int64_t i = 0;
+        std::string s;
+        int floats_count = 0, ints_count = 0, strings_count = 0;
+
+        while (r.good())
+        {
+            int fn, wt;
+            r.read_tag(fn, wt);
+            if      (fn == 1  && wt == LEN)    { name = r.read_str(); }
+            else if (fn == 20 && wt == VARINT)  { type = static_cast<int>(r.read_varint()); }
+            else if (fn == 2  && wt == I32)     { f = r.read_f32(); }
+            else if (fn == 3  && wt == VARINT)  { i = static_cast<int64_t>(r.read_varint()); }
+            else if (fn == 4  && wt == LEN)     { s = r.read_str(); }
+            else if (fn == 7  && wt == LEN)     { Reader pk = r.sub(); while (pk.good()) { pk.read_f32(); ++floats_count; } }
+            else if (fn == 7  && wt == I32)     { r.read_f32(); ++floats_count; }
+            else if (fn == 8  && wt == LEN)     { Reader pk = r.sub(); while (pk.good()) { pk.read_varint(); ++ints_count; } }
+            else if (fn == 8  && wt == VARINT)  { r.read_varint(); ++ints_count; }
+            else if (fn == 9  && wt == LEN)     { r.read_str(); ++strings_count; }
+            else                                { r.skip(wt); }
+        }
+
+        std::string val;
+        switch (type)
+        {
+        case 1:  val = std::to_string(f); break;
+        case 2:  val = std::to_string(i); break;
+        case 3:  val = s; break;
+        case 4:  val = "tensor"; break;
+        case 5:  val = "graph"; break;
+        case 6:  val = std::string("[") + std::to_string(floats_count) + "]"; break;
+        case 7:  val = std::string("[") + std::to_string(ints_count)   + "]"; break;
+        case 8:  val = std::string("[") + std::to_string(strings_count) + "]"; break;
+        default: val = "?"; break;
+        }
+        return { name, val };
+    }
+} // namespace pb
+#endif
 }
 
 onnxLoader::onnxLoader()
@@ -445,7 +577,204 @@ void onnxLoader::fileToNodes(const std::string& filename, std::deque<Node>& node
 
     calPosition(nodes);
 #else
-    (void)filename;
+    std::ifstream ifs(filename, std::ios::binary);
+    if (!ifs.good()) { return; }
+    std::vector<uint8_t> buf(
+        (std::istreambuf_iterator<char>(ifs)),
+        std::istreambuf_iterator<char>());
+    if (buf.empty()) { return; }
+
+    const uint8_t* buf_end = buf.data() + buf.size();
+    pb::Reader model{ buf.data(), buf_end };
+
+    // Locate GraphProto (field 7 in ModelProto)
+    pb::Reader graph_r{ buf_end, buf_end };
+    while (model.good())
+    {
+        int fn, wt;
+        model.read_tag(fn, wt);
+        if (fn == 7 && wt == pb::LEN)
+            graph_r = model.sub();
+        else
+            model.skip(wt);
+    }
+    if (!graph_r.good()) { return; }
+
+    struct InitRaw { std::string name; int dims_size = 0; };
+    struct NodeRaw
+    {
+        std::vector<std::string> inputs, outputs;
+        std::string name, op_type;
+        std::vector<std::pair<std::string, std::string>> attrs;
+    };
+    std::unordered_set<std::string> init_names;
+    std::vector<InitRaw> initializers;
+    std::vector<std::string> graph_inputs, graph_outputs;
+    std::vector<NodeRaw> raw_nodes;
+
+    pb::Reader gr = graph_r;
+    while (gr.good())
+    {
+        int fn, wt;
+        gr.read_tag(fn, wt);
+        if (fn == 1 && wt == pb::LEN)           // NodeProto
+        {
+            pb::Reader nr = gr.sub();
+            NodeRaw raw;
+            int attr_idx = 0;
+            while (nr.good())
+            {
+                int nfn, nwt;
+                nr.read_tag(nfn, nwt);
+                if      (nfn == 1 && nwt == pb::LEN) { raw.inputs.push_back(nr.read_str()); }
+                else if (nfn == 2 && nwt == pb::LEN) { raw.outputs.push_back(nr.read_str()); }
+                else if (nfn == 3 && nwt == pb::LEN) { raw.name = nr.read_str(); }
+                else if (nfn == 4 && nwt == pb::LEN) { raw.op_type = nr.read_str(); }
+                else if (nfn == 5 && nwt == pb::LEN)
+                {
+                    auto [aname, aval] = pb::parse_attr(nr.sub());
+                    if (aname.empty())
+                    {
+                        auto mit = int_to_string_.find(raw.op_type);
+                        if (mit != int_to_string_.end())
+                        {
+                            auto ait = mit->second.find(attr_idx);
+                            aname = (ait != mit->second.end()) ? ait->second : std::to_string(attr_idx);
+                        }
+                        else { aname = std::to_string(attr_idx); }
+                    }
+                    raw.attrs.emplace_back(std::move(aname), std::move(aval));
+                    ++attr_idx;
+                }
+                else { nr.skip(nwt); }
+            }
+            raw_nodes.push_back(std::move(raw));
+        }
+        else if (fn == 5 && wt == pb::LEN)      // TensorProto (initializer)
+        {
+            pb::Reader tr = gr.sub();
+            InitRaw init;
+            while (tr.good())
+            {
+                int tfn, twt;
+                tr.read_tag(tfn, twt);
+                if      (tfn == 1 && twt == pb::VARINT) { tr.read_varint(); ++init.dims_size; }
+                else if (tfn == 1 && twt == pb::LEN)
+                {
+                    pb::Reader pk = tr.sub();
+                    while (pk.good()) { pk.read_varint(); ++init.dims_size; }
+                }
+                else if (tfn == 8 && twt == pb::LEN) { init.name = tr.read_str(); }
+                else { tr.skip(twt); }
+            }
+            init_names.insert(init.name);
+            initializers.push_back(std::move(init));
+        }
+        else if (fn == 11 && wt == pb::LEN)     // ValueInfoProto (graph input)
+        {
+            pb::Reader vr = gr.sub();
+            while (vr.good())
+            {
+                int vfn, vwt;
+                vr.read_tag(vfn, vwt);
+                if (vfn == 1 && vwt == pb::LEN) { graph_inputs.push_back(vr.read_str()); }
+                else { vr.skip(vwt); }
+            }
+        }
+        else if (fn == 12 && wt == pb::LEN)     // ValueInfoProto (graph output)
+        {
+            pb::Reader vr = gr.sub();
+            while (vr.good())
+            {
+                int vfn, vwt;
+                vr.read_tag(vfn, vwt);
+                if (vfn == 1 && vwt == pb::LEN) { graph_outputs.push_back(vr.read_str()); }
+                else { vr.skip(vwt); }
+            }
+        }
+        else { gr.skip(wt); }
+    }
+
+    int auto_node_name = 0;
+    int auto_blob_name = 0;
+
+    for (const auto& init : initializers)
+    {
+        Node node;
+        node.type = "Initializer";
+        node.title = init.name;
+        node.out.push_back(init.name);
+        node.text = std::string("dims=") + std::to_string(init.dims_size);
+        node.nexts.resize(1);
+        nodes.push_back(std::move(node));
+    }
+
+    for (const auto& inp : graph_inputs)
+    {
+        if (init_names.count(inp)) { continue; }
+        Node node;
+        node.type = "Input";
+        node.title = inp;
+        node.out.push_back(inp);
+        node.nexts.resize(1);
+        nodes.push_back(std::move(node));
+    }
+
+    for (auto& raw : raw_nodes)
+    {
+        Node node;
+        node.type = raw.op_type;
+        node.title = raw.name.empty()
+            ? (raw.op_type + "_" + std::to_string(auto_node_name++))
+            : raw.name;
+        for (auto& s : raw.inputs)  { node.in.push_back(sanitize_blob_name(s, auto_blob_name++)); }
+        for (auto& s : raw.outputs) { node.out.push_back(sanitize_blob_name(s, auto_blob_name++)); }
+        for (auto& [aname, aval] : raw.attrs)
+        {
+            node.values[aname] = aval;
+            if (!node.text.empty()) { node.text += " "; }
+            node.text += aname + "=" + aval;
+        }
+        node.prevs.resize(node.in.size());
+        node.nexts.resize(node.out.size());
+        nodes.push_back(std::move(node));
+    }
+
+    for (const auto& out : graph_outputs)
+    {
+        Node node;
+        node.type = "Output";
+        node.title = out;
+        node.in.push_back(out);
+        node.prevs.resize(1);
+        nodes.push_back(std::move(node));
+    }
+
+    for (auto& src : nodes)
+    {
+        for (auto& dst : nodes)
+        {
+            for (int i_out = 0; i_out < static_cast<int>(src.out.size()); ++i_out)
+            {
+                for (int i_in = 0; i_in < static_cast<int>(dst.in.size()); ++i_in)
+                {
+                    if (src.out[i_out] == dst.in[i_in])
+                    {
+                        src.nexts[i_out] = &dst;
+                        dst.prevs[i_in] = &src;
+                    }
+                }
+            }
+        }
+    }
+
+    for (auto& n : nodes)
+    {
+        n.prevs.erase(std::remove(n.prevs.begin(), n.prevs.end(), nullptr), n.prevs.end());
+        n.nexts.erase(std::remove(n.nexts.begin(), n.nexts.end(), nullptr), n.nexts.end());
+    }
+
+    calPosition(nodes);
 #endif
 }
 
