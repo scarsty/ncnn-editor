@@ -246,6 +246,10 @@ private:
     {
         for (auto& node : nodes_)
         {
+            if (is_hidden_node(node))
+            {
+                continue;
+            }
             const ImVec2 pos = ImNodes::GetNodeGridSpacePos(node.id);
             const int x = static_cast<int>(std::lround(pos.x));
             const int y = static_cast<int>(std::lround(pos.y));
@@ -386,6 +390,31 @@ private:
         apply_snapshot(history_[history_cursor_]);
     }
 
+    bool is_visible_link(const Link& link) const
+    {
+        const int from_node_index = link.from / Node::MAX_PIN;
+        const int to_node_index = link.to / Node::MAX_PIN;
+        if (from_node_index < 0 || to_node_index < 0 ||
+            from_node_index >= static_cast<int>(nodes_.size()) ||
+            to_node_index >= static_cast<int>(nodes_.size()))
+        {
+            return false;
+        }
+
+        const Node& from_node = nodes_[from_node_index];
+        const Node& to_node = nodes_[to_node_index];
+        return !from_node.erased && !to_node.erased &&
+               from_node.type != "Initializer" && to_node.type != "Initializer";
+    }
+
+    bool is_connected_pin(int attribute_id) const
+    {
+        return std::any_of(links_.begin(), links_.end(), [&](const Link& link)
+        {
+            return is_visible_link(link) && (link.from == attribute_id || link.to == attribute_id);
+        });
+    }
+
     void draw_pin_row(bool is_input, int start_id, int pin_count, float node_width)
     {
         if (pin_count <= 0)
@@ -393,22 +422,37 @@ private:
             return;
         }
 
+        std::vector<int> visible_pins;
+        visible_pins.reserve(static_cast<size_t>(pin_count));
+        for (int index = 0; index < pin_count; ++index)
+        {
+            const int attribute_id = start_id + index;
+            if (is_connected_pin(attribute_id))
+            {
+                visible_pins.push_back(attribute_id);
+            }
+        }
+        if (visible_pins.empty())
+        {
+            return;
+        }
+
         const float pin_pitch = 18.0f;
-        const float total_width = static_cast<float>(pin_count - 1) * pin_pitch;
+        const float total_width = static_cast<float>(visible_pins.size() - 1) * pin_pitch;
         const float lead_space = (std::max)(0.0f, (node_width - total_width) * 0.5f - 6.0f);
 
         ImGui::Dummy(ImVec2(lead_space, 1.0f));
         ImGui::SameLine(0.0f, 0.0f);
 
-        for (int i = 0; i < pin_count; ++i)
+        for (size_t index = 0; index < visible_pins.size(); ++index)
         {
             if (is_input)
             {
-                ImNodes::BeginInputAttribute(start_id + i);
+                ImNodes::BeginInputAttribute(visible_pins[index]);
             }
             else
             {
-                ImNodes::BeginOutputAttribute(start_id + i);
+                ImNodes::BeginOutputAttribute(visible_pins[index]);
             }
 
             ImGui::Dummy(ImVec2(1.0f, 8.0f));
@@ -422,7 +466,7 @@ private:
                 ImNodes::EndOutputAttribute();
             }
 
-            if (i + 1 < pin_count)
+            if (index + 1 < visible_pins.size())
             {
                 ImGui::SameLine(0.0f, pin_pitch);
             }
@@ -526,13 +570,24 @@ private:
 
     }
 
-    bool link_on_node(const Link& l, int node_id)
+    bool link_on_node(const Link& l, int node_id) const
     {
         int i = l.from - node_id;
         int j = l.to - node_id;
         return (i >= 0 && i < Node::MAX_PIN) || (j >= 0 && j < Node::MAX_PIN);
     }
 
+    bool is_hidden_node(const Node& node) const
+    {
+        if (node.erased || node.type == "Initializer")
+        {
+            return true;
+        }
+        return std::none_of(links_.begin(), links_.end(), [&](const Link& link)
+        {
+            return link_on_node(link, node.id);
+        });
+    }
 
     void refresh_pos_link()
     {
@@ -1116,7 +1171,7 @@ public:
         {
             for (auto& node : nodes_)
             {
-                if (node.erased)
+                if (is_hidden_node(node))
                 {
                     continue;
                 }
@@ -1206,10 +1261,14 @@ public:
         }
 
         {
-            int link_id = 0;
-            for (const auto& link : links_)
+            for (size_t link_index = 0; link_index < links_.size(); ++link_index)
             {
-                ImNodes::Link(link_id++, link.from, link.to);
+                const Link& link = links_[link_index];
+                if (!is_visible_link(link))
+                {
+                    continue;
+                }
+                ImNodes::Link(static_cast<int>(link_index), link.from, link.to);
             }
         }
         ImNodes::MiniMap(0.5f, minimap_location_);

@@ -4,6 +4,7 @@
 #include <cmath>
 #include <deque>
 #include <limits>
+#include <memory>
 #include <numeric>
 #include <queue>
 #include <unordered_map>
@@ -732,8 +733,9 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
             }
         }
 
-        for (const auto& chain : chains)
+        for (size_t chain_index = 0; chain_index < chains.size(); ++chain_index)
         {
+            const auto& chain = chains[chain_index];
             // Skip singleton or virtual-node-only chains.
             if (chain.size() < 2 || is_vn(chain[0]))
             {
@@ -750,12 +752,12 @@ PositionMap assign_horizontal_positions(const std::vector<std::vector<Node*>>& l
             {
                 for (Node* nb : n->prevs)
                 {
-                    if (in_positions(nb) && !chain_id.count(nb))
+                    if (in_positions(nb) && chain_id.at(nb) != static_cast<int>(chain_index))
                     { ext_sum += positions.at(nb); ++ext_cnt; }
                 }
                 for (Node* nb : n->nexts)
                 {
-                    if (in_positions(nb) && !chain_id.count(nb))
+                    if (in_positions(nb) && chain_id.at(nb) != static_cast<int>(chain_index))
                     { ext_sum += positions.at(nb); ++ext_cnt; }
                 }
             }
